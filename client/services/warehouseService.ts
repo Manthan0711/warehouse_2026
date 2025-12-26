@@ -54,6 +54,7 @@ export interface SupabaseWarehouse {
   description: string | null;
   address: string;
   city: string;
+  district?: string;  // Add district field for location matching
   state: string;
   pincode: string;
   latitude: number | null;
@@ -310,14 +311,40 @@ class WarehouseService {
         submissionsQuery = submissionsQuery.or(`name.ilike.%${filters.search}%,address.ilike.%${filters.search}%,city.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
 
-      // Execute both queries
+      // Execute both queries with proper pagination
+      // Apply offset and limit for pagination
+      if (filters.offset !== undefined) {
+        warehousesQuery = warehousesQuery.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+      } else if (filters.limit) {
+        warehousesQuery = warehousesQuery.limit(filters.limit);
+      }
+
       const [warehousesResult, submissionsResult] = await Promise.all([
-        warehousesQuery.limit(filters.limit || 500),
+        warehousesQuery,
         submissionsQuery.limit(100) // Limit approved submissions
       ]);
 
       const { data: warehouses, error: warehousesError, count: warehousesCount } = warehousesResult;
       const { data: approvedSubmissions, error: submissionsError } = submissionsResult;
+
+      console.log('📊 FETCHED DATA:', {
+        warehouses: warehouses?.length || 0,
+        approvedSubmissions: approvedSubmissions?.length || 0,
+        searchQuery: filters.search || 'none',
+        filters: filters
+      });
+
+      // Log details about approved submissions if any
+      if (approvedSubmissions && approvedSubmissions.length > 0) {
+        console.log('✅ Approved submissions found:', approvedSubmissions.map(s => ({
+          id: s.id,
+          name: s.name,
+          city: s.city,
+          status: s.status
+        })));
+      } else {
+        console.log('❌ No approved submissions found in warehouse_submissions table');
+      }
 
       if (warehousesError) {
         console.error('Error fetching warehouses:', warehousesError);
@@ -366,13 +393,8 @@ class WarehouseService {
 
       console.log(`✅ Found ${warehouses?.length || 0} original warehouses + ${convertedSubmissions.length} approved submissions = ${allWarehouses.length} total`);
 
-      // Apply pagination to combined results
-      const offset = filters.offset || 0;
-      const limit = filters.limit || 500;
-      const paginatedResults = allWarehouses.slice(offset, offset + limit);
-
       // Sort combined results by rating and reviews for better results
-      const sortedResults = paginatedResults.sort((a, b) => {
+      const sortedResults = allWarehouses.sort((a, b) => {
         // Sort by rating first, then by reviews count
         if (b.rating !== a.rating) {
           return b.rating - a.rating;

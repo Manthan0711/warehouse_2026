@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleRecommend } from "./routes/recommend";
+import approveSubmissionRouter from "./routes/approveSubmission";
+import debugRouter from "./routes/debug";
 
 export function createServer() {
   const app = express();
@@ -20,6 +22,9 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
   app.post("/api/recommend", handleRecommend);
+  // Approve a warehouse submission server-side and return created warehouse id
+  app.post('/api/approve-submission', approveSubmissionRouter);
+  app.use('/api/debug', debugRouter);
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, time: new Date().toISOString() });
   });

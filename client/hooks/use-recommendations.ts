@@ -24,23 +24,47 @@ export function useRecommendations(
 ) {
   const { enabled = true, refetchOnWindowFocus = false } = options;
 
+  // Create a stable query key that changes when ANY preference changes
+  // DO NOT use Date.now() - it causes infinite re-renders!
+  const queryKey = [
+    'recommendations', 
+    preferences.district || 'all',
+    preferences.targetPrice || 0,
+    preferences.minAreaSqft || 0,
+    preferences.preferredType || 'any',
+    preferences.preferVerified ? 'verified' : 'any',
+    preferences.preferAvailability ? 'available' : 'any',
+    limit
+  ];
+
   return useQuery<RecommendationResponse, Error>({
-    queryKey: ['recommendations', preferences, limit],
+    queryKey,
     queryFn: async (): Promise<RecommendationResponse> => {
       const request: RecommendationRequest = {
         preferences,
         limit
       };
 
-      console.log('Fetching recommendations with preferences:', preferences);
+      console.log('🔄 Fetching recommendations with preferences:', JSON.stringify(preferences));
       
       try {
-        // First try the API endpoint for Gemini AI recommendations
-        const response = await fetch('/api/recommend', {
+        // Request the server to use the hybrid ML algorithm by default so
+        // the KNN+RandomForest ensemble runs on real Supabase data.
+        // Add TIMESTAMP to URL to force new request (browser can't cache different URLs)
+        const timestamp = Date.now();
+        const prefsHash = JSON.stringify(preferences);
+        const uniqueId = btoa(prefsHash).substring(0, 10); // Create unique ID from preferences
+        
+        const response = await fetch(`/api/recommend?algorithm=hybrid&t=${timestamp}&p=${uniqueId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'X-Request-ID': `${timestamp}-${uniqueId}`, // Unique request ID
           },
+          cache: 'no-store', // Force no caching
           body: JSON.stringify(request),
         });
 
@@ -49,22 +73,19 @@ export function useRecommendations(
         }
 
         const data = await response.json();
-        console.log(`Received ${data?.items?.length || 0} Gemini AI recommendations from API`);
+        console.log(`✅ API returned ${data?.items?.length || 0} recommendations`);
+        
+        if (data?.items?.length > 0) {
+          console.log('📊 First result:', data.items[0].name, '-', data.items[0].district);
+        }
         
         // Make sure we got items back
         if (!data?.items?.length) {
           throw new Error('API returned empty recommendations');
         }
         
-        // Add AI insights to the recommendations
-        const enhancedItems = data.items.map(item => ({
-          ...item,
-          aiInsights: item.aiInsights || [
-            `This ${item.type} warehouse in ${item.district} matches your preferences with a ${item.matchScore}% similarity score. It offers ${item.availableAreaSqft.toLocaleString()} sqft at ₹${item.pricePerSqFt}/sqft, making it an excellent value in this location.`
-          ]
-        }));
-        
-        return { items: enhancedItems };
+        // Return the data as-is from the backend
+        return data;
       } catch (error) {
         console.error('Gemini AI recommendation failed, using enhanced ML algorithms:', error);
         
@@ -241,9 +262,11 @@ export function useRecommendations(
       }
     },
     enabled,
-    refetchOnWindowFocus,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false, // Disable auto-refetch on window focus
+    refetchOnMount: false, // Don't fetch on mount - only on preference changes
+    retry: 1, // Retry once on failure
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to prevent spam
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 }
 
@@ -257,19 +280,28 @@ export function useSmartRecommendations() {
     preferAvailability: true,
   });
 
-  const [limit, setLimit] = useState(8);
+  const [limit, setLimit] = useState(50); // Increased to show more results after ML analysis
   const [customizeMode, setCustomizeMode] = useState(false);
+  const [forceRefreshKey, setForceRefreshKey] = useState(0); // Add force refresh mechanism
+  const [hasAppliedPreferences, setHasAppliedPreferences] = useState(true); // TRUE by default to show recommendations
 
-  const query = useRecommendations(preferences, limit);
+  // Enable query by default - will fetch fresh data with Date.now() in query key
+  const query = useRecommendations(preferences, limit, { enabled: true });
 
   return {
     ...query,
     preferences,
-    setPreferences,
+    setPreferences: (newPrefs: RecommendationPreferences) => {
+      console.log('🔄 Setting new preferences:', newPrefs);
+      setPreferences(newPrefs);
+      setHasAppliedPreferences(true); // Enable fetching after preferences are set
+      setForceRefreshKey(prev => prev + 1); // Force new query
+    },
     limit,
     setLimit,
     customizeMode,
     setCustomizeMode,
+    forceRefreshKey, // Expose for external use
     updatePreference: <K extends keyof RecommendationPreferences>(
       key: K,
       value: RecommendationPreferences[K]

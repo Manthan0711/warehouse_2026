@@ -134,9 +134,19 @@ function WarehouseReviewModal({
                 )}
               </div>
               <Button size="sm" variant="outline" className="mt-2" asChild>
-                <a href={warehouse.document_urls.gst_certificate} target="_blank" rel="noopener noreferrer">
+                <a 
+                  href={warehouse.document_urls.gst_certificate.includes('placeholder') ? '#' : warehouse.document_urls.gst_certificate} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    if (warehouse.document_urls?.gst_certificate?.includes('placeholder')) {
+                      e.preventDefault();
+                      alert('This is demo data. Real documents will be uploaded by warehouse owners when they submit properties.');
+                    }
+                  }}
+                >
                   <ExternalLink className="h-4 w-4 mr-1" />
-                  View GST Certificate
+                  {warehouse.document_urls.gst_certificate.includes('placeholder') ? 'Demo Document (Not Available)' : 'View GST Certificate'}
                 </a>
               </Button>
             </div>
@@ -611,22 +621,36 @@ export default function AdminDashboard() {
 
       console.log('✅ Warehouse approved:', warehouse.name);
       
-      // The DB trigger `move_submission_to_warehouses` will handle creating the
-      // entry in `warehouses`. We only update the submission status here and
-      // rely on the trigger to copy fields (including images/document URLs).
-      // This avoids duplicate inserts or unique constraint issues.
-      console.log('ℹ️ Relying on DB trigger to move submission to warehouses');
-      
-      // Create notification for the owner
-      await supabase
-        .from('notifications')
-        .insert({
+      // Prefer a server-side approval endpoint that returns the created
+      // warehouse id (the DB trigger will insert the row) so notifications
+      // can link directly to the public warehouse listing.
+      try {
+        const resp = await fetch('/api/approve-submission', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: warehouseId })
+        });
+        const json = await resp.json();
+        const createdWarehouseId = json?.warehouseId || null;
+
+        // Create notification for the owner using the returned id when available
+        await supabase.from('notifications').insert({
           user_id: warehouse.owner_id,
           type: 'approval',
           title: 'Warehouse Approved! 🎉',
           message: `Your warehouse "${warehouse.name}" has been approved and is now visible to seekers.`,
-          link: `/warehouses/${newWarehouse.id}`
+          link: createdWarehouseId ? `/warehouses/${createdWarehouseId}` : `/warehouses`
         });
+      } catch (err) {
+        console.warn('Server-side approval endpoint failed, falling back to direct notification');
+        await supabase.from('notifications').insert({
+          user_id: warehouse.owner_id,
+          type: 'approval',
+          title: 'Warehouse Approved! 🎉',
+          message: `Your warehouse "${warehouse.name}" has been approved and is now visible to seekers.`,
+          link: `/warehouses`
+        });
+      }
       
       toast({
         title: "Warehouse Approved! 🎉",

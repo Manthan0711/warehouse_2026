@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,8 @@ export default function RecommendationCustomizer({
   onClose,
   isOpen
 }: RecommendationCustomizerProps) {
+  const queryClient = useQueryClient();
+  
   // Always initialize state hooks at the top level, never conditionally
   const [localPrefs, setLocalPrefs] = useState<RecommendationPreferences>(preferences);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
@@ -51,6 +54,12 @@ export default function RecommendationCustomizer({
   if (!isOpen) return null;
 
   const handleApply = () => {
+    // NUCLEAR OPTION: Clear all React Query cache before applying new preferences
+    queryClient.clear();
+    queryClient.removeQueries({ queryKey: ['recommendations'] });
+    queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+    
+    console.log('🧹 CLEARED ALL CACHE - Applying new preferences:', localPrefs);
     onPreferencesChange(localPrefs);
     onClose();
   };

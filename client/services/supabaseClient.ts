@@ -25,23 +25,26 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 
 // Test the connection immediately
 console.log('🧪 Running connection test...');
-supabase.from('warehouses').select('id', { count: 'exact', head: true }).then(({ count, error }) => {
-  console.log('===================================');
-  if (error) {
-    console.error('❌ CONNECTION TEST FAILED');
-    console.error('Error:', error.message);
-    console.error('Code:', error.code);
-    console.error('Details:', error.details);
-    console.error('Hint:', error.hint);
-  } else {
-    console.log('✅ CONNECTION TEST SUCCESS!');
-    console.log('Total warehouses found:', count);
-    console.log('Database is working perfectly!');
+(async () => {
+  try {
+    const { count, error } = await supabase.from('warehouses').select('id', { count: 'exact', head: true });
+    console.log('===================================');
+    if (error) {
+      console.error('❌ CONNECTION TEST FAILED');
+      console.error('Error:', (error as any).message);
+      console.error('Code:', (error as any).code);
+      console.error('Details:', (error as any).details);
+      console.error('Hint:', (error as any).hint);
+    } else {
+      console.log('✅ CONNECTION TEST SUCCESS!');
+      console.log('Total warehouses found:', count);
+      console.log('Database is working perfectly!');
+    }
+    console.log('===================================');
+  } catch (err) {
+    console.log('===================================');
+    console.error('❌ CONNECTION TEST EXCEPTION');
+    console.error('Error:', (err as any).message || err);
+    console.log('===================================');
   }
-  console.log('===================================');
-}).catch(err => {
-  console.log('===================================');
-  console.error('❌ CONNECTION TEST EXCEPTION');
-  console.error('Error:', err.message || err);
-  console.log('===================================');
-});
+})();

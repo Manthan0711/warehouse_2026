@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
+import {
   Loader2, Check, X, Info, AlertTriangle, Database, Network, Bot
 } from "lucide-react";
 import { supabase } from '../services/supabaseClient';
@@ -54,11 +54,11 @@ export default function EnvChecker() {
         diagnosticResults.supabaseUrl = 'Using fallback URL';
       }
       const { data, error } = await supabase.from('warehouses').select('id').limit(1);
-      
+
       if (error) {
         throw error;
       }
-      
+
       diagnosticResults.supabase = true;
     } catch (error: any) {
       diagnosticResults.supabaseError = error.message || 'Unknown error connecting to Supabase';
@@ -94,70 +94,69 @@ export default function EnvChecker() {
   };
 
   return (
-    <Card className="bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center">
-          <Network className="h-5 w-5 mr-2 text-blue-600" />
+    <div className="glass-dark rounded-xl border border-slate-700/50">
+      <div className="p-4 pb-2">
+        <h3 className="text-lg font-semibold flex items-center text-slate-200">
+          <Network className="h-5 w-5 mr-2 text-blue-400" />
           System Diagnostics
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+      <div className="p-4 pt-2">
         <div className="space-y-4">
           {!checking && !results.supabase && !results.api ? (
-            <Button 
-              onClick={runDiagnostics} 
-              variant="outline"
-              className="w-full"
+            <Button
+              onClick={runDiagnostics}
+              className="w-full btn-glass-primary"
             >
               <Info className="h-4 w-4 mr-2" />
               Run Connection Diagnostics
             </Button>
           ) : checking ? (
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="h-5 w-5 mr-2 animate-spin text-blue-600" />
+            <div className="flex items-center justify-center p-4 text-slate-300">
+              <Loader2 className="h-5 w-5 mr-2 animate-spin text-blue-400" />
               <span>Running diagnostics...</span>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="border rounded-md p-3 bg-white">
+                <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <Database className="h-4 w-4 mr-2 text-blue-600" />
-                      <span className="font-medium">Supabase Connection</span>
+                      <Database className="h-4 w-4 mr-2 text-blue-400" />
+                      <span className="font-medium text-slate-200">Supabase Connection</span>
                     </div>
                     {results.supabase ? (
-                      <Check className="h-5 w-5 text-green-500" />
+                      <Check className="h-5 w-5 text-green-400" />
                     ) : (
-                      <X className="h-5 w-5 text-red-500" />
+                      <X className="h-5 w-5 text-red-400" />
                     )}
                   </div>
                   {results.supabaseUrl && (
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="text-xs text-slate-400 mb-1">
                       URL: {results.supabaseUrl}
                     </div>
                   )}
                   {results.supabaseError && (
-                    <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-1">
+                    <div className="text-xs text-red-400 bg-red-500/10 p-2 rounded mt-1 border border-red-500/20">
                       {results.supabaseError}
                     </div>
                   )}
                 </div>
 
-                <div className="border rounded-md p-3 bg-white">
+                <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/50">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <Bot className="h-4 w-4 mr-2 text-purple-600" />
-                      <span className="font-medium">API Connection</span>
+                      <Bot className="h-4 w-4 mr-2 text-purple-400" />
+                      <span className="font-medium text-slate-200">API Connection</span>
                     </div>
                     {results.api ? (
-                      <Check className="h-5 w-5 text-green-500" />
+                      <Check className="h-5 w-5 text-green-400" />
                     ) : (
-                      <X className="h-5 w-5 text-red-500" />
+                      <X className="h-5 w-5 text-red-400" />
                     )}
                   </div>
                   {results.apiError && (
-                    <div className="text-xs text-red-600 bg-red-50 p-2 rounded mt-1">
+                    <div className="text-xs text-red-400 bg-red-500/10 p-2 rounded mt-1 border border-red-500/20">
                       {results.apiError}
                     </div>
                   )}
@@ -166,19 +165,19 @@ export default function EnvChecker() {
 
               {/* Environment Variables */}
               {results.envVars && Object.keys(results.envVars).length > 0 && (
-                <div className="border rounded-md p-3 bg-white">
+                <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/50">
                   <div className="flex items-center mb-2">
-                    <Info className="h-4 w-4 mr-2 text-blue-600" />
-                    <span className="font-medium">Environment Variables</span>
+                    <Info className="h-4 w-4 mr-2 text-blue-400" />
+                    <span className="font-medium text-slate-200">Environment Variables</span>
                   </div>
-                  <div className="space-y-1 text-xs font-mono bg-gray-50 p-2 rounded">
+                  <div className="space-y-1 text-xs font-mono bg-slate-900/50 p-2 rounded border border-slate-700/30">
                     {Object.entries(results.envVars).map(([key, value]) => (
                       <div key={key} className="flex justify-between">
-                        <span className="text-gray-700">{key}:</span>
-                        <span className="text-gray-900">{
+                        <span className="text-slate-400">{key}:</span>
+                        <span className="text-slate-200">{
                           // Mask sensitive values
-                          key.includes('KEY') || key.includes('SECRET') 
-                            ? value.substring(0, 8) + '...' 
+                          key.includes('KEY') || key.includes('SECRET')
+                            ? value.substring(0, 8) + '...'
                             : value
                         }</span>
                       </div>
@@ -187,18 +186,18 @@ export default function EnvChecker() {
                 </div>
               )}
 
-              <div className="flex justify-between">
-                <Button 
-                  onClick={runDiagnostics} 
-                  variant="outline" 
+              <div className="flex justify-between items-center">
+                <Button
+                  onClick={runDiagnostics}
+                  className="btn-glass"
                   size="sm"
                 >
                   <Loader2 className="h-4 w-4 mr-2" />
                   Run Again
                 </Button>
-                
+
                 {(!results.supabase || !results.api) && (
-                  <div className="flex items-center text-amber-600 text-sm">
+                  <div className="flex items-center text-amber-400 text-sm">
                     <AlertTriangle className="h-4 w-4 mr-1" />
                     <span>Issues detected. Check console for more details.</span>
                   </div>
@@ -207,7 +206,7 @@ export default function EnvChecker() {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

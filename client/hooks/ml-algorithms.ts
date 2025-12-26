@@ -100,15 +100,17 @@ export class KNearestNeighbors {
     let score = 0;
     const { district, targetPrice, minAreaSqft, preferredType, preferVerified } = preferences;
 
-    // Location score
+    // Location score (match against both city and district, allow partial matches)
     if (district && district !== 'any') {
-      // Check for exact district match
-      const locationScore = warehouse.city.toLowerCase() === district.toLowerCase() 
-        ? 1 // Exact match
-        : this.isRelatedDistrict(warehouse.city, district) 
-          ? 0.6 // Related district
-          : 0; // No match
-      
+      const pref = district.toLowerCase();
+      const warehouseCity = (warehouse.city || '').toLowerCase();
+      const warehouseDistrict = (warehouse.district || '').toLowerCase();
+
+      // Exact or partial match on city/district
+      const exactMatch = warehouseCity === pref || warehouseDistrict === pref || warehouseCity.includes(pref) || warehouseDistrict.includes(pref);
+      const related = exactMatch ? false : (this.isRelatedDistrict(warehouseCity, district) || this.isRelatedDistrict(warehouseDistrict, district));
+
+      const locationScore = exactMatch ? 1 : related ? 0.6 : 0;
       score += locationScore * weights.location;
     } else {
       // No district preference specified
@@ -190,14 +192,15 @@ export class KNearestNeighbors {
    * Check if two districts are related (nearby)
    */
   private static isRelatedDistrict(warehouseDistrict: string, preferenceDistrict: string): boolean {
+    if (!warehouseDistrict || !preferenceDistrict) return false;
+    const pref = preferenceDistrict.toLowerCase();
     const districtInfo = this.DISTRICT_PROXIMITY.find(
-      d => d.name.toLowerCase() === preferenceDistrict.toLowerCase()
+      d => d.name.toLowerCase() === pref
     );
-    
     if (!districtInfo) return false;
-    
+    const warehouse = warehouseDistrict.toLowerCase();
     return districtInfo.relatedDistricts.some(
-      related => related.toLowerCase() === warehouseDistrict.toLowerCase()
+      related => related.toLowerCase() === warehouse || warehouse.includes(related.toLowerCase())
     );
   }
 
@@ -587,21 +590,33 @@ export class HybridRecommender {
       const KNN_WEIGHT = 0.6;
       const RF_WEIGHT = 0.4;
       
-      // Convert to array and sort
-      const hybridResults = Array.from(warehouseScores.values())
+      // Convert to array and normalize scores across all items to [0,1]
+      const entries = Array.from(warehouseScores.values());
+
+      const knnScores = entries.map(e => e.knnScore || 0);
+      const rfScores = entries.map(e => e.rfScore || 0);
+      const minKnn = Math.min(...knnScores);
+      const maxKnn = Math.max(...knnScores) || 1;
+      const minRf = Math.min(...rfScores);
+      const maxRf = Math.max(...rfScores) || 1;
+
+      const hybridResults = entries
         .map(item => {
-          // Normalized rank score (1 is best, 0 is worst)
           const maxKnnRank = knnResults.length + 1;
           const maxRfRank = rfResults.length + 1;
           const normKnnRank = 1 - (item.knnRank / maxKnnRank);
           const normRfRank = 1 - (item.rfRank / maxRfRank);
-          
-          // Weighted combination
+
+          // Normalize raw knn/rf scores to 0..1
+          const normKnnScore = (item.knnScore - minKnn) / (maxKnn - minKnn || 1);
+          const normRfScore = (item.rfScore - minRf) / (maxRf - minRf || 1);
+
+          // Weighted combination using normalized scores and ranks
           const hybridScore = (
-            KNN_WEIGHT * (item.knnScore * 0.7 + normKnnRank * 0.3) + 
-            RF_WEIGHT * (item.rfScore * 0.7 + normRfRank * 0.3)
+            KNN_WEIGHT * (normKnnScore * 0.7 + normKnnRank * 0.3) + 
+            RF_WEIGHT * (normRfScore * 0.7 + normRfRank * 0.3)
           );
-          
+
           return {
             warehouse: item.warehouse,
             similarity_score: hybridScore,

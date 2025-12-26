@@ -2,7 +2,8 @@ import { useCallback } from 'react';
 
 type Kind = 'image' | 'document';
 
-export function usePresignedUpload(serverUrl = process.env.REACT_APP_PRESIGN_SERVER || 'http://localhost:3001') {
+// Use import.meta.env for Vite instead of process.env
+export function usePresignedUpload(serverUrl = import.meta.env.VITE_PRESIGN_SERVER_URL || 'http://localhost:4001') {
   const presignAndUpload = useCallback(async (file: File, kind: Kind) => {
     const resp = await fetch(`${serverUrl}/presign-upload`, {
       method: 'POST',

@@ -47,7 +47,7 @@ export function Navbar() {
                 ? "text-gradient-blue" 
                 : "text-foreground"
             )}>
-              SmartWarehouse
+              Smart Space
             </span>
           </Link>
         </div>

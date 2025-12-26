@@ -62,6 +62,15 @@ export default function Warehouses() {
     loadWarehouseStats();
   }, []);
 
+  // Reload warehouses when search query or filters change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadWarehouses(1);
+    }, 300); // Debounce 300ms
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery, filters.district, filters.priceRange, filters.status]);
+
   const loadWarehouses = async (page: number = 1, append: boolean = false) => {
     try {
       console.log('Loading warehouses - page:', page);
@@ -72,9 +81,14 @@ export default function Warehouses() {
       }
 
       const offset = (page - 1) * WAREHOUSES_PER_PAGE;
-      const { data, count } = await warehouseService.getWarehouses({
+      const { data, count} = await warehouseService.getWarehouses({
         limit: WAREHOUSES_PER_PAGE,
-        offset: offset
+        offset: offset,
+        search: searchQuery.trim() || undefined, // Pass search query to API
+        city: filters.district || undefined,
+        min_price: filters.priceRange ? filterOptions.priceRanges.find(r => r.label === filters.priceRange)?.min : undefined,
+        max_price: filters.priceRange ? filterOptions.priceRanges.find(r => r.label === filters.priceRange)?.max : undefined,
+        status: filters.status || undefined
       });
 
       console.log('Received warehouse data:', { dataLength: data?.length, count });
@@ -122,59 +136,12 @@ export default function Warehouses() {
     }
   };
 
-  // Apply filters to warehouses
+  // Apply filters to warehouses (server-side search, minimal client-side filtering)
   const filteredWarehouses = useMemo(() => {
     if (warehouses.length === 0) return [];
     let result = warehouses;
 
-    // Search filter - prioritize exact city matches
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase().trim();
-      result = result.filter(warehouse => {
-        // First priority: exact city match
-        if (warehouse.city && warehouse.city.toLowerCase() === searchLower) return true;
-        
-        // Second priority: city starts with search term
-        if (warehouse.city && warehouse.city.toLowerCase().startsWith(searchLower)) return true;
-        
-        // Third priority: city contains search term
-        if (warehouse.city && warehouse.city.toLowerCase().includes(searchLower)) return true;
-        
-        // Fourth priority: address contains search term
-        if (warehouse.address && warehouse.address.toLowerCase().includes(searchLower)) return true;
-        
-        // Fifth priority: ID or description match
-        if (warehouse.id && warehouse.id.toLowerCase().includes(searchLower)) return true;
-        if (warehouse.description && warehouse.description.toLowerCase().includes(searchLower)) return true;
-        
-        return false;
-      });
-      
-      // Sort results by relevance - exact matches first
-      result.sort((a, b) => {
-        const aCity = a.city?.toLowerCase() || '';
-        const bCity = b.city?.toLowerCase() || '';
-        const searchLower = searchQuery.toLowerCase().trim();
-        
-        // Exact matches first
-        if (aCity === searchLower && bCity !== searchLower) return -1;
-        if (bCity === searchLower && aCity !== searchLower) return 1;
-        
-        // Starts with matches next
-        if (aCity.startsWith(searchLower) && !bCity.startsWith(searchLower)) return -1;
-        if (bCity.startsWith(searchLower) && !aCity.startsWith(searchLower)) return 1;
-        
-        // Then by rating
-        return b.rating - a.rating;
-      });
-    }
-
-    // District filter - exact match only for filters
-    if (filters.district) {
-      result = result.filter(warehouse => 
-        warehouse.city && warehouse.city.toLowerCase() === filters.district.toLowerCase()
-      );
-    }
+    // NOTE: Search is now handled server-side, no client-side search filtering needed
 
     // Warehouse type filter (using description for Supabase data)
     if (filters.warehouseType) {
@@ -183,21 +150,10 @@ export default function Warehouses() {
       );
     }
 
-    // Price range filter
-    if (filters.priceRange) {
-      const range = filterOptions.priceRanges.find(r => r.label === filters.priceRange);
-      if (range) {
-        result = result.filter(warehouse => 
-          warehouse.price_per_sqft >= range.min && warehouse.price_per_sqft <= range.max
-        );
-      }
-    }
-
-    // Capacity/Area range filter
+    // Capacity/Area range filter (if not already filtered server-side)
     if (filters.capacityRange) {
       const range = filterOptions.capacityRanges.find(r => r.label === filters.capacityRange);
       if (range) {
-        // Convert capacity to area using approximate ratio
         const minArea = range.min * 10; 
         const maxArea = range.max * 10;
         result = result.filter(warehouse => 
@@ -216,13 +172,8 @@ export default function Warehouses() {
       }
     }
 
-    // Status filter
-    if (filters.status) {
-      result = result.filter(warehouse => warehouse.status === filters.status.toLowerCase());
-    }
-
     return result;
-  }, [warehouses, searchQuery, filters]);
+  }, [warehouses, filters]);
 
   const clearFilters = () => {
     setFilters({

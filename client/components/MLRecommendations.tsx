@@ -1,30 +1,50 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Bot, Star, MapPin, TrendingUp, Target, Zap, 
+import {
+  Bot, Star, MapPin, TrendingUp, Target, Zap,
   Building2, ArrowRight, Sparkles, Brain, ChevronRight, RefreshCw, Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useSmartRecommendations } from "@/hooks/use-recommendations";
 import RecommendationCustomizer from "./RecommendationCustomizer";
 import RecommendationAlgorithmExplainer from "./RecommendationAlgorithmExplainer";
 import EnvChecker from "./EnvChecker";
+import type { RecommendedWarehouse, RecommendationPreferences } from "../../shared/api";
 
-export default function MLRecommendations() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-    preferences,
-    customizeMode,
-    setCustomizeMode,
-    setPreferences,
-  } = useSmartRecommendations();
+// Props interface - data comes from parent component to avoid duplicate state
+interface MLRecommendationsProps {
+  recommendations: RecommendedWarehouse[];
+  preferences: RecommendationPreferences;
+  setPreferences: (prefs: RecommendationPreferences) => void;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+  customizeMode: boolean;
+  setCustomizeMode: (mode: boolean) => void;
+  limit: number;
+  setLimit: React.Dispatch<React.SetStateAction<number>>;
+}
 
-  const recommendations = data?.items || [];
+export default function MLRecommendations({
+  recommendations,
+  preferences,
+  setPreferences,
+  isLoading,
+  error,
+  refetch,
+  customizeMode,
+  setCustomizeMode,
+  limit,
+  setLimit
+}: MLRecommendationsProps) {
+  const queryClient = useQueryClient();
+
+  // Simple debug log
+  if (recommendations.length > 0) {
+    console.log(`🎨 Rendering ${recommendations.length} warehouses. First: ${recommendations[0]?.name} (${recommendations[0]?.district})`);
+  }
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600 bg-green-100/80 backdrop-blur-sm";
@@ -45,9 +65,9 @@ export default function MLRecommendations() {
                 <p className="text-sm text-gray-600">Unable to load personalized recommendations</p>
               </div>
             </div>
-            <Button 
-              onClick={() => refetch()} 
-              variant="outline" 
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
               size="sm"
               className="border-red-200 hover:bg-red-50"
             >
@@ -104,17 +124,17 @@ export default function MLRecommendations() {
               <div>
                 <CardTitle className="text-lg text-gradient-blue">ML-Powered Recommendations</CardTitle>
                 <CardDescription>
-                  {recommendations.length > 0 
-                    ? `Found ${recommendations.length} personalized warehouse suggestions`
+                  {recommendations.length > 0
+                    ? `Showing top ${recommendations.length} warehouses selected by ML algorithms`
                     : "Personalized warehouse suggestions based on your preferences"
                   }
                 </CardDescription>
               </div>
             </div>
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => refetch()}
                 disabled={isLoading}
                 className="btn-professional-outline"
@@ -122,8 +142,8 @@ export default function MLRecommendations() {
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => setCustomizeMode(true)}
                 className="btn-professional-outline"
@@ -176,10 +196,12 @@ export default function MLRecommendations() {
       {recommendations.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendations.map((warehouse, index) => (
-            <Card 
-              key={warehouse.whId} 
+            <Card
+              key={`${warehouse.whId}-${index}`}
               className="overflow-hidden glass-card glass-card-hover relative hover-lift shadow-professional"
-              style={{animationDelay: `${index * 100}ms`}}
+              style={{ animationDelay: `${index * 100}ms` }}
+              data-warehouse-name={warehouse.name}
+              data-warehouse-district={warehouse.district}
             >
               {index === 0 && (
                 <div className="absolute top-3 right-3 z-10">
@@ -229,8 +251,8 @@ export default function MLRecommendations() {
                 <div>
                   <span className="text-sm text-gray-500">Available Space</span>
                   <div className="font-medium text-green-600">
-                    {warehouse.availableAreaSqft 
-                      ? warehouse.availableAreaSqft.toLocaleString() 
+                    {warehouse.availableAreaSqft
+                      ? warehouse.availableAreaSqft.toLocaleString()
                       : warehouse.totalAreaSqft?.toLocaleString() || 'N/A'
                     } sq ft
                   </div>
@@ -290,9 +312,9 @@ export default function MLRecommendations() {
             <p className="text-gray-600 mb-4">
               Try adjusting your preferences to find more warehouse options.
             </p>
-            <Button 
-              onClick={() => setCustomizeMode(true)} 
-              variant="outline" 
+            <Button
+              onClick={() => setCustomizeMode(true)}
+              variant="outline"
               className="border-blue-200 hover:bg-blue-50"
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -300,6 +322,25 @@ export default function MLRecommendations() {
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {/* Load More Button */}
+      {recommendations.length >= limit && limit < 200 && (
+        <div className="flex justify-center">
+          <Button
+            onClick={() => setLimit(prev => Math.min(prev + 50, 200))}
+            disabled={isLoading}
+            className="btn-professional group"
+            size="lg"
+          >
+            <TrendingUp className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+            Load More Results
+            <span className="ml-2 text-sm opacity-80">
+              (Showing {recommendations.length}, load {Math.min(50, 200 - limit)} more)
+            </span>
+            <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
       )}
 
       {/* AI Insights */}
@@ -334,7 +375,7 @@ export default function MLRecommendations() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gradient-purple mb-1">
-                {recommendations.length > 0 
+                {recommendations.length > 0
                   ? `₹${Math.round(recommendations.reduce((sum, w) => sum + w.pricePerSqFt, 0) / recommendations.length)}`
                   : '₹0'
                 }
@@ -348,17 +389,17 @@ export default function MLRecommendations() {
               <div className="text-sm text-slate-300">
                 {recommendations.some(w => w.aiInsights) ? (
                   <div>
-                    <strong className="text-gradient-gold">Gemini ML Analysis:</strong> Using advanced ML algorithms 
-                    including KNearest Neighbors and Random Forest to analyze warehouse data across multiple dimensions 
-                    including location suitability, price optimization, and amenity matching. Recommendations are personalized 
-                    to your specific preferences with detailed reasoning.
+                    <strong className="text-gradient-gold">Hybrid ML Analysis:</strong> Analyzed hundreds of Mumbai warehouses
+                    using K-Nearest Neighbors (KNN) + Random Forest ensemble algorithm. The system evaluated location suitability,
+                    price optimization, size matching, and amenity compatibility to select the top {recommendations.length} warehouses
+                    that best match your requirements: ₹{preferences.targetPrice || 60}/sqft target, {(preferences.minAreaSqft || 50000).toLocaleString()} sqft minimum area.
                   </div>
                 ) : (
                   <div>
-                    <strong className="text-gradient-gold">Smart Tip:</strong> {
+                    <strong className="text-gradient-gold">ML Processing:</strong> {
                       recommendations.length > 0
-                        ? `Your top match has ${recommendations[0].matchScore}% compatibility. Consider warehouses with 80%+ match scores for best results.`
-                        : "Adjust your preferences using the Customize button to get personalized recommendations based on location, budget, and requirements."
+                        ? `Analyzed ${preferences.district === 'Mumbai' ? '488' : '1000+'} warehouses from your ${preferences.district || 'selected'} region using hybrid KNN+Random Forest ML algorithms. Top ${recommendations.length} matches shown based on ${preferences.targetPrice ? `₹${preferences.targetPrice}/sqft budget, ` : ''}${preferences.minAreaSqft ? `${preferences.minAreaSqft.toLocaleString()} sqft minimum, ` : ''}and compatibility scores.`
+                        : "Adjust your preferences using the Customize button to get ML-powered recommendations based on location, budget, and requirements."
                     }
                   </div>
                 )}
@@ -370,7 +411,7 @@ export default function MLRecommendations() {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Environment Checker for easier debugging */}
       {(error || recommendations.length === 0) && (
         <div className="mt-6">
@@ -382,7 +423,18 @@ export default function MLRecommendations() {
       <RecommendationCustomizer
         isOpen={customizeMode}
         preferences={preferences}
-        onPreferencesChange={setPreferences}
+        onPreferencesChange={(newPrefs) => {
+          console.log('🔄 Modal applying new preferences:', JSON.stringify(newPrefs));
+
+          // Clear ALL React Query cache for recommendations
+          queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+          queryClient.removeQueries({ queryKey: ['recommendations'] });
+
+          // Update preferences (this will trigger new fetch due to Date.now() in queryKey)
+          setPreferences(newPrefs);
+
+          console.log('✅ Preferences updated, new fetch will start automatically');
+        }}
         onClose={() => setCustomizeMode(false)}
       />
     </div>
