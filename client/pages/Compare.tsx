@@ -232,7 +232,7 @@ export default function Compare() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-900">SmartWarehouse</span>
+            <span className="font-bold text-xl text-gray-900">SmartSpace</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/warehouses" className="text-gray-600 hover:text-gray-900 font-medium">Find Warehouses</Link>

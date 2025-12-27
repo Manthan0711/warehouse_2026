@@ -327,7 +327,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Choose SmartWarehouse?
+              Why Choose SmartSpace?
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               We make warehouse discovery and leasing simple, secure, and efficient
@@ -356,7 +356,7 @@ export default function Index() {
               Ready to Find Your Perfect Warehouse?
             </h2>
             <p className="text-xl text-blue-100">
-              Join thousands of businesses already using SmartWarehouse to optimize their logistics
+              Join thousands of businesses already using SmartSpace to optimize their logistics
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" asChild>
@@ -380,7 +380,7 @@ export default function Index() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-blue-400" />
-                <span className="font-bold text-xl">SmartWarehouse</span>
+                <span className="font-bold text-xl">SmartSpace</span>
               </div>
               <p className="text-gray-400">
                 India's leading marketplace for warehouse space. Connecting businesses with the perfect storage solutions.
@@ -412,7 +412,7 @@ export default function Index() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 SmartWarehouse. All rights reserved.</p>
+            <p>&copy; 2024 SmartSpace. All rights reserved.</p>
           </div>
         </div>
       </footer>

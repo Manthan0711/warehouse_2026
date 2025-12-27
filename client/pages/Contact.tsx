@@ -32,7 +32,7 @@ export default function Contact() {
   const contactInfo = [
     {
       title: "Email Us",
-      content: "hello@smartwarehouse.in",
+      content: "hello@SmartSpace.in",
       subContent: "We'll respond within 24 hours",
       icon: Mail
     },
@@ -61,19 +61,19 @@ export default function Contact() {
       city: "Mumbai",
       address: "WeWork, Bandra Kurla Complex, Mumbai, Maharashtra 400051",
       phone: "+91 98765 43210",
-      email: "mumbai@smartwarehouse.in"
+      email: "mumbai@SmartSpace.in"
     },
     {
       city: "Delhi",
       address: "DLF Cyber City, Gurgaon, Haryana 122002",
       phone: "+91 98765 43211",
-      email: "delhi@smartwarehouse.in"
+      email: "delhi@SmartSpace.in"
     },
     {
       city: "Bangalore",
       address: "Embassy Tech Village, Outer Ring Road, Bangalore, Karnataka 560103",
       phone: "+91 98765 43212",
-      email: "bangalore@smartwarehouse.in"
+      email: "bangalore@SmartSpace.in"
     }
   ];
 
@@ -84,7 +84,7 @@ export default function Contact() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-900">SmartWarehouse</span>
+            <span className="font-bold text-xl text-gray-900">SmartSpace</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/warehouses" className="text-gray-600 hover:text-gray-900 font-medium">Find Warehouses</Link>
@@ -295,12 +295,12 @@ export default function Contact() {
                   Preferred Communication Method
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  For fastest response, email us at <strong>hello@smartwarehouse.in</strong> or use the contact form. 
+                  For fastest response, email us at <strong>hello@SmartSpace.in</strong> or use the contact form. 
                   For urgent matters, call us directly.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button variant="outline" asChild>
-                    <a href="mailto:hello@smartwarehouse.in">
+                    <a href="mailto:hello@SmartSpace.in">
                       <Mail className="mr-2 h-4 w-4" />
                       Email Us
                     </a>
@@ -383,7 +383,7 @@ export default function Contact() {
               Ready to Get Started?
             </h2>
             <p className="text-xl text-blue-100">
-              Join thousands of businesses already using SmartWarehouse to find and list warehouse spaces.
+              Join thousands of businesses already using SmartSpace to find and list warehouse spaces.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" asChild>
@@ -407,7 +407,7 @@ export default function Contact() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-blue-400" />
-                <span className="font-bold text-xl">SmartWarehouse</span>
+                <span className="font-bold text-xl">SmartSpace</span>
               </div>
               <p className="text-gray-400">
                 India's leading marketplace for warehouse space. Connecting businesses with the perfect storage solutions.
@@ -439,7 +439,7 @@ export default function Contact() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 SmartWarehouse. All rights reserved.</p>
+            <p>&copy; 2024 SmartSpace. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -68,7 +68,7 @@ export default function About() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-900">SmartWarehouse</span>
+            <span className="font-bold text-xl text-gray-900">SmartSpace</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/warehouses" className="text-gray-600 hover:text-gray-900 font-medium">Find Warehouses</Link>
@@ -96,7 +96,7 @@ export default function About() {
               <span className="block text-blue-600">Warehouse Discovery</span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8">
-              SmartWarehouse is India's leading marketplace connecting businesses with the perfect warehouse spaces. 
+              SmartSpace is India's leading marketplace connecting businesses with the perfect warehouse spaces. 
               We're making warehouse discovery simple, transparent, and efficient for everyone.
             </p>
             <div className="grid md:grid-cols-4 gap-8">
@@ -227,7 +227,7 @@ export default function About() {
             </h2>
             <div className="space-y-6 text-lg leading-relaxed">
               <p>
-                SmartWarehouse was born out of a simple observation: finding warehouse space in India was 
+                SmartSpace was born out of a simple observation: finding warehouse space in India was 
                 unnecessarily complex and time-consuming. Business owners would spend weeks calling brokers, 
                 visiting properties, and negotiating terms without having a clear picture of what was available.
               </p>
@@ -277,7 +277,7 @@ export default function About() {
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Building2 className="h-8 w-8 text-blue-400" />
-                <span className="font-bold text-xl">SmartWarehouse</span>
+                <span className="font-bold text-xl">SmartSpace</span>
               </div>
               <p className="text-gray-400">
                 India's leading marketplace for warehouse space. Connecting businesses with the perfect storage solutions.
@@ -309,7 +309,7 @@ export default function About() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 SmartWarehouse. All rights reserved.</p>
+            <p>&copy; 2024 SmartSpace. All rights reserved.</p>
           </div>
         </div>
       </footer>
