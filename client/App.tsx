@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import SeekerDashboard from "./pages/SeekerDashboard";
 import MLRecommendationsPage from "./pages/MLRecommendationsPage";
 import ListProperty from "./pages/ListProperty";
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/signup" element={<Login />} />
                 <Route path="/register" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/seeker-dashboard" element={<SeekerDashboard />} />
                 <Route path="/admin-dashboard" element={<Dashboard />} />
                 <Route path="/ml-recommendations" element={<MLRecommendationsPage />} />

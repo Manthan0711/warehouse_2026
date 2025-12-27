@@ -5,6 +5,11 @@ import { handleDemo } from "./routes/demo";
 import { handleRecommend } from "./routes/recommend";
 import approveSubmissionRouter from "./routes/approveSubmission";
 import debugRouter from "./routes/debug";
+import {
+  getAdminBookings,
+  updateBookingStatus,
+  getBookingStats
+} from "./routes/admin-bookings";
 
 export function createServer() {
   const app = express();
@@ -25,6 +30,12 @@ export function createServer() {
   // Approve a warehouse submission server-side and return created warehouse id
   app.post('/api/approve-submission', approveSubmissionRouter);
   app.use('/api/debug', debugRouter);
+
+  // Admin booking management routes
+  app.get("/api/admin/bookings", getAdminBookings);
+  app.post("/api/admin/bookings/status", updateBookingStatus);
+  app.get("/api/admin/bookings/stats", getBookingStats);
+
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, time: new Date().toISOString() });
   });

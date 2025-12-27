@@ -8,25 +8,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  Building2, Users, TrendingUp, DollarSign, BarChart3, 
+import {
+  Building2, Users, TrendingUp, DollarSign, BarChart3,
   Settings, Shield, AlertCircle, CheckCircle, Clock,
   MapPin, Star, Eye, Edit, Trash, Filter, Search,
   UserCheck, UserX, FileText, Activity, Download,
-  Flame, ExternalLink, Zap
+  Flame, ExternalLink, Zap, Calendar, Package
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import showSimpleNotification from "@/utils/simpleNotification";
 
 // Modal Components
-function WarehouseReviewModal({ 
-  warehouse, 
-  onApprove, 
-  onReject, 
-  loading 
-}: { 
+function WarehouseReviewModal({
+  warehouse,
+  onApprove,
+  onReject,
+  loading
+}: {
   warehouse: PendingWarehouse;
   onApprove: () => void;
   onReject: (reason: string) => void;
@@ -134,9 +135,9 @@ function WarehouseReviewModal({
                 )}
               </div>
               <Button size="sm" variant="outline" className="mt-2" asChild>
-                <a 
-                  href={warehouse.document_urls.gst_certificate.includes('placeholder') ? '#' : warehouse.document_urls.gst_certificate} 
-                  target="_blank" 
+                <a
+                  href={warehouse.document_urls.gst_certificate.includes('placeholder') ? '#' : warehouse.document_urls.gst_certificate}
+                  target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     if (warehouse.document_urls?.gst_certificate?.includes('placeholder')) {
@@ -224,7 +225,7 @@ function WarehouseReviewModal({
 
       {/* Actions */}
       <div className="flex gap-4 pt-4 border-t">
-        <Button 
+        <Button
           onClick={onApprove}
           disabled={loading}
           className="bg-green-600 hover:bg-green-700"
@@ -232,7 +233,7 @@ function WarehouseReviewModal({
           <CheckCircle className="h-4 w-4 mr-2" />
           {loading ? 'Approving...' : 'Approve Warehouse'}
         </Button>
-        <Button 
+        <Button
           variant="destructive"
           disabled={loading}
           onClick={() => onReject('Document validation failed')}
@@ -245,11 +246,11 @@ function WarehouseReviewModal({
   );
 }
 
-function RejectWarehouseModal({ 
-  warehouse, 
-  onConfirm, 
-  loading 
-}: { 
+function RejectWarehouseModal({
+  warehouse,
+  onConfirm,
+  loading
+}: {
   warehouse: PendingWarehouse;
   onConfirm: (reason: string) => void;
   loading: boolean;
@@ -289,9 +290,9 @@ function RejectWarehouseModal({
           rows={3}
         />
       </div>
-      
+
       <div className="flex gap-2 pt-4">
-        <Button 
+        <Button
           variant="destructive"
           onClick={() => onConfirm(reason)}
           disabled={!reason || loading}
@@ -375,7 +376,7 @@ interface PendingWarehouse {
 export default function AdminDashboard() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  
+
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -383,6 +384,11 @@ export default function AdminDashboard() {
   const [pendingWarehouses, setPendingWarehouses] = useState<PendingWarehouse[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<PendingWarehouse | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Booking management state
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookingStats, setBookingStats] = useState<any>(null);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   // Real admin stats from Supabase
   const [stats, setStats] = useState<AdminStats>({
@@ -436,7 +442,7 @@ export default function AdminDashboard() {
   const fetchAdminStats = async () => {
     try {
       console.log('📊 Fetching admin stats from Supabase...');
-      
+
       // Fetch total users (using users table instead of profiles)
       const { count: totalUsers } = await supabase
         .from('users')
@@ -499,14 +505,14 @@ export default function AdminDashboard() {
   const fetchPendingWarehouses = async () => {
     try {
       console.log('📋 Loading submissions from Supabase for admin review');
-      
+
       // Load from Supabase warehouse_submissions table (simplified query)
       const { data: submissions, error } = await supabase
         .from('warehouse_submissions')
         .select('*')
         .eq('status', 'pending')
         .order('submitted_at', { ascending: false });
-      
+
       if (error) {
         console.error('Error fetching submissions:', error);
         // Fallback to localStorage if Supabase fails
@@ -516,7 +522,7 @@ export default function AdminDashboard() {
         setPendingWarehouses(pendingSubmissions);
         return;
       }
-      
+
       // Transform data to match our interface (simplified since we don't have user join)
       const transformedData: PendingWarehouse[] = submissions?.map(submission => ({
         ...submission,
@@ -524,7 +530,7 @@ export default function AdminDashboard() {
         owner_email: 'demo.owner@example.com',
         owner_phone: '+91-9876543210'
       })) || [];
-      
+
       console.log(`Found ${transformedData.length} pending submissions for admin review`);
       setPendingWarehouses(transformedData);
     } catch (error) {
@@ -547,7 +553,7 @@ export default function AdminDashboard() {
     },
     {
       id: '2',
-      name: 'Priya Sharma', 
+      name: 'Priya Sharma',
       email: 'priya@example.com',
       userType: 'seeker',
       status: 'active',
@@ -558,7 +564,7 @@ export default function AdminDashboard() {
     {
       id: '3',
       name: 'Amit Patel',
-      email: 'amit@example.com', 
+      email: 'amit@example.com',
       userType: 'owner',
       status: 'pending',
       joinedDate: '2024-01-18',
@@ -577,23 +583,116 @@ export default function AdminDashboard() {
     }
   ];
 
+  // Fetch bookings from admin API
+  const fetchBookings = async () => {
+    setBookingLoading(true);
+    try {
+      const response = await fetch('/api/admin/bookings');
+      const data = await response.json();
+      if (data.success) {
+        setBookings(data.bookings || []);
+        console.log(`✅ Loaded ${data.bookings?.length || 0} bookings`);
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      showSimpleNotification('error', 'Error', 'Failed to fetch bookings');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  // Fetch booking statistics
+  const fetchBookingStats = async () => {
+    try {
+      const response = await fetch('/api/admin/bookings/stats');
+      const data = await response.json();
+      if (data.success) {
+        setBookingStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching booking stats:', error);
+    }
+  };
+
+  // Handle booking approval
+  const handleApproveBooking = async (bookingId: string) => {
+    setBookingLoading(true);
+    try {
+      const response = await fetch('/api/admin/bookings/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId,
+          status: 'approved',
+          adminNotes: 'Booking approved by admin'
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showSimpleNotification('success', 'Booking Approved', data.message);
+        await Promise.all([fetchBookings(), fetchBookingStats()]);
+      } else {
+        showSimpleNotification('error', 'Error', data.error || 'Failed to approve booking');
+      }
+    } catch (error) {
+      console.error('Error approving booking:', error);
+      showSimpleNotification('error', 'Error', 'Failed to approve booking');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  // Handle booking rejection
+  const handleRejectBooking = async (bookingId: string, reason: string) => {
+    setBookingLoading(true);
+    try {
+      const response = await fetch('/api/admin/bookings/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId,
+          status: 'rejected',
+          adminNotes: reason
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showSimpleNotification('success', 'Booking Rejected', data.message);
+        await Promise.all([fetchBookings(), fetchBookingStats()]);
+      } else {
+        showSimpleNotification('error', 'Error', data.error || 'Failed to reject booking');
+      }
+    } catch (error) {
+      console.error('Error rejecting booking:', error);
+      showSimpleNotification('error', 'Error', 'Failed to reject booking');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([
         fetchAdminStats(),
-        fetchPendingWarehouses()
+        fetchPendingWarehouses(),
+        fetchBookings(),
+        fetchBookingStats()
       ]);
       setLoading(false);
     };
-    
+
     loadData();
-    
-    // Set up periodic refresh to check for new submissions
+
+    // Set up periodic refresh to check for new submissions and bookings
     const interval = setInterval(() => {
       fetchAdminStats();
       fetchPendingWarehouses();
+      fetchBookings();
+      fetchBookingStats();
     }, 10000); // Refresh every 10 seconds
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -620,7 +719,7 @@ export default function AdminDashboard() {
       }
 
       console.log('✅ Warehouse approved:', warehouse.name);
-      
+
       // Prefer a server-side approval endpoint that returns the created
       // warehouse id (the DB trigger will insert the row) so notifications
       // can link directly to the public warehouse listing.
@@ -651,7 +750,7 @@ export default function AdminDashboard() {
           link: `/warehouses`
         });
       }
-      
+
       toast({
         title: "Warehouse Approved! 🎉",
         description: `${warehouse.name} has been approved and is now visible to seekers.`,
@@ -699,7 +798,7 @@ export default function AdminDashboard() {
       }
 
       console.log('🚫 Warehouse rejected:', warehouse.name, 'Reason:', reason);
-      
+
       // Create notification for the owner
       await supabase
         .from('notifications')
@@ -710,7 +809,7 @@ export default function AdminDashboard() {
           message: `Your warehouse "${warehouse.name}" has been rejected. Reason: ${reason}`,
           link: `/list-property`
         });
-      
+
       toast({
         title: "Warehouse Rejected ❌",
         description: `${warehouse.name} has been rejected. Reason: ${reason}`,
@@ -755,7 +854,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -851,7 +950,7 @@ export default function AdminDashboard() {
 
         {/* Admin Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 mb-8 bg-white dark:bg-gray-800 p-1 rounded-lg">
+          <TabsList className="grid grid-cols-5 mb-8 bg-white dark:bg-gray-800 p-1 rounded-lg">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Overview
@@ -859,6 +958,15 @@ export default function AdminDashboard() {
             <TabsTrigger value="warehouse-approvals" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Warehouse Approvals
+            </TabsTrigger>
+            <TabsTrigger value="bookings" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Bookings
+              {bookingStats && bookingStats.pending_bookings > 0 && (
+                <Badge className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500">
+                  {bookingStats.pending_bookings}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="user-management" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -905,7 +1013,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-3">
-                    <Button 
+                    <Button
                       className="h-20 bg-blue-600 hover:bg-blue-700 text-white"
                       onClick={() => setActiveTab('warehouse-approvals')}
                     >
@@ -914,7 +1022,7 @@ export default function AdminDashboard() {
                         <div className="text-sm">Verify Documents</div>
                       </div>
                     </Button>
-                    <Button 
+                    <Button
                       className="h-20 bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => toast({ title: "Feature Coming Soon", description: "Report generation will be available in the next update." })}
                     >
@@ -923,7 +1031,7 @@ export default function AdminDashboard() {
                         <div className="text-sm">Generate Reports</div>
                       </div>
                     </Button>
-                    <Button 
+                    <Button
                       className="h-20 bg-purple-600 hover:bg-purple-700 text-white"
                       onClick={() => setActiveTab('user-management')}
                     >
@@ -932,7 +1040,7 @@ export default function AdminDashboard() {
                         <div className="text-sm">Manage Users</div>
                       </div>
                     </Button>
-                    <Button 
+                    <Button
                       className="h-20 bg-orange-600 hover:bg-orange-700 text-white"
                       onClick={() => toast({ title: "Feature Coming Soon", description: "System settings will be available in the next update." })}
                     >
@@ -982,7 +1090,7 @@ export default function AdminDashboard() {
                         </div>
                         <Badge variant="secondary">Pending</Badge>
                       </div>
-                      
+
                       <div className="grid md:grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-xs text-gray-500">Owner</p>
@@ -1006,24 +1114,24 @@ export default function AdminDashboard() {
                         <p className="text-xs text-gray-500 mb-2">Documents & Validation:</p>
                         <div className="flex gap-2 flex-wrap">
                           {warehouse.document_urls?.gst_certificate && (
-                            <Badge 
-                              variant={warehouse.ocr_results?.gst_certificate?.is_valid ? "default" : "destructive"} 
+                            <Badge
+                              variant={warehouse.ocr_results?.gst_certificate?.is_valid ? "default" : "destructive"}
                               className="text-xs"
                             >
                               GST Certificate {warehouse.ocr_results?.gst_certificate?.is_valid ? '✓' : '✗'}
                             </Badge>
                           )}
                           {warehouse.document_urls?.property_papers && (
-                            <Badge 
-                              variant={warehouse.ocr_results?.property_papers?.is_valid ? "default" : "destructive"} 
+                            <Badge
+                              variant={warehouse.ocr_results?.property_papers?.is_valid ? "default" : "destructive"}
                               className="text-xs"
                             >
                               Property Papers {warehouse.ocr_results?.property_papers?.is_valid ? '✓' : '✗'}
                             </Badge>
                           )}
                           {warehouse.document_urls?.fire_certificate && (
-                            <Badge 
-                              variant={warehouse.ocr_results?.fire_certificate?.is_valid ? "default" : "destructive"} 
+                            <Badge
+                              variant={warehouse.ocr_results?.fire_certificate?.is_valid ? "default" : "destructive"}
                               className="text-xs"
                             >
                               Fire Certificate {warehouse.ocr_results?.fire_certificate?.is_valid ? '✓' : '✗'}
@@ -1045,7 +1153,7 @@ export default function AdminDashboard() {
                               <DialogTitle>Review Warehouse Submission</DialogTitle>
                             </DialogHeader>
                             {selectedWarehouse && (
-                              <WarehouseReviewModal 
+                              <WarehouseReviewModal
                                 warehouse={selectedWarehouse}
                                 onApprove={() => handleApproveWarehouse(selectedWarehouse.id)}
                                 onReject={(reason) => handleRejectWarehouse(selectedWarehouse.id, reason)}
@@ -1054,8 +1162,8 @@ export default function AdminDashboard() {
                             )}
                           </DialogContent>
                         </Dialog>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="bg-green-600 hover:bg-green-700"
                           onClick={() => handleApproveWarehouse(warehouse.id)}
                           disabled={reviewLoading}
@@ -1065,8 +1173,8 @@ export default function AdminDashboard() {
                         </Button>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="destructive"
                               disabled={reviewLoading}
                             >
@@ -1078,7 +1186,7 @@ export default function AdminDashboard() {
                             <DialogHeader>
                               <DialogTitle>Reject Warehouse</DialogTitle>
                             </DialogHeader>
-                            <RejectWarehouseModal 
+                            <RejectWarehouseModal
                               warehouse={warehouse}
                               onConfirm={(reason) => handleRejectWarehouse(warehouse.id, reason)}
                               loading={reviewLoading}
@@ -1089,6 +1197,160 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Bookings Management Tab */}
+          <TabsContent value="bookings" className="space-y-6">
+            {/* Booking Statistics Cards */}
+            {bookingStats && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Total Bookings</p>
+                        <p className="text-2xl font-bold">{bookingStats.total_bookings}</p>
+                      </div>
+                      <Package className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                        <p className="text-2xl font-bold text-yellow-600">{bookingStats.pending_bookings}</p>
+                      </div>
+                      <Clock className="h-8 w-8 text-yellow-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Approved</p>
+                        <p className="text-2xl font-bold text-green-600">{bookingStats.approved_bookings}</p>
+                      </div>
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Revenue</p>
+                        <p className="text-2xl font-bold text-purple-600">₹{(bookingStats.total_revenue / 1000).toFixed(0)}K</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Bookings List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Booking Requests</CardTitle>
+                <CardDescription>Manage incoming booking requests from seekers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {bookingLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : bookings.length === 0 ? (
+                  <div className="text-center p-8 text-gray-500">
+                    <Package className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <p>No booking requests found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {bookings.map((booking) => (
+                      <div key={booking.id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="font-semibold text-lg">{booking.warehouse_name}</h4>
+                              <Badge className={
+                                booking.status === 'pending' ? 'bg-yellow-500' :
+                                  booking.status === 'approved' ? 'bg-green-500' :
+                                    'bg-red-500'
+                              }>
+                                {booking.status}
+                              </Badge>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4 text-sm mb-3">
+                              <div>
+                                <p className="text-gray-600 dark:text-gray-400">Customer</p>
+                                <p className="font-medium">{booking.seeker_name}</p>
+                                <p className="text-xs text-gray-500">{booking.seeker_email}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 dark:text-gray-400">Location</p>
+                                <p className="font-medium">{booking.warehouse_location}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 dark:text-gray-400">Booking Period</p>
+                                <p className="font-medium">
+                                  {booking.start_date ? new Date(booking.start_date).toLocaleDateString() : 'N/A'} -
+                                  {booking.end_date ? new Date(booking.end_date).toLocaleDateString() : 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600 dark:text-gray-400">Amount</p>
+                                <p className="font-medium text-lg">₹{booking.total_amount?.toLocaleString() || 'N/A'}</p>
+                              </div>
+                            </div>
+                            {booking.area_sqft && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Area: {booking.area_sqft.toLocaleString()} sq ft
+                              </p>
+                            )}
+                            {booking.booking_notes && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                Notes: {booking.booking_notes}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-2">
+                              Booked: {new Date(booking.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                          {booking.status === 'pending' && (
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleApproveBooking(booking.id)}
+                                disabled={bookingLoading}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  const reason = prompt('Enter rejection reason:');
+                                  if (reason) handleRejectBooking(booking.id, reason);
+                                }}
+                                disabled={bookingLoading}
+                              >
+                                <AlertCircle className="h-4 w-4 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1129,15 +1391,15 @@ export default function AdminDashboard() {
                           <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
                           <p className="text-xs text-gray-500">
-                            {user.userType === 'owner' ? 'Warehouse Owner' : 'Storage Seeker'} • 
+                            {user.userType === 'owner' ? 'Warehouse Owner' : 'Storage Seeker'} •
                             Joined {user.joinedDate} • Last active {user.lastActive}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <Badge 
+                          <Badge
                             variant={user.status === 'active' ? 'default' : user.status === 'pending' ? 'secondary' : 'destructive'}
                           >
                             {user.status}
@@ -1151,8 +1413,8 @@ export default function AdminDashboard() {
                             <Eye className="h-4 w-4" />
                           </Button>
                           {user.status === 'pending' && (
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               className="bg-green-600 hover:bg-green-700"
                               onClick={() => handleUserStatusChange(user.id, 'active')}
                             >
@@ -1160,8 +1422,8 @@ export default function AdminDashboard() {
                             </Button>
                           )}
                           {user.status === 'active' && (
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="destructive"
                               onClick={() => handleUserStatusChange(user.id, 'suspended')}
                             >
