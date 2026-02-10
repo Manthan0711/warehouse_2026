@@ -1,12 +1,10 @@
 import { RequestHandler } from "express";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "../lib/supabaseClient";
 
-// Create Supabase client
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Get seeker's bookings
+/**
+ * Get all bookings for a specific seeker
+ * Maps admin approval statuses to seeker-friendly statuses
+ */
 export const getSeekerBookings: RequestHandler = async (req, res) => {
     try {
         const { seeker_id } = req.query;
@@ -18,25 +16,27 @@ export const getSeekerBookings: RequestHandler = async (req, res) => {
             });
         }
 
-        console.log(`📊 Fetching bookings for seeker: ${seeker_id}`);
+        console.log(`📋 Fetching bookings for seeker: ${seeker_id}`);
 
-        // Fetch bookings from activity_logs
-        const { data: bookingsData, error } = await supabase
+        // Fetch all booking activity logs for this seeker
+        const { data: bookingsData, error: bookingsError } = await supabase
             .from('activity_logs')
             .select('*')
-            .eq('seeker_id', seeker_id)
             .eq('type', 'booking')
+            .eq('seeker_id', seeker_id)
             .order('created_at', { ascending: false });
 
-        if (error) {
-            console.error('❌ Error fetching seeker bookings:', error);
+        if (bookingsError) {
+            console.error('❌ Error fetching seeker bookings:', bookingsError);
             return res.status(500).json({
                 success: false,
-                error: 'Failed to fetch bookings'
+                error: 'Failed to fetch bookings',
+                details: bookingsError.message
             });
         }
 
-        const bookings = [];
+        // Transform activity logs into seeker booking format with status mapping
+        const seekerBookings = [];
 
         for (const booking of bookingsData || []) {
             const metadata = booking.metadata || {};
@@ -68,53 +68,76 @@ export const getSeekerBookings: RequestHandler = async (req, res) => {
                 status = 'upcoming';
             }
 
-            // Use warehouse info from metadata
-            const warehouseInfo = {
+            // Use warehouse info from metadata first, then fetch if needed
+            let warehouseInfo = {
                 name: metadata.warehouse_name || 'Unknown Warehouse',
-                address: metadata.warehouse_address || 'Address not available',
-                city: metadata.warehouse_city || 'Unknown',
-                state: metadata.warehouse_state || 'Unknown'
+                location: `${metadata.warehouse_city || 'Unknown'}, ${metadata.warehouse_state || 'Unknown'}`,
+                address: metadata.warehouse_address || 'Address not available'
             };
 
-            bookings.push({
+            // If we have warehouse_id and missing info, fetch from database
+            if (warehouseId && !metadata.warehouse_name) {
+                const { data: warehouseData } = await supabase
+                    .from('warehouses')
+                    .select('name, city, state, address')
+                    .eq('id', warehouseId)
+                    .single();
+
+                if (warehouseData) {
+                    warehouseInfo = {
+                        name: warehouseData.name,
+                        location: `${warehouseData.city}, ${warehouseData.state}`,
+                        address: warehouseData.address
+                    };
+                }
+            }
+
+            seekerBookings.push({
                 id: booking.id,
                 warehouse_id: warehouseId,
                 warehouse_name: warehouseInfo.name,
-                warehouse_location: `${warehouseInfo.city}, ${warehouseInfo.state}`,
+                warehouse_location: warehouseInfo.location,
                 warehouse_address: warehouseInfo.address,
                 start_date: metadata.start_date,
                 end_date: metadata.end_date,
                 total_amount: metadata.total_amount || metadata.monthly_rent,
                 area_sqft: metadata.area_sqft,
                 blocks_booked: metadata.blocks_booked || [],
-                status,
-                admin_status: adminStatus,
+                payment_method: metadata.payment_method,
+                status: status,
+                admin_status: adminStatus, // Include original admin status for transparency
                 created_at: booking.created_at,
-                booking_type: metadata.booking_type || 'standard'
+                booking_notes: booking.description,
+                booking_type: metadata.booking_type || 'standard',
+                admin_notes: metadata.admin_notes || null
             });
         }
 
-        console.log(`✅ Found ${bookings.length} bookings for seeker`);
+        console.log(`✅ Found ${seekerBookings.length} bookings for seeker`);
 
         return res.json({
             success: true,
-            bookings,
-            total: bookings.length
+            bookings: seekerBookings,
+            total: seekerBookings.length
         });
 
     } catch (error) {
         console.error('❌ Get seeker bookings error:', error);
         return res.status(500).json({
             success: false,
-            error: 'Internal server error'
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
         });
     }
 };
 
-// Cancel a booking
+/**
+ * Cancel a booking
+ * Updates booking status to cancelled in activity_logs
+ */
 export const cancelBooking: RequestHandler = async (req, res) => {
     try {
-        const { booking_id, seeker_id } = req.body;
+        const { booking_id, seeker_id, cancellation_reason } = req.body;
 
         if (!booking_id || !seeker_id) {
             return res.status(400).json({
@@ -123,48 +146,77 @@ export const cancelBooking: RequestHandler = async (req, res) => {
             });
         }
 
-        console.log(`🚫 Cancelling booking ${booking_id}`);
+        console.log(`🚫 Cancelling booking ${booking_id} for seeker ${seeker_id}`);
 
         // Fetch the booking
-        const { data: booking, error: fetchError } = await supabase
+        const { data: existingBooking, error: fetchError } = await supabase
             .from('activity_logs')
             .select('*')
             .eq('id', booking_id)
-            .eq('seeker_id', seeker_id)
             .eq('type', 'booking')
+            .eq('seeker_id', seeker_id)
             .single();
 
-        if (fetchError || !booking) {
+        if (fetchError || !existingBooking) {
+            console.error('❌ Booking not found:', fetchError);
             return res.status(404).json({
                 success: false,
-                error: 'Booking not found'
+                error: 'Booking not found or you do not have permission to cancel it'
+            });
+        }
+
+        // Check if booking can be cancelled
+        const currentStatus = existingBooking.metadata?.booking_status || 'pending';
+        if (currentStatus === 'cancelled') {
+            return res.status(400).json({
+                success: false,
+                error: 'Booking is already cancelled'
+            });
+        }
+
+        if (currentStatus === 'completed') {
+            return res.status(400).json({
+                success: false,
+                error: 'Cannot cancel a completed booking'
             });
         }
 
         // Update booking status to cancelled
         const updatedMetadata = {
-            ...booking.metadata,
+            ...existingBooking.metadata,
             booking_status: 'cancelled',
-            cancelled_at: new Date().toISOString(),
-            cancelled_by: 'seeker'
+            cancellation_reason: cancellation_reason || 'Cancelled by seeker',
+            cancelled_at: new Date().toISOString()
         };
 
-        const { error: updateError } = await supabase
+        const { data: updatedBooking, error: updateError } = await supabase
             .from('activity_logs')
-            .update({ metadata: updatedMetadata })
-            .eq('id', booking_id);
+            .update({
+                metadata: updatedMetadata,
+                description: `${existingBooking.description} - CANCELLED`
+            })
+            .eq('id', booking_id)
+            .select()
+            .single();
 
         if (updateError) {
+            console.error('❌ Error cancelling booking:', updateError);
             return res.status(500).json({
                 success: false,
-                error: 'Failed to cancel booking'
+                error: 'Failed to cancel booking',
+                details: updateError.message
             });
         }
 
-        console.log(`✅ Booking ${booking_id} cancelled`);
+        console.log(`✅ Booking ${booking_id} cancelled successfully`);
 
         return res.json({
             success: true,
+            booking: {
+                id: updatedBooking.id,
+                status: 'cancelled',
+                cancelled_at: updatedMetadata.cancelled_at
+            },
             message: 'Booking cancelled successfully'
         });
 
@@ -172,12 +224,16 @@ export const cancelBooking: RequestHandler = async (req, res) => {
         console.error('❌ Cancel booking error:', error);
         return res.status(500).json({
             success: false,
-            error: 'Internal server error'
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
         });
     }
 };
 
-// Generate invoice for a booking
+/**
+ * Generate invoice for a booking
+ * Returns invoice data in JSON format
+ */
 export const generateInvoice: RequestHandler = async (req, res) => {
     try {
         const { booking_id } = req.params;
@@ -192,14 +248,15 @@ export const generateInvoice: RequestHandler = async (req, res) => {
         console.log(`📄 Generating invoice for booking ${booking_id}`);
 
         // Fetch the booking
-        const { data: booking, error } = await supabase
+        const { data: booking, error: bookingError } = await supabase
             .from('activity_logs')
             .select('*')
             .eq('id', booking_id)
             .eq('type', 'booking')
             .single();
 
-        if (error || !booking) {
+        if (bookingError || !booking) {
+            console.error('❌ Booking not found:', bookingError);
             return res.status(404).json({
                 success: false,
                 error: 'Booking not found'
@@ -208,33 +265,68 @@ export const generateInvoice: RequestHandler = async (req, res) => {
 
         const metadata = booking.metadata || {};
 
-        // Generate invoice data
+        // Only generate invoice for approved bookings
+        if (metadata.booking_status !== 'approved') {
+            return res.status(400).json({
+                success: false,
+                error: 'Invoice can only be generated for approved bookings'
+            });
+        }
+
+        // Calculate invoice details
+        const startDate = new Date(metadata.start_date);
+        const endDate = new Date(metadata.end_date);
+        const durationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const baseAmount = metadata.total_amount || 0;
+        const tax = baseAmount * 0.18; // 18% GST
+        const insurance = baseAmount * 0.02; // 2% insurance
+        const totalAmount = baseAmount + tax + insurance;
+
         const invoice = {
-            invoice_id: `INV-${booking_id.substring(0, 8).toUpperCase()}`,
+            invoice_id: `INV-${booking.id.substring(0, 8).toUpperCase()}`,
             booking_id: booking.id,
-            generated_at: new Date().toISOString(),
+            invoice_date: new Date().toISOString(),
+
+            // Customer details
             customer: {
                 name: metadata.customer_details?.name || 'N/A',
                 email: metadata.customer_details?.email || 'N/A',
                 phone: metadata.customer_details?.phone || 'N/A'
             },
+
+            // Warehouse details
             warehouse: {
                 name: metadata.warehouse_name || 'Unknown Warehouse',
-                address: metadata.warehouse_address || 'N/A',
-                city: metadata.warehouse_city || 'N/A',
-                state: metadata.warehouse_state || 'N/A'
+                location: `${metadata.warehouse_city || 'Unknown'}, ${metadata.warehouse_state || 'Unknown'}`,
+                address: metadata.warehouse_address || 'Address not available'
             },
-            booking_details: {
+
+            // Booking details
+            booking: {
                 start_date: metadata.start_date,
                 end_date: metadata.end_date,
-                area_sqft: metadata.area_sqft || 'N/A',
-                blocks_booked: metadata.blocks_booked || []
+                duration_days: durationDays,
+                area_sqft: metadata.area_sqft || 0,
+                booking_type: metadata.booking_type || 'standard',
+                goods_type: metadata.goods_type || 'General Goods'
             },
-            payment: {
-                total_amount: metadata.total_amount || 0,
-                payment_method: metadata.payment_method || 'N/A',
-                status: metadata.booking_status || 'pending'
-            }
+
+            // Pricing
+            pricing: {
+                base_amount: baseAmount,
+                tax: tax,
+                tax_rate: '18% GST',
+                insurance: insurance,
+                insurance_rate: '2% Insurance',
+                total_amount: totalAmount,
+                currency: 'INR',
+                payment_method: metadata.payment_method || 'N/A'
+            },
+
+            // Status
+            status: 'paid',
+            created_at: booking.created_at,
+            approved_at: metadata.status_updated_at || booking.created_at
         };
 
         console.log(`✅ Invoice generated for booking ${booking_id}`);
@@ -248,7 +340,8 @@ export const generateInvoice: RequestHandler = async (req, res) => {
         console.error('❌ Generate invoice error:', error);
         return res.status(500).json({
             success: false,
-            error: 'Internal server error'
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
         });
     }
 };

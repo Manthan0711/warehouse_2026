@@ -93,10 +93,10 @@ export default function MLRecommendationsPage() {
               <Bot className="h-10 w-10 text-blue-400 glow-animate" />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
             </div>
-            ML Warehouse Recommendations
+            LLM Warehouse Recommendations
           </h1>
           <p className="text-lg text-slate-300 mt-3">
-            Personalized warehouse suggestions powered by our <span className="text-neon-blue font-medium">advanced 5-algorithm ensemble</span> for 95%+ accuracy
+            Personalized warehouse suggestions powered by an <span className="text-neon-blue font-medium">LLM-first ranking engine</span>
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function MLRecommendationsPage() {
               </TabsTrigger>
               <TabsTrigger value="insights" className="tab-item-glass flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
-                ML Insights
+                AI Insights
               </TabsTrigger>
               <TabsTrigger value="how-it-works" className="tab-item-glass flex items-center gap-2">
                 <Brain className="h-4 w-4" />
@@ -315,8 +315,8 @@ export default function MLRecommendationsPage() {
                   <Brain className="h-6 w-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-100">How Our ML System Works</h3>
-                  <p className="text-sm text-slate-400">Advanced 5-algorithm ensemble for 95%+ accuracy</p>
+                  <h3 className="text-xl font-bold text-slate-100">How Our LLM Ranking Works</h3>
+                  <p className="text-sm text-slate-400">LLM-first ranking with heuristic guardrails</p>
                 </div>
               </div>
 

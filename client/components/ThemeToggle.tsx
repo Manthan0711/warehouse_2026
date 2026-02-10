@@ -13,10 +13,10 @@ export function ThemeToggle() {
   const { theme, toggleTheme, setProfessionalTheme, isProfessional } = useTheme();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <TooltipProvider>
-          <Tooltip>
+    <TooltipProvider>
+      <DropdownMenu>
+        <Tooltip>
+          <DropdownMenuTrigger asChild>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full">
                 {theme === "light" ? (
@@ -29,12 +29,11 @@ export function ThemeToggle() {
                 <span className="sr-only">Toggle theme</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Change theme</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </DropdownMenuTrigger>
+          </DropdownMenuTrigger>
+          <TooltipContent>
+            <p>Change theme</p>
+          </TooltipContent>
+        </Tooltip>
       <DropdownMenuContent align="end" className="glass-card-dark border-blue-900/20 w-44">
         <DropdownMenuItem 
           onClick={() => setProfessionalTheme()}
@@ -61,6 +60,7 @@ export function ThemeToggle() {
           {theme === "light" && <span className="ml-auto text-xs text-amber-400">✓</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+    </TooltipProvider>
   );
 }

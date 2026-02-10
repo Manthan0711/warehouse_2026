@@ -2,6 +2,93 @@ import type { RecommendationPreferences, RecommendedWarehouse } from "./api";
 import type { SupabaseWarehouse } from "../client/services/warehouseService";
 
 /**
+ * License Expiry Validation Utilities
+ * Filters warehouses with expired or soon-to-expire licenses for legal safety
+ */
+
+/**
+ * Check if a warehouse license is expired or expiring soon
+ * @param licenseDate - License valid until date (ISO string)
+ * @param warningMonths - Number of months before expiry to warn (default: 3)
+ * @returns Object with expiry status
+ */
+function checkLicenseExpiry(licenseDate: string | null | undefined, warningMonths: number = 3): {
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+  daysRemaining: number;
+  shouldExclude: boolean;
+} {
+  if (!licenseDate) {
+    // No license date means we can't verify - exclude for safety
+    return {
+      isExpired: true,
+      isExpiringSoon: false,
+      daysRemaining: 0,
+      shouldExclude: true
+    };
+  }
+
+  const now = new Date();
+  const expiryDate = new Date(licenseDate);
+  const diffTime = expiryDate.getTime() - now.getTime();
+  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  const isExpired = daysRemaining <= 0;
+  const warningDays = warningMonths * 30;
+  const isExpiringSoon = !isExpired && daysRemaining <= warningDays;
+
+  return {
+    isExpired,
+    isExpiringSoon,
+    daysRemaining,
+    shouldExclude: isExpired // Only exclude if actually expired
+  };
+}
+
+/**
+ * Filter warehouses by license validity
+ * Removes warehouses with expired licenses and penalizes those expiring soon
+ * @param warehouses - Array of warehouses to filter
+ * @returns Filtered warehouses with license scores
+ */
+function filterByLicenseValidity(warehouses: SupabaseWarehouse[]): SupabaseWarehouse[] {
+  return warehouses.filter(warehouse => {
+    const licenseStatus = checkLicenseExpiry(warehouse.license_valid_upto);
+
+    // Exclude expired warehouses completely
+    if (licenseStatus.shouldExclude) {
+      console.log(`⚠️ Excluding warehouse ${warehouse.name} - license expired or missing`);
+      return false;
+    }
+
+    return true;
+  });
+}
+
+/**
+ * Calculate license health score for ML weighting
+ * Returns a score between 0 and 1 based on license validity
+ */
+function getLicenseHealthScore(warehouse: SupabaseWarehouse): number {
+  const licenseStatus = checkLicenseExpiry(warehouse.license_valid_upto, 3);
+
+  if (licenseStatus.isExpired) {
+    return 0; // Expired = no score
+  }
+
+  if (licenseStatus.isExpiringSoon) {
+    // Gradually reduce score as expiry approaches
+    // 90 days remaining = 1.0, 0 days = 0.3
+    const maxWarningDays = 90;
+    const score = 0.3 + (0.7 * (licenseStatus.daysRemaining / maxWarningDays));
+    return Math.max(0.3, Math.min(1.0, score));
+  }
+
+  return 1.0; // Valid license with plenty of time
+}
+
+
+/**
  * Advanced K-Nearest Neighbors Implementation for Warehouse Recommendations
  * This algorithm finds warehouses that are similar to preferred criteria
  * using a multi-dimensional distance calculation in feature space
@@ -45,13 +132,11 @@ export function knnRecommend(warehouses: SupabaseWarehouse[], preferences: Recom
   const warehousesWithScores = warehouses.map(warehouse => {
     // Extract features into a vector for this warehouse
     const warehouseFeatures = {
-      // Location feature - CHECK BOTH city AND district fields
+      // Location feature - STRICT MATCHING: Only exact city/district match gets 1.0
+      // Since the server already filters strictly, this is a safeguard
       locationScore: district && district !== 'any' ?
         ((warehouse.city?.toLowerCase() === district.toLowerCase() ||
-          warehouse.district?.toLowerCase() === district.toLowerCase()) ? 1.0 :
-          (warehouse.address?.toLowerCase().includes(district.toLowerCase()) ||
-            warehouse.city?.toLowerCase().includes(district.toLowerCase()) ||
-            warehouse.district?.toLowerCase().includes(district.toLowerCase())) ? 0.7 : 0.1) : 0.5,
+          warehouse.district?.toLowerCase() === district.toLowerCase()) ? 1.0 : 0.0) : 0.5,
 
       // Price feature
       priceScore: targetPrice && targetPrice > 0 ?
@@ -208,14 +293,11 @@ export function randomForestRecommend(warehouses: SupabaseWarehouse[], preferenc
       extractor: (warehouse) => {
         if (!preferences.district || preferences.district === 'any') return 0.5;
 
-        // CHECK BOTH city AND district fields
+        // STRICT MATCHING: Only exact city/district match gets 1.0
         const exactMatch = warehouse.city?.toLowerCase() === preferences.district.toLowerCase() ||
           warehouse.district?.toLowerCase() === preferences.district.toLowerCase();
-        const partialMatch = warehouse.address?.toLowerCase()?.includes(preferences.district.toLowerCase()) ||
-          warehouse.city?.toLowerCase()?.includes(preferences.district.toLowerCase()) ||
-          warehouse.district?.toLowerCase()?.includes(preferences.district.toLowerCase());
 
-        return exactMatch ? 1.0 : partialMatch ? 0.7 : 0.1;
+        return exactMatch ? 1.0 : 0.0;
       },
       importance: preferences.district && preferences.district !== 'any' ? 0.5 : 0.05
     },
@@ -510,16 +592,26 @@ export function hybridRecommend(warehouses: SupabaseWarehouse[], preferences: Re
 }[] {
   if (!warehouses || warehouses.length === 0) return [];
 
+  // CRITICAL: Filter out warehouses with expired licenses FIRST
+  const validLicenseWarehouses = filterByLicenseValidity(warehouses);
+
+  console.log(`🔒 License filtering: ${warehouses.length} → ${validLicenseWarehouses.length} warehouses (removed ${warehouses.length - validLicenseWarehouses.length} with expired/missing licenses)`);
+
+  if (validLicenseWarehouses.length === 0) {
+    console.warn('⚠️ No warehouses with valid licenses found!');
+    return [];
+  }
+
   // CRITICAL: Pre-filter by location if district is specified
   // This ensures location-matching warehouses are prioritized
-  let primaryWarehouses = warehouses;
+  let primaryWarehouses = validLicenseWarehouses;
   let secondaryWarehouses: SupabaseWarehouse[] = [];
 
   if (preferences.district && preferences.district !== 'any') {
     const district = preferences.district.toLowerCase();
 
     // Split warehouses into matching and non-matching groups
-    primaryWarehouses = warehouses.filter(w => {
+    primaryWarehouses = validLicenseWarehouses.filter(w => {
       const city = (w.city || '').toLowerCase();
       const warehouseDistrict = (w.district || '').toLowerCase();
       const address = (w.address || '').toLowerCase();
@@ -531,7 +623,7 @@ export function hybridRecommend(warehouses: SupabaseWarehouse[], preferences: Re
         address.includes(district);
     });
 
-    secondaryWarehouses = warehouses.filter(w => {
+    secondaryWarehouses = validLicenseWarehouses.filter(w => {
       const city = (w.city || '').toLowerCase();
       const warehouseDistrict = (w.district || '').toLowerCase();
       const address = (w.address || '').toLowerCase();

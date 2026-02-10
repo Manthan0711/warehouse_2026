@@ -9,15 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, DollarSign, Upload, CheckCircle, AlertCircle, X, Shield, FileText, Flame } from "lucide-react";
+import { Building2, MapPin, DollarSign, Upload, CheckCircle, AlertCircle, X, Shield, FileText, Flame, Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import Tesseract from 'tesseract.js';
 import usePresignedUpload from '@/hooks/usePresignedUpload';
+import { PricingRecommendationModal } from "@/components/PricingRecommendationModal";
+import { DEFAULT_GOODS_TYPES, GOODS_TYPES_BY_WAREHOUSE, WAREHOUSE_TYPES } from "@/data/warehouseTaxonomy";
+import { getAIResponse } from "@/services/aiService";
 
 interface PropertyFormData {
   name: string;
   description: string;
+  warehouseType: string;
+  allowedGoodsTypes: string[];
   address: string;
   city: string;
   state: string;
@@ -56,18 +61,23 @@ export default function ListProperty() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  
+  const { presignAndUpload } = usePresignedUpload();
+
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
   const [documentValidation, setDocumentValidation] = useState<DocumentValidation>({
     gstCertificate: { isValid: false, confidence: 0, extractedText: "", anomalies: [] },
     propertyPapers: { isValid: false, confidence: 0, extractedText: "", anomalies: [] },
     fireCertificate: { isValid: false, confidence: 0, extractedText: "", anomalies: [] }
   });
-  const [ocrProcessing, setOcrProcessing] = useState<{[key: string]: boolean}>({});
+  const [ocrProcessing, setOcrProcessing] = useState<{ [key: string]: boolean }>({});
   const [formData, setFormData] = useState<PropertyFormData>({
     name: "",
     description: "",
+    warehouseType: "General Storage",
+    allowedGoodsTypes: [],
     address: "",
     city: "",
     state: "",
@@ -105,6 +115,64 @@ export default function ListProperty() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleGenerateDescription = async () => {
+    if (!formData.name || !formData.city || !formData.warehouseType) {
+      toast({
+        title: "Missing details",
+        description: "Please add name, city, and warehouse type to generate description.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setGeneratingDescription(true);
+    try {
+      const prompt = `Write a professional warehouse listing description (4-6 sentences) using these details:
+
+Name: ${formData.name}
+City: ${formData.city}
+Warehouse Type: ${formData.warehouseType}
+Total Area: ${formData.totalArea || 'Not provided'} sq ft
+Amenities: ${(formData.amenities || []).join(', ') || 'Standard amenities'}
+Features: ${(formData.features || []).join(', ') || 'Standard features'}
+
+Tone: Business-friendly, confident, and clear. Avoid exaggerated claims.`;
+
+      const response = await getAIResponse({
+        prompt,
+        systemPrompt: 'You are a professional real estate listing writer. Return plain text only.',
+        temperature: 0.4,
+        maxTokens: 250
+      });
+
+      handleInputChange('description', response.text.trim());
+      toast({
+        title: "AI description generated",
+        description: "You can edit the text before submitting."
+      });
+    } catch (error) {
+      console.error('AI description error:', error);
+      toast({
+        title: "Generation failed",
+        description: "Unable to generate description right now.",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
+  const availableGoodsTypes = GOODS_TYPES_BY_WAREHOUSE[formData.warehouseType] || DEFAULT_GOODS_TYPES;
+
+  const toggleGoodsType = (item: string) => {
+    setFormData(prev => ({
+      ...prev,
+      allowedGoodsTypes: prev.allowedGoodsTypes.includes(item)
+        ? prev.allowedGoodsTypes.filter(i => i !== item)
+        : [...prev.allowedGoodsTypes, item]
+    }));
+  };
+
   const toggleArrayItem = (field: 'amenities' | 'features', item: string) => {
     setFormData(prev => ({
       ...prev,
@@ -137,15 +205,15 @@ export default function ListProperty() {
   // OCR and Document Validation Functions
   const validateDocumentWithOCR = async (file: File, docType: 'gstCertificate' | 'propertyPapers' | 'fireCertificate') => {
     setOcrProcessing(prev => ({ ...prev, [docType]: true }));
-    
+
     try {
       const { data: { text, confidence } } = await Tesseract.recognize(file, 'eng', {
         logger: m => console.log(m)
       });
-      
+
       const anomalies = detectAnomalies(text, docType);
       const isValid = confidence > 0.7 && anomalies.length === 0;
-      
+
       setDocumentValidation(prev => ({
         ...prev,
         [docType]: {
@@ -155,15 +223,15 @@ export default function ListProperty() {
           anomalies
         }
       }));
-      
+
       toast({
         title: isValid ? "Document Validated" : "Document Issues Found",
-        description: isValid 
+        description: isValid
           ? `${docType} passed OCR validation (${(confidence * 100).toFixed(1)}% confidence)`
           : `Found ${anomalies.length} potential issues`,
         variant: isValid ? "default" : "destructive"
       });
-      
+
     } catch (error) {
       console.error('OCR Error:', error);
       toast({
@@ -179,7 +247,7 @@ export default function ListProperty() {
   const detectAnomalies = (text: string, docType: string): string[] => {
     const anomalies: string[] = [];
     const lowerText = text.toLowerCase();
-    
+
     // Common forgery indicators
     const suspiciousPatterns = [
       /photoshop/i,
@@ -188,13 +256,13 @@ export default function ListProperty() {
       /copy/i,
       /duplicate/i
     ];
-    
+
     suspiciousPatterns.forEach(pattern => {
       if (pattern.test(text)) {
         anomalies.push("Suspicious editing keywords detected");
       }
     });
-    
+
     // Document-specific validations
     switch (docType) {
       case 'gstCertificate':
@@ -205,32 +273,32 @@ export default function ListProperty() {
           anomalies.push("Document type verification failed");
         }
         break;
-        
+
       case 'propertyPapers':
         if (!lowerText.includes('property') && !lowerText.includes('title') && !lowerText.includes('deed')) {
           anomalies.push("Property document keywords not found");
         }
         break;
-        
+
       case 'fireCertificate':
         if (!lowerText.includes('fire') && !lowerText.includes('safety') && !lowerText.includes('noc')) {
           anomalies.push("Fire safety certification keywords not found");
         }
         break;
     }
-    
+
     // Check for readable text threshold
     if (text.length < 50) {
       anomalies.push("Insufficient readable text detected");
     }
-    
+
     return anomalies;
   };
 
   const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: 'gstCertificate' | 'propertyPapers' | 'fireCertificate') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Check file type
     if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
       toast({
@@ -240,7 +308,7 @@ export default function ListProperty() {
       });
       return;
     }
-    
+
     // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       toast({
@@ -250,7 +318,7 @@ export default function ListProperty() {
       });
       return;
     }
-    
+
     setFormData(prev => ({
       ...prev,
       documents: {
@@ -258,7 +326,7 @@ export default function ListProperty() {
         [docType]: file
       }
     }));
-    
+
     // Auto-approve document upload for demo mode
     setDocumentValidation(prev => ({
       ...prev,
@@ -268,7 +336,7 @@ export default function ListProperty() {
         anomalies: []
       }
     }));
-    
+
     // Start OCR validation only for images (optional enhancement)
     if (file.type.startsWith('image/')) {
       try {
@@ -278,7 +346,7 @@ export default function ListProperty() {
         // Keep the auto-approval we set above
       }
     }
-    
+
     toast({
       title: "Document uploaded",
       description: `${docType === 'gstCertificate' ? 'GST Certificate' : docType === 'propertyPapers' ? 'Property Papers' : 'Fire Certificate'} uploaded successfully`,
@@ -288,10 +356,26 @@ export default function ListProperty() {
 
   const validateStep1 = () => {
     if (!formData.name || !formData.description || !formData.address ||
-        !formData.city || !formData.state || !formData.pincode) {
+      !formData.city || !formData.state || !formData.pincode) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return false;
+    }
+    if (!formData.warehouseType) {
+      toast({
+        title: "Warehouse type required",
+        description: "Please select a warehouse type",
+        variant: "destructive"
+      });
+      return false;
+    }
+    if (formData.allowedGoodsTypes.length === 0) {
+      toast({
+        title: "Goods types required",
+        description: "Please select at least one allowed goods type",
         variant: "destructive"
       });
       return false;
@@ -335,7 +419,7 @@ export default function ListProperty() {
       });
       return false;
     }
-    
+
     // Auto-approve documents if OCR validation is not complete or failed
     // This ensures demo functionality works smoothly
     const autoApprove = () => {
@@ -346,7 +430,7 @@ export default function ListProperty() {
       });
       return true;
     };
-    
+
     // Check if any documents are still processing
     const stillProcessing = Object.values(ocrProcessing).some(processing => processing);
     if (stillProcessing) {
@@ -357,14 +441,14 @@ export default function ListProperty() {
       });
       return false;
     }
-    
+
     // Check if validation was completed
     const hasValidation = Object.values(documentValidation).some(doc => doc.confidence > 0);
     if (!hasValidation) {
       // No OCR validation completed - auto approve for demo
       return autoApprove();
     }
-    
+
     const allValid = Object.values(documentValidation).every(doc => doc.isValid);
     if (!allValid) {
       // Give option to override validation for demo
@@ -375,7 +459,7 @@ export default function ListProperty() {
       });
       return autoApprove();
     }
-    
+
     return true;
   };
 
@@ -388,10 +472,9 @@ export default function ListProperty() {
 
   const handleSubmit = async () => {
     setLoading(true);
-    
+
     try {
       // Upload images/documents via presign server (MinIO or production S3) using hook
-      const { presignAndUpload } = usePresignedUpload();
       const imageUrls: string[] = [];
       const documentUrls: any = {};
 
@@ -424,6 +507,8 @@ export default function ListProperty() {
           owner_id: user.id,
           name: formData.name,
           description: formData.description,
+          warehouse_type: formData.warehouseType,
+          allowed_goods_types: formData.allowedGoodsTypes,
           address: formData.address,
           city: formData.city,
           state: formData.state,
@@ -444,7 +529,7 @@ export default function ListProperty() {
       }
 
       console.log('✅ Warehouse submission created:', submission.id);
-      
+
       // Create notification for admin
       await supabase
         .from('notifications')
@@ -464,6 +549,8 @@ export default function ListProperty() {
       setFormData({
         name: '',
         description: '',
+        warehouseType: 'General Storage',
+        allowedGoodsTypes: [],
         address: '',
         city: '',
         state: '',
@@ -482,7 +569,7 @@ export default function ListProperty() {
 
       setStep(1);
       navigate('/dashboard');
-      
+
       // Create notification for admin
       await supabase
         .from('notifications')
@@ -502,6 +589,8 @@ export default function ListProperty() {
       setFormData({
         name: '',
         description: '',
+        warehouseType: 'General Storage',
+        allowedGoodsTypes: [],
         address: '',
         city: '',
         state: '',
@@ -535,24 +624,22 @@ export default function ListProperty() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Progress Steps */}
         <div className="max-w-4xl mx-auto mb-8">
           <div className="flex items-center justify-between">
             {[1, 2, 3, 4, 5].map((s) => (
               <div key={s} className="flex items-center flex-1">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                  step >= s
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-400'
-                }`}>
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${step >= s
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-400'
+                  }`}>
                   {step > s ? <CheckCircle className="h-5 w-5" /> : s}
                 </div>
                 {s < 5 && (
-                  <div className={`flex-1 h-1 mx-2 ${
-                    step > s ? 'bg-blue-600' : 'bg-gray-300'
-                  }`} />
+                  <div className={`flex-1 h-1 mx-2 ${step > s ? 'bg-blue-600' : 'bg-gray-300'
+                    }`} />
                 )}
               </div>
             ))}
@@ -602,6 +689,69 @@ export default function ListProperty() {
                       rows={4}
                       className="mt-2"
                     />
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateDescription}
+                        disabled={generatingDescription}
+                        className="border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950"
+                      >
+                        {generatingDescription ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+                            Generate with AI
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="warehouseType">Warehouse Type *</Label>
+                      <select
+                        id="warehouseType"
+                        value={formData.warehouseType}
+                        onChange={(e) => {
+                          const selectedType = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            warehouseType: selectedType,
+                            allowedGoodsTypes: []
+                          }));
+                        }}
+                        aria-label="Warehouse type"
+                        title="Warehouse type"
+                        className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                      >
+                        {WAREHOUSE_TYPES.map(type => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Allowed Goods Types *</Label>
+                      <p className="text-xs text-gray-500 mt-1">Select goods that this warehouse supports</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {availableGoodsTypes.map((item) => (
+                          <Badge
+                            key={item}
+                            variant={formData.allowedGoodsTypes.includes(item) ? "default" : "outline"}
+                            className="cursor-pointer justify-center py-1"
+                            onClick={() => toggleGoodsType(item)}
+                          >
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -684,6 +834,23 @@ export default function ListProperty() {
                         />
                       </div>
                       <p className="text-sm text-gray-500 mt-1">Monthly rent per sq ft</p>
+
+                      {/* AI Price Suggestion Button */}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-3 w-full border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950"
+                        onClick={() => setShowPricingModal(true)}
+                        disabled={!formData.city || !formData.totalArea}
+                      >
+                        <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+                        Get AI Price Suggestion
+                      </Button>
+                      {(!formData.city || !formData.totalArea) && (
+                        <p className="text-xs text-gray-500 mt-1 text-center">
+                          Fill city and area first to get AI suggestions
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -806,7 +973,7 @@ export default function ListProperty() {
                         <p className="text-sm text-gray-600">Click to upload GST Certificate</p>
                         <p className="text-xs text-gray-400">PNG, JPG or PDF (max 5MB)</p>
                       </label>
-                      
+
                       {formData.documents.gstCertificate && (
                         <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
                           <p className="text-sm font-medium break-all text-blue-900">{formData.documents.gstCertificate.name}</p>
@@ -817,11 +984,10 @@ export default function ListProperty() {
                             </div>
                           )}
                           {!ocrProcessing.gstCertificate && documentValidation.gstCertificate.confidence > 0 && (
-                            <div className={`mt-2 p-2 rounded text-sm ${
-                              documentValidation.gstCertificate.isValid 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <div className={`mt-2 p-2 rounded text-sm ${documentValidation.gstCertificate.isValid
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                              }`}>
                               {documentValidation.gstCertificate.isValid ? (
                                 <div className="flex items-center gap-2">
                                   <CheckCircle className="h-4 w-4" />
@@ -875,7 +1041,7 @@ export default function ListProperty() {
                         <p className="text-sm text-gray-600">Click to upload Property Papers</p>
                         <p className="text-xs text-gray-400">Title deed, ownership papers (max 5MB)</p>
                       </label>
-                      
+
                       {formData.documents.propertyPapers && (
                         <div className="mt-3 p-3 bg-green-50 rounded border border-green-200">
                           <p className="text-sm font-medium break-all text-green-900">{formData.documents.propertyPapers.name}</p>
@@ -886,11 +1052,10 @@ export default function ListProperty() {
                             </div>
                           )}
                           {!ocrProcessing.propertyPapers && documentValidation.propertyPapers.confidence > 0 && (
-                            <div className={`mt-2 p-2 rounded text-sm ${
-                              documentValidation.propertyPapers.isValid 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <div className={`mt-2 p-2 rounded text-sm ${documentValidation.propertyPapers.isValid
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                              }`}>
                               {documentValidation.propertyPapers.isValid ? (
                                 <div className="flex items-center gap-2">
                                   <CheckCircle className="h-4 w-4" />
@@ -944,7 +1109,7 @@ export default function ListProperty() {
                         <p className="text-sm text-gray-600">Click to upload Fire Certificate</p>
                         <p className="text-xs text-gray-400">Fire NOC, safety certificate (max 5MB)</p>
                       </label>
-                      
+
                       {formData.documents.fireCertificate && (
                         <div className="mt-3 p-3 bg-orange-50 rounded border border-orange-200">
                           <p className="text-sm font-medium break-all text-orange-900">{formData.documents.fireCertificate.name}</p>
@@ -955,11 +1120,10 @@ export default function ListProperty() {
                             </div>
                           )}
                           {!ocrProcessing.fireCertificate && documentValidation.fireCertificate.confidence > 0 && (
-                            <div className={`mt-2 p-2 rounded text-sm ${
-                              documentValidation.fireCertificate.isValid 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <div className={`mt-2 p-2 rounded text-sm ${documentValidation.fireCertificate.isValid
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                              }`}>
                               {documentValidation.fireCertificate.isValid ? (
                                 <div className="flex items-center gap-2">
                                   <CheckCircle className="h-4 w-4" />
@@ -1063,7 +1227,7 @@ export default function ListProperty() {
                     Previous
                   </Button>
                 )}
-                
+
                 {step < 5 ? (
                   <Button onClick={handleNext} className="ml-auto">
                     Next
@@ -1082,6 +1246,27 @@ export default function ListProperty() {
           </Card>
         </div>
       </div>
+
+      {/* Pricing Recommendation Modal */}
+      <PricingRecommendationModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onAcceptPrice={(price) => {
+          handleInputChange('pricePerSqft', price.toString());
+          setShowPricingModal(false);
+          toast({
+            title: "AI Price Applied",
+            description: `Price set to ₹${price}/sqft based on AI market analysis`,
+          });
+        }}
+        warehouseData={{
+          city: formData.city,
+          district: formData.city, // Using city as district for now
+          warehouse_type: formData.warehouseType,
+          total_area: parseFloat(formData.totalArea) || 0,
+          amenities: formData.amenities,
+        }}
+      />
     </div>
   );
 }

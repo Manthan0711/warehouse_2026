@@ -9,6 +9,7 @@ import { Building2, Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, Setti
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 interface LoginFormData {
   email: string;
@@ -22,13 +23,14 @@ interface RegisterFormData {
   confirmPassword: string;
   phone: string;
   userType: 'owner' | 'seeker';
+  seekerType?: 'farmer' | 'wholesaler' | 'quick_commerce' | 'msme' | 'industrial';
   company?: string;
   location?: string;
 }
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, resendVerification, loading } = useAuth();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -48,6 +50,7 @@ export default function Login() {
     confirmPassword: '',
     phone: '',
     userType: 'seeker',
+    seekerType: 'farmer',
     company: '',
     location: '',
   });
@@ -75,7 +78,7 @@ export default function Login() {
     const newErrors: Record<string, string> = {};
 
     if (!registerData.name) newErrors.name = 'Name is required';
-    
+
     if (!registerData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(registerData.email)) {
@@ -115,8 +118,8 @@ export default function Login() {
     if (!validateLoginForm()) return;
 
     try {
-      const { error } = await signIn(loginData.email, loginData.password);
-      
+      const { error, data } = await signIn(loginData.email, loginData.password);
+
       if (error) {
         toast({
           title: "Login failed",
@@ -131,7 +134,15 @@ export default function Login() {
         description: "You have successfully logged in",
       });
 
-      navigate('/dashboard');
+      // Navigate based on user type
+      const userType = data?.user?.user_metadata?.user_type || 'seeker';
+      if (userType === 'admin') {
+        navigate('/admin');
+      } else if (userType === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/seeker-dashboard');
+      }
     } catch (err) {
       console.error('Login error:', err);
       toast({
@@ -142,17 +153,51 @@ export default function Login() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!loginData.email) {
+      toast({
+        title: "Email required",
+        description: "Enter your email to resend the verification link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await resendVerification(loginData.email);
+    if (error) {
+      toast({
+        title: "Resend failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Verification email sent",
+      description: "Check your inbox and spam folder.",
+    });
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateRegisterForm()) return;
 
     try {
-      const { error } = await signUp(registerData.email, registerData.password, {
+      const userData: any = {
         name: registerData.name,
         phone: registerData.phone,
         user_type: registerData.userType,
         company: registerData.company || '',
-      });
+        location: registerData.location || '',
+      };
+
+      // Add seeker_type for seekers
+      if (registerData.userType === 'seeker' && registerData.seekerType) {
+        userData.seeker_type = registerData.seekerType;
+      }
+
+      const { error } = await signUp(registerData.email, registerData.password, userData);
 
       if (error) {
         toast({
@@ -182,10 +227,10 @@ export default function Login() {
 
   const handleDemoLogin = async (email: string, password: string) => {
     setLoginData({ email, password });
-    
+
     try {
-      const { error } = await signIn(email, password);
-      
+      const { error, data } = await signIn(email, password);
+
       if (error) {
         toast({
           title: "Demo login failed",
@@ -200,7 +245,15 @@ export default function Login() {
         description: "Welcome to SmartSpace",
       });
 
-      navigate('/dashboard');
+      // Navigate based on user type from metadata
+      const userType = data?.user?.user_metadata?.user_type || 'seeker';
+      if (userType === 'admin') {
+        navigate('/admin');
+      } else if (userType === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/seeker-dashboard');
+      }
     } catch (err) {
       console.error('Demo login error:', err);
       toast({
@@ -212,25 +265,36 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-auth relative flex items-center justify-center p-4 overflow-hidden">
-      <div className="bg-decoration"></div>
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0c1222 0%, #153366 100%)' }}>
+      
+      {/* Background pattern layer (Mesh effect) */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 21% 33%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+            radial-gradient(at 79% 76%, rgba(139, 92, 246, 0.15) 0px, transparent 50%)
+          `
+        }}
+      />
+
       <div className="w-full max-w-lg z-10 fade-in">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-3 mb-4">
-            <Building2 className="h-12 w-12 text-blue-600 pulse" />
-            <span className="text-3xl font-bold text-gradient-blue">SmartSpace</span>
+            <Building2 className="h-12 w-12 text-blue-400 pulse" />
+            <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">SmartSpace</span>
           </Link>
-          <p className="text-gray-600 text-lg">
+          <p className="text-slate-300 text-lg">
             Connect with warehouse spaces across India
           </p>
         </div>
 
-        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/95">
+        <Card className="shadow-2xl border border-slate-700/50 backdrop-blur-xl bg-slate-900/90">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-center text-2xl font-bold text-gray-900">
+            <CardTitle className="text-center text-2xl font-bold text-slate-50">
               {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
             </CardTitle>
-            <CardDescription className="text-center text-gray-600">
+            <CardDescription className="text-center text-slate-400">
               {activeTab === 'login'
                 ? 'Sign in to your account to continue'
                 : 'Join SmartSpace to connect with warehouse spaces'
@@ -239,72 +303,82 @@ export default function Login() {
           </CardHeader>
           <CardContent className="space-y-6">
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login" className="font-medium">Sign In</TabsTrigger>
-                <TabsTrigger value="register" className="font-medium">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-800/50">
+                <TabsTrigger value="login" className="font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white">Sign In</TabsTrigger>
+                <TabsTrigger value="register" className="font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white">Sign Up</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login" className="space-y-4 mt-0">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="login-email" className="text-sm font-medium text-slate-300">
                       Email Address
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                       <Input
                         id="login-email"
                         type="email"
                         placeholder="Enter your email"
                         value={loginData.email}
                         onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                        className={`pl-10 h-11 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
+                        className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                       />
                     </div>
                     {errors.email && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertDescription className="text-sm">{errors.email}</AlertDescription>
+                      <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                        <AlertDescription className="text-sm text-red-300">{errors.email}</AlertDescription>
                       </Alert>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="login-password" className="text-sm font-medium text-slate-300">
                       Password
                     </Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                       <Input
                         id="login-password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={loginData.password}
                         onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                        className={`pl-10 pr-10 h-11 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
+                        className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     {errors.password && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertDescription className="text-sm">{errors.password}</AlertDescription>
+                      <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                        <AlertDescription className="text-sm text-red-300">{errors.password}</AlertDescription>
                       </Alert>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="remember" className="rounded border-gray-300" />
-                      <Label htmlFor="remember" className="text-sm text-gray-600">Remember me</Label>
+                      <input type="checkbox" id="remember" className="rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500" />
+                      <Label htmlFor="remember" className="text-sm text-slate-400">Remember me</Label>
                     </div>
-                    <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
-                      Forgot password?
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link to="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
+                        Forgot password?
+                      </Link>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-sm text-blue-400 hover:text-blue-300 p-0 h-auto"
+                        onClick={handleResendVerification}
+                      >
+                        Resend verification
+                      </Button>
+                    </div>
                   </div>
 
                   <Button
@@ -328,206 +402,229 @@ export default function Login() {
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="register-name" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="register-name" className="text-sm font-medium text-slate-300">
                         Full Name
                       </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                         <Input
                           id="register-name"
                           type="text"
                           placeholder="Enter your full name"
                           value={registerData.name}
                           onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                          className={`pl-10 h-11 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.name && (
-                        <Alert variant="destructive" className="py-2">
-                          <AlertDescription className="text-sm">{errors.name}</AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.name}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-email" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="register-email" className="text-sm font-medium text-slate-300">
                         Email Address
                       </Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                         <Input
                           id="register-email"
                           type="email"
                           placeholder="Enter your email"
                           value={registerData.email}
                           onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                          className={`pl-10 h-11 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.email && (
-                        <Alert variant="destructive" className="py-2">
-                          <AlertDescription className="text-sm">{errors.email}</AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.email}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-phone" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="register-phone" className="text-sm font-medium text-slate-300">
                         Phone Number
                       </Label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                         <Input
                           id="register-phone"
                           type="tel"
                           placeholder="Enter your phone number"
                           value={registerData.phone}
                           onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                          className={`pl-10 h-11 ${errors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.phone && (
-                        <Alert variant="destructive" className="py-2">
-                          <AlertDescription className="text-sm">{errors.phone}</AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.phone}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Account Type</Label>
+                      <Label className="text-sm font-medium text-slate-300">Account Type</Label>
                       <div className="grid grid-cols-2 gap-3">
                         <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                            registerData.userType === 'seeker'
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${registerData.userType === 'seeker'
+                            ? 'border-blue-500 bg-blue-600/20 text-blue-300'
+                            : 'border-slate-700 bg-slate-800/30 text-slate-300 hover:border-slate-600'
+                            }`}
                           onClick={() => setRegisterData({ ...registerData, userType: 'seeker' })}
                         >
                           <div className="text-center">
                             <User className="h-6 w-6 mx-auto mb-2" />
                             <div className="font-medium">Space Seeker</div>
-                            <div className="text-xs text-gray-500">Looking for warehouse space</div>
+                            <div className="text-xs text-slate-500">Looking for warehouse space</div>
                           </div>
                         </div>
                         <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                            registerData.userType === 'owner'
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${registerData.userType === 'owner'
+                            ? 'border-blue-500 bg-blue-600/20 text-blue-300'
+                            : 'border-slate-700 bg-slate-800/30 text-slate-300 hover:border-slate-600'
+                            }`}
                           onClick={() => setRegisterData({ ...registerData, userType: 'owner' })}
                         >
                           <div className="text-center">
                             <Building2 className="h-6 w-6 mx-auto mb-2" />
                             <div className="font-medium">Space Owner</div>
-                            <div className="text-xs text-gray-500">Offering warehouse space</div>
+                            <div className="text-xs text-slate-500">Offering warehouse space</div>
                           </div>
                         </div>
                       </div>
                     </div>
 
+                    {registerData.userType === 'seeker' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="register-seeker-type" className="text-sm font-medium text-slate-300">
+                          Seeker Type *
+                        </Label>
+                        <select
+                          id="register-seeker-type"
+                          value={registerData.seekerType || 'farmer'}
+                          onChange={(e) => setRegisterData({ ...registerData, seekerType: e.target.value as any })}
+                          className="w-full h-11 px-3 py-2 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-800/50 text-slate-100"
+                        >
+                          <option value="farmer">Farmer - Agricultural Storage</option>
+                          <option value="wholesaler">Wholesaler - Bulk Distribution</option>
+                          <option value="quick_commerce">Quick Commerce - Fast Delivery</option>
+                          <option value="msme">MSME - Small Business</option>
+                          <option value="industrial">Industrial - Manufacturing</option>
+                        </select>
+                        <p className="text-xs text-slate-500">Help us personalize your experience</p>
+                      </div>
+                    )}
+
                     {registerData.userType === 'owner' && (
                       <div className="space-y-2">
-                        <Label htmlFor="register-company" className="text-sm font-medium text-gray-700">
+                        <Label htmlFor="register-company" className="text-sm font-medium text-slate-300">
                           Company Name
                         </Label>
                         <div className="relative">
-                          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                           <Input
                             id="register-company"
                             type="text"
                             placeholder="Enter your company name"
                             value={registerData.company || ''}
                             onChange={(e) => setRegisterData({ ...registerData, company: e.target.value })}
-                            className={`pl-10 h-11 ${errors.company ? 'border-red-500 focus:ring-red-500' : ''}`}
+                            className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.company ? 'border-red-500 focus:ring-red-500' : ''}`}
                           />
                         </div>
                         {errors.company && (
-                          <Alert variant="destructive" className="py-2">
-                            <AlertDescription className="text-sm">{errors.company}</AlertDescription>
+                          <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                            <AlertDescription className="text-sm text-red-300">{errors.company}</AlertDescription>
                           </Alert>
                         )}
                       </div>
                     )}
 
                     <div className="space-y-2">
-                      <Label htmlFor="register-location" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="register-location" className="text-sm font-medium text-slate-300">
                         Location
                       </Label>
                       <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                         <Input
                           id="register-location"
                           type="text"
                           placeholder="Enter your city/state"
                           value={registerData.location || ''}
                           onChange={(e) => setRegisterData({ ...registerData, location: e.target.value })}
-                          className={`pl-10 h-11 ${errors.location ? 'border-red-500 focus:ring-red-500' : ''}`}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.location ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.location && (
-                        <Alert variant="destructive" className="py-2">
-                          <AlertDescription className="text-sm">{errors.location}</AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.location}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="register-password" className="text-sm font-medium text-gray-700">
+                        <Label htmlFor="register-password" className="text-sm font-medium text-slate-300">
                           Password
                         </Label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                           <Input
                             id="register-password"
                             type={showPassword ? "text" : "password"}
                             placeholder="Create password"
                             value={registerData.password}
                             onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                            className={`pl-10 pr-10 h-11 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
+                            className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
+
+                        {/* Password Strength Meter */}
+                        <PasswordStrengthMeter password={registerData.password} />
+
                         {errors.password && (
-                          <Alert variant="destructive" className="py-2">
-                            <AlertDescription className="text-sm">{errors.password}</AlertDescription>
+                          <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                            <AlertDescription className="text-sm text-red-300">{errors.password}</AlertDescription>
                           </Alert>
                         )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="register-confirm-password" className="text-sm font-medium text-gray-700">
+                        <Label htmlFor="register-confirm-password" className="text-sm font-medium text-slate-300">
                           Confirm Password
                         </Label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                           <Input
                             id="register-confirm-password"
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirm password"
                             value={registerData.confirmPassword}
                             onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                            className={`pl-10 pr-10 h-11 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
+                            className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
                           />
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
                           >
                             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
                         {errors.confirmPassword && (
-                          <Alert variant="destructive" className="py-2">
-                            <AlertDescription className="text-sm">{errors.confirmPassword}</AlertDescription>
+                          <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                            <AlertDescription className="text-sm text-red-300">{errors.confirmPassword}</AlertDescription>
                           </Alert>
                         )}
                       </div>
@@ -535,14 +632,14 @@ export default function Login() {
                   </div>
 
                   <div className="flex items-start space-x-2 pt-4">
-                    <input type="checkbox" id="terms" className="mt-0.5 rounded border-gray-300" required />
-                    <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+                    <input type="checkbox" id="terms" className="mt-0.5 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500" required />
+                    <Label htmlFor="terms" className="text-sm text-slate-400 leading-relaxed">
                       I agree to the{' '}
-                      <Link to="/terms" className="text-blue-600 hover:text-blue-700">
+                      <Link to="/terms" className="text-blue-400 hover:text-blue-300">
                         Terms of Service
                       </Link>{' '}
                       and{' '}
-                      <Link to="/privacy" className="text-blue-600 hover:text-blue-700">
+                      <Link to="/privacy" className="text-blue-400 hover:text-blue-300">
                         Privacy Policy
                       </Link>
                     </Label>
@@ -567,41 +664,41 @@ export default function Login() {
             </Tabs>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-400">
                 {activeTab === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
                 <button
                   onClick={() => setActiveTab(activeTab === 'login' ? 'register' : 'login')}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-blue-400 hover:text-blue-300 font-medium"
                 >
                   {activeTab === 'login' ? 'Sign up' : 'Sign in'}
                 </button>
               </p>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-slate-700">
               <div className="text-center">
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-slate-500 mb-4">
                   Quick Demo Access
                 </p>
                 <div className="grid grid-cols-3 gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-12 bg-blue-600 hover:bg-blue-700 border-blue-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                     onClick={() => handleDemoLogin('demo.seeker@smartspace.com', 'demo123')}
                   >
                     <User className="mr-2 h-4 w-4" />
                     Seeker Demo
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-12 bg-green-600 hover:bg-green-700 border-green-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                     onClick={() => handleDemoLogin('demo.owner@smartspace.com', 'demo123')}
                   >
                     <Building2 className="mr-2 h-4 w-4" />
                     Owner Demo
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-12 bg-purple-600 hover:bg-purple-700 border-purple-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                     onClick={() => handleDemoLogin('demo.admin@smartspace.com', 'demo123')}
                   >
@@ -614,7 +711,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-slate-500">
           <p>Secure • Trusted • Fast</p>
           <div className="flex justify-center items-center space-x-6 mt-4">
             <div className="flex items-center space-x-2">

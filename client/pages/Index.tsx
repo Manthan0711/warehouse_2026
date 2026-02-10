@@ -149,7 +149,7 @@ export default function Index() {
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-500/10 dark:bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
-        
+
         <div className="max-w-4xl mx-auto relative z-10">
           <h1 className="text-5xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x drop-shadow-2xl">
             Find Perfect Warehouses
@@ -184,10 +184,10 @@ export default function Index() {
                 <div className="flex flex-wrap items-center gap-2 mt-6">
                   <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Popular:</span>
                   {["Mumbai", "Pune", "Nashik", "Aurangabad", "Thane"].map((city) => (
-                    <Button 
-                      key={city} 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      key={city}
+                      variant="ghost"
+                      size="sm"
                       className="h-8 text-xs hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
                       onClick={() => setSearchLocation(city)}
                     >
@@ -198,7 +198,7 @@ export default function Index() {
                     <span className="text-sm text-blue-600 dark:text-blue-400 font-medium mr-2 animate-pulse">✨ New</span>
                     <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900 shadow-md hover:shadow-lg transition-all duration-300" asChild>
                       <Link to="/ai-recommendations">
-                        AI Recommendations
+                        ML Recommendations
                       </Link>
                     </Button>
                   </div>
@@ -324,11 +324,11 @@ export default function Index() {
                       >
                         View Details
                         <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </div>
@@ -398,7 +398,7 @@ export default function Index() {
                 <Link to="/warehouses">Browse Warehouses</Link>
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg" asChild>
-                <Link to="/ai-recommendations">Try AI Recommendations</Link>
+                <Link to="/ai-recommendations">Try ML Recommendations</Link>
               </Button>
             </div>
           </div>
@@ -419,7 +419,7 @@ export default function Index() {
               <h4 className="font-semibold mb-4">Platform</h4>
               <ul className="space-y-2 text-gray-300">
                 <li><Link to="/warehouses" className="hover:text-white transition-colors">Browse Warehouses</Link></li>
-                <li><Link to="/ai-recommendations" className="hover:text-white transition-colors">AI Recommendations</Link></li>
+                <li><Link to="/ai-recommendations" className="hover:text-white transition-colors">ML Recommendations</Link></li>
                 <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
                 <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
               </ul>

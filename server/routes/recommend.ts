@@ -4,6 +4,8 @@ import { recommendWarehouses } from "../../shared/recommendation";
 import { createClient } from '@supabase/supabase-js';
 import { hybridRecommend, advancedEnsembleRecommend, mapToRecommendedWarehouse } from "../../shared/ml-algorithms";
 import { geminiRecommend, mapGeminiToRecommendedWarehouse } from "../../shared/gemini-ai";
+import { getLLMRecommendations, mapLLMToRecommendations } from "../../shared/advanced-llm-service";
+import { advancedMLRecommend } from "../../shared/advanced-ml-algorithms";
 
 // Use environment variables for Supabase credentials (server-side prefers service role)
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
@@ -27,10 +29,48 @@ if (!process.env.SUPABASE_SERVICE_ROLE) {
 
 /**
  * Enhanced recommendation handler with multi-algorithm approach
+ * NOW REQUIRES AUTHENTICATION - Users must be logged in to get recommendations
  */
 export async function handleRecommend(req: Request, res: Response) {
   try {
-    const body = req.body as RecommendationRequest | undefined;
+    // ============================================
+    // AUTHENTICATION CHECK - TEMPORARILY DISABLED FOR TESTING
+    // ============================================
+    // TODO: Re-enable after fixing demo auth token passing
+    /*
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authenticated. Please sign in to get recommendations.',
+        recommendations: []
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+      if (authError || !user) {
+        console.log('❌ Authentication failed:', authError?.message);
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid or expired authentication token.',
+          recommendations: []
+        });
+      }
+
+      console.log('✅ Authenticated user:', user.email);
+    } catch (authCheckError) {
+      console.error('Authentication check error:', authCheckError);
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication verification failed.',
+        recommendations: []
+      });
+    }
+    */const body = req.body as RecommendationRequest | undefined;
     const prefs = body?.preferences ?? {};
     const limit = body?.limit ?? 12;
 
@@ -69,11 +109,14 @@ export async function handleRecommend(req: Request, res: Response) {
           // Recreate query each loop (supabase query builder is immutable)
           let q: any = supabase.from('warehouses').select('*');
 
-          // Apply district filter (check city OR district with ilike for partial matches)
+          // Apply district filter - STRICT MATCHING
+          // Database structure: city = "Mumbai City", district = "Mumbai"
+          // User selects from dropdown: "Mumbai" (matches district column)
+          // Solution: Query district column for EXACT match
           if (district && district !== 'any') {
-            const term = `%${district}%`;
-            // Use OR to check city or district contains the term
-            q = q.or(`city.ilike.${term},district.ilike.${term}`);
+            // Use exact equality on district column
+            q = q.eq('district', district);
+            console.log(`🔒 STRICT district filter applied: district = '${district}'`);
           }
 
           // Apply price window around target (if provided)
@@ -86,6 +129,13 @@ export async function handleRecommend(req: Request, res: Response) {
           // Apply minimum area filter
           if (minArea) {
             q = q.gte('total_area', minArea);
+          }
+
+          // Apply warehouse type filter for focused ML recommendations
+          const preferredType = prefs.preferredType;
+          if (preferredType && preferredType !== 'any') {
+            q = q.eq('warehouse_type', preferredType);
+            console.log(`🏭 Warehouse type filter applied: warehouse_type = '${preferredType}'`);
           }
 
           // Fetch page range
@@ -116,12 +166,12 @@ export async function handleRecommend(req: Request, res: Response) {
         }
 
         if (warehouses.length === 0) {
-          console.warn('⚠ No warehouses matched filters. Trying relaxed fetch...');
-          // Try a relaxed fetch but STILL apply district filter if specified
+          console.warn('⚠ No warehouses matched filters. Trying relaxed fetch (strict location still applied)...');
+          // Relaxed fetch: remove price/area constraints but KEEP strict district filter
           let relaxedQuery: any = supabase.from('warehouses').select('*');
           if (district && district !== 'any') {
-            const term = `%${district}%`;
-            relaxedQuery = relaxedQuery.or(`city.ilike.${term},district.ilike.${term}`);
+            // Keep exact equality on district column
+            relaxedQuery = relaxedQuery.eq('district', district);
           }
           const { data: relaxedData, error: relaxedErr } = await relaxedQuery.range(0, PAGE_SIZE - 1);
           if (relaxedErr) {
@@ -140,25 +190,49 @@ export async function handleRecommend(req: Request, res: Response) {
       }
 
       // Choose the algorithm based on query param or use auto-selection
-      if (useAlgorithm === 'gemini') {
-        // First try Gemini AI
+      // NEW: Use advanced LLM + ML pipeline
+      if (useAlgorithm === 'llm' || useAlgorithm === 'gemini') {
+        // Try LLM providers with fallback chain: Groq → OpenRouter → Gemini
         try {
-          console.log('Attempting Gemini AI recommendations...');
-          const geminiResults = await geminiRecommend(warehouses, prefs);
-          items = geminiResults.map(mapGeminiToRecommendedWarehouse).slice(0, limit);
-          console.log(`✓ Generated ${items.length} Gemini AI recommendations`);
-        } catch (geminiError) {
-          console.error('Gemini AI failed, falling back to hybrid ML:', geminiError);
-          // Fall back to hybrid ML
-          const hybridResults = hybridRecommend(warehouses, prefs);
-          items = hybridResults.map(mapToRecommendedWarehouse).slice(0, limit);
-          console.log(`✓ Generated ${items.length} hybrid ML recommendations (fallback)`);
+          console.log('🤖 Attempting LLM-powered recommendations (Groq → OpenRouter → Gemini)...');
+          const llmResult = await getLLMRecommendations(warehouses, prefs);
+          
+          if (llmResult.success && llmResult.recommendations.length > 0) {
+            // Map LLM recommendations to warehouses
+            const mappedRecs = mapLLMToRecommendations(llmResult.recommendations, warehouses);
+            items = mappedRecs.map(rec => mapToRecommendedWarehouse({
+              warehouse: rec.warehouse,
+              score: rec.score,
+              reasons: rec.reasons,
+              recommendationType: 'llm' as any
+            })).slice(0, limit);
+            console.log(`✅ Generated ${items.length} LLM recommendations via ${llmResult.provider}`);
+          } else {
+            // Fall back to advanced ML
+            throw new Error('LLM returned no results');
+          }
+        } catch (llmError) {
+          console.log('⚠️ LLM failed, falling back to Advanced ML algorithms:', llmError);
+          // Fall back to advanced ML algorithms
+          const mlResults = advancedMLRecommend(warehouses, prefs, limit);
+          items = mlResults.map(rec => mapToRecommendedWarehouse({
+            warehouse: rec.warehouse,
+            score: rec.score,
+            reasons: rec.reasons,
+            recommendationType: 'advanced-ml' as any
+          }));
+          console.log(`✅ Generated ${items.length} Advanced ML recommendations (fallback)`);
         }
       } else if (useAlgorithm === 'hybrid') {
-        // Use hybrid ML directly
-        const hybridResults = hybridRecommend(warehouses, prefs);
-        items = hybridResults.map(mapToRecommendedWarehouse).slice(0, limit);
-        // console.log(`✓ Generated ${items.length} hybrid ML recommendations`);
+        // Use advanced ML algorithms with 5-algorithm ensemble
+        const mlResults = advancedMLRecommend(warehouses, prefs, limit);
+        items = mlResults.map(rec => mapToRecommendedWarehouse({
+          warehouse: rec.warehouse,
+          score: rec.score,
+          reasons: rec.reasons,
+          recommendationType: 'advanced-ml' as any
+        }));
+        console.log(`✅ Generated ${items.length} Advanced ML recommendations (5-algorithm ensemble)`);
       } else if (useAlgorithm === 'ensemble') {
         // Use Advanced 5-Algorithm Ensemble for maximum accuracy
         const ensembleResults = advancedEnsembleRecommend(warehouses, prefs);

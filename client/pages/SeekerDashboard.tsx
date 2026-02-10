@@ -60,16 +60,79 @@ export default function SeekerDashboard() {
       const isDemoUser = user!.id.startsWith('demo-');
       
       if (isDemoUser) {
-        // For demo users, set mock data without database calls
-        console.log('Demo user detected - loading mock data');
-        setStats({
-          activeBookings: 2,
-          completedBookings: 5,
-          totalSpent: 245000,
-          savedWarehouses: 8
-        });
-        setBookings([]);
-        setSavedWarehouses([]);
+        // For demo users, fetch real bookings from API instead of using mock data
+        console.log('Demo user detected - fetching real data from API');
+        
+        try {
+          // Fetch bookings from API
+          const bookingsResponse = await fetch(`/api/bookings?seeker_id=${user!.id}`);
+          const bookingsData = await bookingsResponse.json();
+          
+          // Fetch saved warehouses count from API
+          const savedResponse = await fetch(`/api/saved/${user!.id}`);
+          const savedData = await savedResponse.json();
+          
+          if (bookingsData.success && bookingsData.bookings) {
+            const mappedBookings = bookingsData.bookings.map((b: any) => ({
+              id: b.id,
+              warehouse_id: b.warehouse_id,
+              warehouse_name: b.warehouse_name || 'N/A',
+              total_sqft: b.area_sqft || b.total_sqft,
+              total_amount: b.total_amount,
+              start_date: b.start_date,
+              end_date: b.end_date,
+              status: b.status,
+              payment_status: b.payment_status || 'pending',
+              booking_reference: b.booking_reference
+            }));
+            
+            setBookings(mappedBookings);
+            
+            const active = mappedBookings.filter((b: Booking) => 
+              b.status === 'active' || b.status === 'confirmed' || b.status === 'approved' || b.status === 'pending'
+            ).length;
+            const completed = mappedBookings.filter((b: Booking) => b.status === 'completed').length;
+            const spent = mappedBookings
+              .filter((b: Booking) => b.payment_status === 'paid')
+              .reduce((sum: number, b: Booking) => sum + parseFloat(String(b.total_amount) || '0'), 0);
+            
+            const savedCount = savedData.success ? (savedData.saved?.length || 0) : 0;
+            
+            setStats({
+              activeBookings: active,
+              completedBookings: completed,
+              totalSpent: spent,
+              savedWarehouses: savedCount
+            });
+          } else {
+            // No bookings found, set zeros
+            setStats({
+              activeBookings: 0,
+              completedBookings: 0,
+              totalSpent: 0,
+              savedWarehouses: savedData.success ? (savedData.saved?.length || 0) : 0
+            });
+            setBookings([]);
+          }
+          
+          if (savedData.success && savedData.saved) {
+            setSavedWarehouses(savedData.saved);
+          } else {
+            setSavedWarehouses([]);
+          }
+        } catch (error) {
+          console.error('Error fetching demo user data:', error);
+          // Fallback to zeros on error
+          setStats({
+            activeBookings: 0,
+            completedBookings: 0,
+            totalSpent: 0,
+            savedWarehouses: 0
+          });
+          setBookings([]);
+          setSavedWarehouses([]);
+        }
+        
         setLoading(false);
         return;
       }
@@ -283,6 +346,45 @@ export default function SeekerDashboard() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Button 
+            variant="outline" 
+            className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-500"
+            onClick={() => navigate('/warehouses')}
+          >
+            <Search className="h-6 w-6 text-blue-600" />
+            <span>Browse Warehouses</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-500"
+            onClick={() => navigate('/saved')}
+          >
+            <Heart className="h-6 w-6 text-red-600" />
+            <span>Saved Warehouses</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-500"
+            onClick={() => navigate('/activity')}
+          >
+            <History className="h-6 w-6 text-purple-600" />
+            <span>Activity Timeline</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-500"
+            onClick={() => navigate('/ml-recommendations')}
+          >
+            <TrendingUp className="h-6 w-6 text-green-600" />
+            <span>ML Recommendations</span>
+          </Button>
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">

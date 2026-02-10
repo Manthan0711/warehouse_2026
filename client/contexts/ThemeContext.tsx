@@ -28,28 +28,28 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const root = window.document.documentElement;
     const body = window.document.body;
-    
+
     // Remove all theme classes first
     root.classList.remove('light', 'dark', 'professional');
     body.classList.remove(
-      'bg-white', 
+      'bg-white',
       'bg-gray-950',
-      'bg-professional-dark-gradient', 
+      'bg-professional-dark-gradient',
       'bg-professional-deep-blue',
       'bg-mesh-dark'
     );
-    
+
     // Clear any inline styles that might be interfering
     body.style.backgroundColor = '';
     body.style.background = '';
-    
+
     // Apply theme classes and backgrounds
     if (theme === 'professional') {
       root.classList.add('dark', 'professional');
       // Apply professional dark gradient background
       body.style.background = 'linear-gradient(135deg, #0c1222 0%, #153366 100%)';
       body.classList.add('bg-professional-deep-blue', 'bg-mesh-dark');
-      
+
       // Add professional mesh pattern if not exists
       let patternDiv = document.getElementById('professional-bg-pattern');
       if (!patternDiv) {
@@ -74,7 +74,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Apply dark theme background
       body.style.background = 'linear-gradient(135deg, hsl(225, 32%, 7%) 0%, hsl(229, 35%, 10%) 100%)';
       body.classList.add('bg-gray-950');
-      
+
       // Remove professional pattern if exists
       const patternDiv = document.getElementById('professional-bg-pattern');
       if (patternDiv) patternDiv.remove();
@@ -83,29 +83,29 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.add('light');
       body.style.backgroundColor = 'hsl(0, 0%, 100%)';
       body.classList.add('bg-white');
-      
+
       // Remove professional pattern if exists
       const patternDiv = document.getElementById('professional-bg-pattern');
       if (patternDiv) patternDiv.remove();
     }
-    
+
     // Apply theme to the meta color-scheme for browser UI
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', 
-        theme === 'light' ? '#ffffff' : 
-        theme === 'dark' ? '#1e293b' : 
-        '#0c1222'
+      metaThemeColor.setAttribute('content',
+        theme === 'light' ? '#ffffff' :
+          theme === 'dark' ? '#1e293b' :
+            '#0c1222'
       );
     } else {
       const meta = document.createElement('meta');
       meta.name = 'theme-color';
-      meta.content = theme === 'light' ? '#ffffff' : 
-                     theme === 'dark' ? '#1e293b' : 
-                     '#0c1222';
+      meta.content = theme === 'light' ? '#ffffff' :
+        theme === 'dark' ? '#1e293b' :
+          '#0c1222';
       document.head.appendChild(meta);
     }
-    
+
     // Apply theme to the color-scheme meta tag
     const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
     if (metaColorScheme) {
@@ -116,7 +116,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       meta.content = theme === 'light' ? 'light' : 'dark';
       document.head.appendChild(meta);
     }
-    
+
     // Store theme in localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);
@@ -129,12 +129,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return 'light';
     });
   };
-  
+
   // Set professional theme
   const setProfessionalTheme = () => {
     setTheme('professional');
   };
-  
+
   // Check if current theme is professional
   const isProfessional = theme === 'professional';
 
@@ -146,10 +146,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 };
 
 // Custom hook for consuming the theme context
+// Custom hook for consuming the theme context - SAFE VERSION
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Return fallback context instead of throwing to prevent crashes
+    return {
+      theme: 'professional',
+      toggleTheme: () => { },
+      setProfessionalTheme: () => { },
+      isProfessional: true
+    };
   }
   return context;
 };

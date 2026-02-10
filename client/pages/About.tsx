@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Target, Award, ArrowRight, CheckCircle } from "lucide-react";
+import { Users, Target, Award, ArrowRight, CheckCircle, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Navbar } from "@/components/Navbar";
 
 export default function About() {
   const stats = [
@@ -36,75 +37,49 @@ export default function About() {
 
   const team = [
     {
-      name: "Rajesh Kumar",
-      role: "CEO & Founder",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
-      bio: "20+ years in logistics and real estate"
+      name: "Dipesh Sharma",
+      role: "Lead Developer",
+      bio: "Architecture, backend services, and deployment"
     },
     {
-      name: "Priya Sharma",
-      role: "CTO",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&q=80",
-      bio: "Former tech lead at major logistics companies"
+      name: "Manthan Shinde",
+      role: "Frontend Developer",
+      bio: "UI systems, design consistency, and UX flows"
     },
     {
-      name: "Amit Patel",
-      role: "Head of Operations",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
-      bio: "Expert in warehouse operations and management"
+      name: "Sahil Shinde",
+      role: "Full Stack Developer",
+      bio: "API integrations, auth, and data pipelines"
     },
     {
-      name: "Sneha Singh",
-      role: "Head of Business Development",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80",
-      bio: "Specialist in B2B partnerships and growth"
+      name: "Pranjal Zambre",
+      role: "QA & Automation",
+      bio: "Quality assurance, test automation, and validation"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <Building2 className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-900">SmartSpace</span>
-          </Link>
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/warehouses" className="text-gray-600 hover:text-gray-900 font-medium">Find Warehouses</Link>
-            <Link to="/list-property" className="text-gray-600 hover:text-gray-900 font-medium">List Your Property</Link>
-            <Link to="/about" className="text-blue-600 font-medium">About</Link>
-            <Link to="/contact" className="text-gray-600 hover:text-gray-900 font-medium">Contact</Link>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/register">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+      <Navbar />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-20">
+      <section className="relative py-20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
               Revolutionizing
-              <span className="block text-blue-600">Warehouse Discovery</span>
+              <span className="block text-blue-400">Warehouse Discovery</span>
             </h1>
-            <p className="text-xl text-gray-600 leading-relaxed mb-8">
+            <p className="text-xl text-slate-200 leading-relaxed mb-8">
               SmartSpace is India's leading marketplace connecting businesses with the perfect warehouse spaces. 
               We're making warehouse discovery simple, transparent, and efficient for everyone.
             </p>
             <div className="grid md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
-                  <stat.icon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <stat.icon className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  <div className="text-sm text-slate-300">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -117,15 +92,15 @@ export default function About() {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
                 Our Mission
               </h2>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+              <p className="text-lg text-slate-200 mb-6 leading-relaxed">
                 We believe that finding the right warehouse space shouldn't be complicated, time-consuming, or opaque. 
                 Our mission is to create a transparent, efficient marketplace where businesses can easily discover and 
                 secure warehouse spaces that perfectly match their needs.
               </p>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+              <p className="text-lg text-slate-200 mb-8 leading-relaxed">
                 By leveraging technology and building trust between warehouse owners and businesses, we're helping 
                 optimize warehouse utilization across India while enabling businesses to scale efficiently.
               </p>
@@ -137,17 +112,17 @@ export default function About() {
               </Button>
             </div>
             <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl">
+              <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl border border-slate-700">
                 <img
                   src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=80"
                   alt="Modern warehouse operations"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl border">
+              <div className="absolute -bottom-6 -left-6 bg-slate-900 p-6 rounded-xl shadow-xl border border-slate-700">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">98%</div>
-                  <div className="text-sm text-gray-600">Customer Satisfaction</div>
+                  <div className="text-2xl font-bold text-blue-400">98%</div>
+                  <div className="text-sm text-slate-300">Customer Satisfaction</div>
                 </div>
               </div>
             </div>
@@ -156,23 +131,23 @@ export default function About() {
       </section>
 
       {/* Values Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-slate-900/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
               Our Values
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-200 max-w-2xl mx-auto">
               The principles that guide everything we do
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {values.map((value, index) => (
-              <Card key={index} className="text-center p-6 border-0 bg-white shadow-lg">
-                <value.icon className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <CardTitle className="text-lg mb-3">{value.title}</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
+              <Card key={index} className="text-center p-6 border border-slate-800 bg-slate-900/70 shadow-lg">
+                <value.icon className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                <CardTitle className="text-lg mb-3 text-white">{value.title}</CardTitle>
+                <CardDescription className="text-base leading-relaxed text-slate-300">
                   {value.description}
                 </CardDescription>
               </Card>
@@ -185,32 +160,25 @@ export default function About() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
               Meet Our Team
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Experienced professionals passionate about transforming the warehouse industry
+            <p className="text-xl text-slate-200 max-w-2xl mx-auto">
+              The developers building SmartSpace
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member, index) => (
-              <Card key={index} className="text-center overflow-hidden">
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              <Card key={index} className="text-center overflow-hidden border border-slate-800 bg-slate-900/70">
                 <CardHeader>
-                  <CardTitle className="text-lg">{member.name}</CardTitle>
-                  <CardDescription className="text-blue-600 font-medium">
+                  <CardTitle className="text-lg text-white">{member.name}</CardTitle>
+                  <CardDescription className="text-blue-400 font-medium">
                     {member.role}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600">{member.bio}</p>
+                  <p className="text-sm text-slate-300">{member.bio}</p>
                 </CardContent>
               </Card>
             ))}
@@ -249,10 +217,10 @@ export default function About() {
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto space-y-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
+            <h2 className="text-3xl lg:text-4xl font-bold text-white">
               Ready to Join Our Mission?
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-slate-200">
               Whether you're looking for warehouse space or have space to offer, we'd love to help you succeed.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -262,57 +230,13 @@ export default function About() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" asChild className="border-slate-600 text-slate-200 hover:bg-slate-800">
                 <Link to="/list-property">List Your Property</Link>
               </Button>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Building2 className="h-8 w-8 text-blue-400" />
-                <span className="font-bold text-xl">SmartSpace</span>
-              </div>
-              <p className="text-gray-400">
-                India's leading marketplace for warehouse space. Connecting businesses with the perfect storage solutions.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">For Businesses</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/warehouses" className="hover:text-white">Find Warehouses</Link></li>
-                <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link to="/support" className="hover:text-white">Support</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">For Owners</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/list-property" className="hover:text-white">List Property</Link></li>
-                <li><Link to="/dashboard" className="hover:text-white">Dashboard</Link></li>
-                <li><Link to="/resources" className="hover:text-white">Resources</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Company</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="/about" className="hover:text-white">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
-                <li><Link to="/careers" className="hover:text-white">Careers</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 SmartSpace. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

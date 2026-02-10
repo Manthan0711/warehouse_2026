@@ -1,6 +1,9 @@
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
+const DEMO_SESSION_KEY = 'demo.auth.session';
+const LEGACY_SUPABASE_SESSION_KEY = 'supabase.auth.token';
+
 // Create a User type that extends User from supabase
 type DemoUser = {
   id: string;
@@ -135,11 +138,14 @@ function createDemoSession(userType: 'seeker' | 'owner' | 'admin'): Session {
 export async function loginWithDemo(userType: 'seeker' | 'owner' | 'admin') {
   const demoSession = createDemoSession(userType);
   
-  // Store in localStorage to persist the session
-  localStorage.setItem('supabase.auth.token', JSON.stringify({
-    currentSession: demoSession,
-    expiresAt: demoSession.expires_at,
-  }));
+  // Store in localStorage to persist the demo session (avoid Supabase auth storage)
+  localStorage.setItem(
+    DEMO_SESSION_KEY,
+    JSON.stringify({
+      session: demoSession,
+      userType,
+    })
+  );
   
   // Return the demo user and session
   return {
@@ -189,7 +195,9 @@ export async function signInWithFallback(email: string, password: string, userTy
  */
 export async function signOutWithFallback() {
   // Clear demo login data
-  localStorage.removeItem('supabase.auth.token');
+  localStorage.removeItem(DEMO_SESSION_KEY);
+  // Clear legacy demo session if present
+  localStorage.removeItem(LEGACY_SUPABASE_SESSION_KEY);
   
   // Also try to sign out from Supabase
   try {
@@ -205,12 +213,12 @@ export async function signOutWithFallback() {
  * Check if current session is a demo session
  */
 export function isDemoSession() {
-  const token = localStorage.getItem('supabase.auth.token');
+  const token = localStorage.getItem(DEMO_SESSION_KEY);
   if (!token) return false;
   
   try {
     const parsed = JSON.parse(token);
-    return parsed?.currentSession?.access_token?.startsWith('demo-token');
+    return parsed?.session?.access_token?.startsWith('demo-token');
   } catch (error) {
     return false;
   }
@@ -222,13 +230,14 @@ export function isDemoSession() {
 export function getCurrentDemoUserType(): 'seeker' | 'owner' | 'admin' | null {
   if (!isDemoSession()) return null;
   
-  const token = localStorage.getItem('supabase.auth.token');
+  const token = localStorage.getItem(DEMO_SESSION_KEY);
   if (!token) return null;
   
   try {
     const parsed = JSON.parse(token);
-    const accessToken = parsed?.currentSession?.access_token;
-    
+    if (parsed?.userType) return parsed.userType;
+
+    const accessToken = parsed?.session?.access_token;
     if (accessToken?.includes('-seeker-')) return 'seeker';
     if (accessToken?.includes('-owner-')) return 'owner';
     if (accessToken?.includes('-admin-')) return 'admin';
@@ -236,5 +245,56 @@ export function getCurrentDemoUserType(): 'seeker' | 'owner' | 'admin' | null {
     return null;
   } catch (error) {
     return null;
+  }
+}
+
+export function getStoredDemoSession(): { user: User; session: Session; profile: typeof DEMO_PROFILES[keyof typeof DEMO_PROFILES] } | null {
+  const token = localStorage.getItem(DEMO_SESSION_KEY);
+  if (!token) return null;
+
+  try {
+    const parsed = JSON.parse(token);
+    const userType = (parsed?.userType as 'seeker' | 'owner' | 'admin') || getCurrentDemoUserType();
+    if (!userType) return null;
+
+    const session = parsed?.session as Session | undefined;
+    if (!session) return null;
+
+    return {
+      user: DEMO_USERS[userType] as unknown as User,
+      session,
+      profile: DEMO_PROFILES[userType]
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+export function normalizeDemoSessionStorage() {
+  const legacyToken = localStorage.getItem(LEGACY_SUPABASE_SESSION_KEY);
+  if (!legacyToken) return;
+
+  try {
+    const parsed = JSON.parse(legacyToken);
+    const accessToken = parsed?.currentSession?.access_token;
+    if (!accessToken?.startsWith('demo-token')) return;
+
+    let userType: 'seeker' | 'owner' | 'admin' | null = null;
+    if (accessToken.includes('-seeker-')) userType = 'seeker';
+    if (accessToken.includes('-owner-')) userType = 'owner';
+    if (accessToken.includes('-admin-')) userType = 'admin';
+
+    if (userType && parsed?.currentSession) {
+      localStorage.setItem(
+        DEMO_SESSION_KEY,
+        JSON.stringify({
+          session: parsed.currentSession,
+          userType,
+        })
+      );
+      localStorage.removeItem(LEGACY_SUPABASE_SESSION_KEY);
+    }
+  } catch (error) {
+    // Ignore parse errors
   }
 }

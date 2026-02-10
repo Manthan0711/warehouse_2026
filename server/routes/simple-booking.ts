@@ -17,6 +17,7 @@ export const bookWarehouseBlocks: RequestHandler = async (req, res) => {
             end_date,
             total_amount,
             payment_method,
+            goods_type,
             customer_details
         } = req.body;
 
@@ -29,18 +30,61 @@ export const bookWarehouseBlocks: RequestHandler = async (req, res) => {
             });
         }
 
-        // Calculate total area from blocks
-        const totalArea = blocks.reduce((sum: number, block: any) => sum + (block.area || 0), 0);
+        if (!goods_type) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing goods_type'
+            });
+        }
 
-        // Fetch warehouse info
-        const { data: warehouse, error: warehouseError } = await supabase
+        // Calculate total area from blocks (default 100 sq ft per block if not specified)
+        const BLOCK_AREA_SQFT = 100;
+        const totalArea = blocks.reduce((sum: number, block: any) => sum + (block.area || BLOCK_AREA_SQFT), 0);
+
+        // Fetch warehouse info - try main table first, then submissions
+        // Warehouse ID could be wh_id (LIC007986) or UUID id
+        let warehouse: any = null;
+        let warehouseOwnerId: string | null = null;
+
+        // Try by wh_id first (for LIC format IDs)
+        let { data: mainWarehouse } = await supabase
             .from('warehouses')
-            .select('name, address, city, state')
-            .eq('id', warehouse_id)
-            .single();
+            .select('name, address, city, state, owner_id')
+            .eq('wh_id', warehouse_id)
+            .maybeSingle();
 
-        if (warehouseError) {
-            console.error('Error fetching warehouse:', warehouseError);
+        // If not found, try by id (UUID format)
+        if (!mainWarehouse) {
+            const { data: byId } = await supabase
+                .from('warehouses')
+                .select('name, address, city, state, owner_id')
+                .eq('id', warehouse_id)
+                .maybeSingle();
+            mainWarehouse = byId;
+        }
+
+        if (mainWarehouse) {
+            warehouse = mainWarehouse;
+            warehouseOwnerId = mainWarehouse.owner_id || null;
+            console.log(`✅ Found warehouse in main table, owner_id: ${warehouseOwnerId}`);
+        } else {
+            // Try warehouse_submissions for approved submissions (by id which is the submission ID)
+            const { data: submissionWarehouse } = await supabase
+                .from('warehouse_submissions')
+                .select('name, address, city, state, owner_id')
+                .eq('id', warehouse_id)
+                .eq('status', 'approved')
+                .maybeSingle();
+
+            if (submissionWarehouse) {
+                warehouse = submissionWarehouse;
+                warehouseOwnerId = submissionWarehouse.owner_id || null;
+                console.log(`✅ Found warehouse in submissions, owner_id: ${warehouseOwnerId}`);
+            }
+        }
+
+        if (!warehouse) {
+            console.log(`⚠️ Warehouse ${warehouse_id} not found in database, using provided details`);
         }
 
         // Create booking activity log with 'pending' status for admin review
@@ -52,6 +96,7 @@ export const bookWarehouseBlocks: RequestHandler = async (req, res) => {
                 description: `Block booking for ${warehouse?.name || 'Warehouse'} - ${blocks.length} blocks (${totalArea} sq ft)`,
                 metadata: {
                     warehouse_id,
+                    warehouse_owner_id: warehouseOwnerId, // Store owner ID for notifications
                     warehouse_name: warehouse?.name || 'Unknown Warehouse',
                     warehouse_address: warehouse?.address || '',
                     warehouse_city: warehouse?.city || '',
@@ -62,6 +107,7 @@ export const bookWarehouseBlocks: RequestHandler = async (req, res) => {
                     end_date,
                     total_amount,
                     payment_method,
+                    goods_type,
                     customer_details,
                     booking_status: 'pending',  // Changed from 'confirmed' to 'pending' for admin review
                     booking_type: 'block_booking'

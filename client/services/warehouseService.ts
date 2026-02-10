@@ -1,52 +1,27 @@
 // Import Supabase client from the dedicated client file
 import { supabase } from './supabaseClient';
-import { WarehouseData, allMaharashtraWarehouses, platformStats } from '../data/enhanced-warehouses';
+import type { WarehouseData } from '@/data/warehouses';
+import type { RecommendationPreferences, RecommendationResponse, RecommendedWarehouse } from '../../shared/api';
+import { getAIResponse } from './aiService';
 
-// Try importing warehouse data from the mock data file
-let mockData: { warehouses: any[], platformStats: any } | null = null;
-try {
-  // Use the enhanced warehouse data
-  mockData = {
-    warehouses: allMaharashtraWarehouses,
-    platformStats: platformStats
-  };
-  console.log(`Successfully loaded enhanced warehouse data with ${allMaharashtraWarehouses.length} warehouses`);
-} catch (e) {
-  try {
-    // Fallback to original data
-    const { maharashtraWarehouses } = require('../data/warehouses');
-    mockData = {
-      warehouses: maharashtraWarehouses.slice(0, 100),
-      platformStats: {
-        totalWarehouses: maharashtraWarehouses.length,
-        totalCapacity: 2500000,
-        totalArea: 25000000,
-        averageOccupancy: 0.58,
-        districtsCount: 36,
-        verifiedWarehouses: 168
-      }
-    };
-    console.log('Using original warehouse data fallback');
-  } catch (mockError) {
-    // If even the mock fails, create a minimal mock structure
-    console.log('Using minimal mock data structure');
-    mockData = {
-      warehouses: [],
-      platformStats: {
-        totalWarehouses: 0,
-        totalCapacity: 0,
-        totalArea: 0,
-        averageOccupancy: 0,
-        districtsCount: 0,
-        verifiedWarehouses: 0
-      }
-    };
-  }
-}
-
-// Flag to control whether we should use mock data as a fallback
-// CRITICAL: Disabled - ALL data MUST come from Supabase only
+// CRITICAL: ALL data MUST come from Supabase only - no mock data
+// Mock data imports removed to prevent data mixing issues
 const USE_MOCK_DATA_FALLBACK = false;
+
+// Empty mock structure for fallback (should never be used)
+const mockData: { warehouses: any[], platformStats: any } = {
+  warehouses: [],
+  platformStats: {
+    totalWarehouses: 0,
+    totalCapacity: 0,
+    totalArea: 0,
+    averageOccupancy: 0,
+    districtsCount: 0,
+    verifiedWarehouses: 0
+  }
+};
+
+console.log('🔌 WarehouseService initialized - Using Supabase only (no mock data)');
 
 export interface SupabaseWarehouse {
   id: string;
@@ -79,6 +54,10 @@ export interface SupabaseWarehouse {
   contact_person?: string | null;
   contact_phone?: string | null;
   contact_email?: string | null;
+  warehouse_type?: string | null;  // Type of warehouse (Cold Storage, Dark Store, etc.)
+  allowed_goods_types?: string[] | null;  // Goods types allowed for this warehouse
+  license_valid_upto?: string | null;  // License expiry date
+  verified?: boolean | null;
 }
 
 export interface WarehouseFilters {
@@ -160,10 +139,10 @@ class WarehouseService {
     try {
       console.log('🔄 Using mock warehouse data with filters:', filters);
       console.log('📦 Total mock warehouses available:', mockData.warehouses?.length || 0);
-      
+
       // Start with all warehouses
       let filteredWarehouses = mockData.warehouses || [];
-      
+
       // Apply filters
       if (filters.city) {
         filteredWarehouses = filteredWarehouses.filter(w => {
@@ -191,7 +170,7 @@ class WarehouseService {
       }
 
       if (filters.status) {
-        filteredWarehouses = filteredWarehouses.filter(w => 
+        filteredWarehouses = filteredWarehouses.filter(w =>
           w.status.toLowerCase() === filters.status!.toLowerCase()
         );
       } else {
@@ -201,7 +180,7 @@ class WarehouseService {
 
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
-        filteredWarehouses = filteredWarehouses.filter(w => 
+        filteredWarehouses = filteredWarehouses.filter(w =>
           (w.whId && w.whId.toLowerCase().includes(searchTerm)) ||
           (w.address && w.address.toLowerCase().includes(searchTerm)) ||
           (w.district && w.district.toLowerCase().includes(searchTerm)) ||
@@ -212,10 +191,10 @@ class WarehouseService {
 
       // Sort by rating
       filteredWarehouses.sort((a, b) => b.rating - a.rating);
-      
+
       // Calculate total count before pagination
       const totalCount = filteredWarehouses.length;
-      
+
       // Apply pagination
       if (filters.offset && filters.limit) {
         filteredWarehouses = filteredWarehouses.slice(filters.offset, filters.offset + filters.limit);
@@ -240,7 +219,7 @@ class WarehouseService {
   async getWarehouses(filters: WarehouseFilters = {}): Promise<{ data: SupabaseWarehouse[]; count: number }> {
     try {
       console.log('Fetching warehouses with filters:', filters);
-      
+
       // Fetch from original warehouses table (Maharashtra focus)
       let warehousesQuery = supabase
         .from('warehouses')
@@ -280,38 +259,7 @@ class WarehouseService {
         warehousesQuery = warehousesQuery.or(`name.ilike.%${filters.search}%,address.ilike.%${filters.search}%,city.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
 
-      // Fetch approved warehouse submissions
-      let submissionsQuery = supabase
-        .from('warehouse_submissions')
-        .select('*')
-        .eq('status', 'approved');
-
-      // Apply same filters to submissions
-      if (filters.city) {
-        submissionsQuery = submissionsQuery.ilike('city', `%${filters.city}%`);
-      }
-
-      if (filters.min_price) {
-        submissionsQuery = submissionsQuery.gte('price_per_sqft', filters.min_price);
-      }
-
-      if (filters.max_price) {
-        submissionsQuery = submissionsQuery.lte('price_per_sqft', filters.max_price);
-      }
-
-      if (filters.min_area) {
-        submissionsQuery = submissionsQuery.gte('total_area', filters.min_area);
-      }
-
-      if (filters.max_area) {
-        submissionsQuery = submissionsQuery.lte('total_area', filters.max_area);
-      }
-
-      if (filters.search) {
-        submissionsQuery = submissionsQuery.or(`name.ilike.%${filters.search}%,address.ilike.%${filters.search}%,city.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      }
-
-      // Execute both queries with proper pagination
+      // Execute warehouse query
       // Apply offset and limit for pagination
       if (filters.offset !== undefined) {
         warehousesQuery = warehousesQuery.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
@@ -319,39 +267,21 @@ class WarehouseService {
         warehousesQuery = warehousesQuery.limit(filters.limit);
       }
 
-      const [warehousesResult, submissionsResult] = await Promise.all([
-        warehousesQuery,
-        submissionsQuery.limit(100) // Limit approved submissions
-      ]);
-
+      const warehousesResult = await warehousesQuery;
       const { data: warehouses, error: warehousesError, count: warehousesCount } = warehousesResult;
-      const { data: approvedSubmissions, error: submissionsError } = submissionsResult;
+
+      // Skip warehouse_submissions query - table may not exist
+      // This prevents 400 errors in the console
+      const approvedSubmissions: any[] = [];
 
       console.log('📊 FETCHED DATA:', {
         warehouses: warehouses?.length || 0,
-        approvedSubmissions: approvedSubmissions?.length || 0,
         searchQuery: filters.search || 'none',
         filters: filters
       });
 
-      // Log details about approved submissions if any
-      if (approvedSubmissions && approvedSubmissions.length > 0) {
-        console.log('✅ Approved submissions found:', approvedSubmissions.map(s => ({
-          id: s.id,
-          name: s.name,
-          city: s.city,
-          status: s.status
-        })));
-      } else {
-        console.log('❌ No approved submissions found in warehouse_submissions table');
-      }
-
       if (warehousesError) {
         console.error('Error fetching warehouses:', warehousesError);
-      }
-
-      if (submissionsError) {
-        console.error('Error fetching approved submissions:', submissionsError);
       }
 
       // Convert approved submissions to SupabaseWarehouse format
@@ -371,6 +301,8 @@ class WarehouseService {
         images: submission.image_urls || [],
         amenities: submission.amenities || [],
         features: submission.features || [],
+        warehouse_type: submission.warehouse_type || null,
+        allowed_goods_types: submission.allowed_goods_types || [],
         status: 'active', // Approved submissions are active
         occupancy: 0, // New warehouses start with 0 occupancy
         rating: 4.5, // Default rating for new warehouses
@@ -407,151 +339,74 @@ class WarehouseService {
 
     } catch (error) {
       console.error('Error in getWarehouses:', error);
-      
+
       // Use mock data if enabled as fallback
       if (USE_MOCK_DATA_FALLBACK) {
         console.log('Falling back to mock warehouse data');
         return this.getMockWarehouses(filters);
       }
-      
+
       // Return empty result if mock data is disabled
       return { data: [], count: 0 };
     }
   }
 
-  // Get warehouse by ID (supports both UUID and wh_id)
+  // Get warehouse by ID (uses both id and wh_id for maximum compatibility)
   async getWarehouseById(id: string): Promise<{ data: SupabaseWarehouse | null; error: string | null }> {
     try {
       console.log(`🔍 Looking for warehouse with ID: ${id}`);
 
-      // First check original warehouses table
-      const { data: warehouse, error: warehouseError } = await supabase
-        .from('warehouses')
-        .select('*')
-        .or(`id.eq.${id},wh_id.eq.${id}`)
-        .single();
+      // Check if ID is a UUID format (e.g., "550e8400-e29b-41d4-a716-446655440000")
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      let query = supabase.from('warehouses').select('*');
+      
+      if (isUUID) {
+        // If it's a UUID, search by id column only
+        query = query.eq('id', id);
+        console.log('🔑 Searching by UUID in id column');
+      } else {
+        // If it's not a UUID (e.g., "LIC007034"), search by wh_id column only
+        query = query.eq('wh_id', id);
+        console.log('🔑 Searching by wh_id column');
+      }
 
-      if (warehouse && !warehouseError) {
+      const { data: warehouses, error: warehouseError } = await query;
+
+      if (warehouseError) {
+        console.error('❌ Error querying warehouse:', warehouseError);
+        return { data: null, error: warehouseError.message || 'Error loading warehouse' };
+      }
+
+      // Check if we found exactly one warehouse
+      if (warehouses && warehouses.length > 0) {
+        const warehouse = warehouses[0]; // Take the first match
         console.log('✅ Found warehouse in original warehouses table:', warehouse.name);
+        
+        // Try to fetch owner profile separately if owner_id exists
+        if (warehouse.owner_id) {
+          try {
+            const { data: ownerProfile, error: ownerError } = await supabase
+              .from('profiles')
+              .select('id, name, email, phone, profile_image_url, created_at')
+              .eq('id', warehouse.owner_id)
+              .single();
+            
+            if (!ownerError && ownerProfile) {
+              // Attach owner profile to warehouse data
+              (warehouse as any).owner = ownerProfile;
+            }
+            // If profile not found, warehouse contact fields will be used as fallback
+          } catch (ownerErr) {
+            // Silently continue - profile lookup is optional, fallback to warehouse contact fields
+          }
+        }
+        
         return { data: warehouse, error: null };
       }
 
-      // Then check approved warehouse submissions
-      const { data: submission, error: submissionError } = await supabase
-        .from('warehouse_submissions')
-        .select('*')
-        .eq('id', id)
-        .eq('status', 'approved')
-        .single();
-
-      if (submission && !submissionError) {
-        console.log('✅ Found approved submission in warehouse_submissions:', submission.name);
-        
-        // Convert submission to SupabaseWarehouse format
-        const convertedWarehouse: SupabaseWarehouse = {
-          id: submission.id,
-          wh_id: submission.id,
-          name: submission.name,
-          description: submission.description,
-          address: submission.address,
-          city: submission.city,
-          state: submission.state,
-          pincode: submission.pincode,
-          latitude: null,
-          longitude: null,
-          total_area: submission.total_area,
-          price_per_sqft: submission.price_per_sqft,
-          images: submission.image_urls || [],
-          amenities: submission.amenities || [],
-          features: submission.features || [],
-          status: 'active',
-          occupancy: 0,
-          rating: 4.5,
-          reviews_count: 0,
-          total_blocks: Math.max(1, Math.floor(submission.total_area / 1000)),
-          available_blocks: Math.max(1, Math.floor(submission.total_area / 1000)),
-          grid_rows: Math.ceil(Math.sqrt(Math.max(1, Math.floor(submission.total_area / 1000)))),
-          grid_cols: Math.ceil(Math.sqrt(Math.max(1, Math.floor(submission.total_area / 1000)))),
-          owner_id: submission.owner_id,
-          created_at: submission.created_at,
-          updated_at: submission.updated_at,
-          contact_person: null,
-          contact_phone: null,
-          contact_email: null
-        };
-        
-        return { data: convertedWarehouse, error: null };
-      }
-
-      // Fallback to localStorage for demo submissions
-      const localSubmissions = JSON.parse(localStorage.getItem('demo-submissions') || '[]');
-      const approvedWarehouses = JSON.parse(localStorage.getItem('approved-warehouses') || '[]');
-      const allLocalWarehouses = [...localSubmissions, ...approvedWarehouses];
-      
-      const localWarehouse = allLocalWarehouses.find((w: any) => w.id === id);
-      if (localWarehouse) {
-        console.log('📦 Found warehouse in localStorage:', localWarehouse.name);
-        // Convert localStorage format to Supabase format for display
-        const convertedWarehouse: SupabaseWarehouse = {
-          id: localWarehouse.id,
-          wh_id: localWarehouse.id,
-          name: localWarehouse.name,
-          description: localWarehouse.description || null,
-          address: localWarehouse.address,
-          city: localWarehouse.city,
-          state: localWarehouse.state,
-          pincode: localWarehouse.pincode,
-          total_area: parseInt(localWarehouse.total_area?.toString() || '0'),
-          price_per_sqft: parseInt(localWarehouse.price_per_sqft?.toString() || '0'),
-          images: localWarehouse.image_urls || [],
-          amenities: localWarehouse.amenities || [],
-          features: localWarehouse.features || [],
-          status: localWarehouse.status === 'approved' ? 'active' : 'pending',
-          occupancy: 0,
-          rating: 4.5,
-          reviews_count: 0,
-          total_blocks: Math.floor(parseInt(localWarehouse.total_area?.toString() || '0') / 100),
-          available_blocks: Math.floor(parseInt(localWarehouse.total_area?.toString() || '0') / 100),
-          grid_rows: 10,
-          grid_cols: 10,
-          owner_id: localWarehouse.owner_id || 'demo-owner',
-          created_at: localWarehouse.submitted_at || new Date().toISOString(),
-          updated_at: localWarehouse.reviewed_at || new Date().toISOString(),
-          latitude: 19.0760,
-          longitude: 72.8777,
-          contact_person: localWarehouse.owner_name || 'Demo Owner',
-          contact_phone: localWarehouse.owner_phone || '+91 9876543210',
-          contact_email: localWarehouse.owner_email || 'owner@demo.com'
-        };
-        return { data: convertedWarehouse, error: null };
-      }
-
-      // Try to find by wh_id first (for routes like /warehouse/LIC000062)
-      let query = supabase
-        .from('warehouses')
-        .select('*');
-
-      // Check if it looks like a UUID or wh_id
-      if (id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        query = query.eq('id', id);
-      } else {
-        query = query.eq('wh_id', id);
-      }
-
-      const { data, error } = await query.maybeSingle();
-
-      if (error) {
-        console.error('Error fetching warehouse from Supabase:', error);
-        throw error;
-      }
-
-      // If no data found in Supabase, fall back to mock data
-      if (!data) {
-        console.log('No warehouse found in Supabase, falling back to mock data');
-        throw new Error('Warehouse not found in database');
-      }
-
-      return { data, error: null };
+      console.log('❌ Warehouse not found:', id);
+      return { data: null, error: 'Warehouse not found' };
     } catch (error) {
       console.error('Error in getWarehouseById:', error);
 
@@ -582,53 +437,49 @@ class WarehouseService {
           occupancy,
           rating,
           amenities
-        `);
+        `)
+        .eq('status', 'active');  // Only count active warehouses - matches main query filter
 
       if (error) {
         console.error('Error fetching warehouse stats from Supabase:', error);
         throw error;
       }
 
-      // If no data in Supabase, fall back to mock data
+      // If no data in Supabase, return zeros (no mock fallback)
       if (!data || data.length === 0) {
-        console.log('No data in Supabase, falling back to mock data');
-        throw new Error('No warehouses in database');
+        console.log('No active warehouses in Supabase database');
+        return {
+          totalWarehouses: 0,
+          totalArea: 0,
+          averagePrice: 0,
+          averageOccupancy: 0,
+          citiesCount: 0,
+          averageRating: 0
+        };
       }
 
       const cities = new Set(data.map(w => w.city));
-      const totalArea = data.reduce((sum, w) => sum + w.total_area, 0);
-      const avgPrice = data.reduce((sum, w) => sum + w.price_per_sqft, 0) / data.length;
-      const avgOccupancy = data.reduce((sum, w) => sum + w.occupancy, 0) / data.length;
-      const avgRating = data.reduce((sum, w) => sum + w.rating, 0) / data.length;
+      const totalArea = data.reduce((sum, w) => sum + (w.total_area || 0), 0);
+      const avgPrice = data.reduce((sum, w) => sum + (w.price_per_sqft || 0), 0) / data.length;
+      // Note: occupancy is stored as decimal (0.71) not percentage (71)
+      const avgOccupancy = data.reduce((sum, w) => sum + (w.occupancy || 0), 0) / data.length;
+      const avgRating = data.reduce((sum, w) => sum + (w.rating || 0), 0) / data.length;
+
+      console.log(`📊 Warehouse Stats from Supabase: ${data.length} active warehouses, ${cities.size} cities`);
 
       return {
         totalWarehouses: data.length,
         totalArea,
         averagePrice: Math.round(avgPrice),
-        averageOccupancy: Math.round(avgOccupancy * 100),
+        // If occupancy is stored as decimal (0.71), multiply by 100; if already percentage, use as-is
+        averageOccupancy: avgOccupancy > 1 ? Math.round(avgOccupancy) : Math.round(avgOccupancy * 100),
         citiesCount: cities.size,
         averageRating: Math.round(avgRating * 10) / 10
       };
     } catch (error) {
       console.error('Error in getWarehouseStats:', error);
-      
-      // Use mock data if enabled as fallback
-      if (USE_MOCK_DATA_FALLBACK && mockData.platformStats) {
-        console.log('Falling back to mock warehouse stats');
-        
-        const cities = new Set(mockData.warehouses?.map(w => w.city) || []);
-        
-        return {
-          totalWarehouses: mockData.platformStats.totalWarehouses || 0,
-          totalArea: mockData.platformStats.totalArea || 0,
-          averagePrice: mockData.warehouses?.reduce((sum, w) => sum + w.pricing, 0) / (mockData.warehouses?.length || 1) || 0,
-          averageOccupancy: Math.round(mockData.platformStats.averageOccupancy * 100) || 0,
-          citiesCount: cities.size || 0,
-          averageRating: mockData.warehouses?.reduce((sum, w) => sum + w.rating, 0) / (mockData.warehouses?.length || 1) || 0
-        };
-      }
-      
-      // Return default stats if mock data is disabled or not available
+
+      // Return default stats - no mock fallback
       return {
         totalWarehouses: 0,
         totalArea: 0,
@@ -643,40 +494,25 @@ class WarehouseService {
   // ML-powered recommendations using advanced algorithms (XGBoost-inspired approach)
   async getMLRecommendations(request: MLRecommendationRequest): Promise<MLRecommendationResponse[]> {
     try {
-      console.log('Generating ML recommendations with preferences:', request.user_preferences);
-      
-      // Get base warehouse data - increased limit for better ML analysis
+      console.log('🤖 Generating ML recommendations with preferences:', request.user_preferences);
+
+      // Get ALL warehouse data for better ML analysis (no pagination limit)
+      // This ensures ML algorithms have complete dataset for training/analysis
       const { data: warehouses } = await this.getWarehouses({
-        limit: 1000,  // Get more data for better ML recommendations
+        limit: 10000,  // Get ALL warehouses for ML recommendations
         status: 'active'
       });
-      
+
       if (!warehouses || warehouses.length === 0) {
-        console.warn('No warehouses available for ML recommendations');
-        
-        // Fall back to mock recommendations if no warehouses are available
-        if (USE_MOCK_DATA_FALLBACK) {
-          console.log('Using mock data for ML recommendations');
-          const mockRecommendations = await this.getMockRecommendations(request.limit || 12);
-          
-          // Convert to ML recommendation format
-          return mockRecommendations.map(warehouse => ({
-            warehouse,
-            similarity_score: Math.random() * 0.3 + 0.7, // Random high score between 0.7-1.0
-            recommendation_reasons: [
-              `Top rated: ${warehouse.rating}⭐ (${warehouse.reviews_count} reviews)`,
-              'Popular choice among similar businesses',
-              'Excellent location and facilities'
-            ],
-            recommendation_type: Math.random() > 0.5 ? 'collaborative' : 'hybrid'
-          }));
-        }
-        
+        console.warn('❌ No warehouses available for ML recommendations');
         return [];
       }
 
+      console.log(`📊 ML processing ${warehouses.length} warehouses from Supabase`);
+
+
       console.log(`Processing ${warehouses.length} warehouses for ML recommendations`);
-      
+
       const recommendations: MLRecommendationResponse[] = [];
       const preferences = request.user_preferences || {};
 
@@ -691,21 +527,21 @@ class WarehouseService {
           ratingScore: warehouse.rating / 5.0, // Normalize rating to 0-1
           availabilityScore: (100 - warehouse.occupancy) / 100 // Higher score for lower occupancy
         };
-        
+
         // Compute location score based on preferred cities
         if (preferences.preferred_cities && preferences.preferred_cities.length > 0) {
-          const cityMatch = preferences.preferred_cities.some(city => 
+          const cityMatch = preferences.preferred_cities.some(city =>
             warehouse.city.toLowerCase() === city.toLowerCase());
-          const cityPartialMatch = preferences.preferred_cities.some(city => 
-            warehouse.city.toLowerCase().includes(city.toLowerCase()) || 
+          const cityPartialMatch = preferences.preferred_cities.some(city =>
+            warehouse.city.toLowerCase().includes(city.toLowerCase()) ||
             (warehouse.address && warehouse.address.toLowerCase().includes(city.toLowerCase())));
-            
+
           featureScores.locationScore = cityMatch ? 1.0 : cityPartialMatch ? 0.7 : 0.0;
         } else {
           // If no location preference, all locations get a neutral score
           featureScores.locationScore = 0.5;
         }
-        
+
         // Compute price score based on budget
         if (preferences.max_budget) {
           if (warehouse.price_per_sqft <= preferences.max_budget) {
@@ -719,11 +555,11 @@ class WarehouseService {
           // If no price preference, give neutral score with preference to more affordable options
           featureScores.priceScore = Math.min(1.0, 1000 / warehouse.price_per_sqft) * 0.5;
         }
-        
+
         // Compute amenity score based on preferences
         if (preferences.preferred_amenities && preferences.preferred_amenities.length > 0 && warehouse.amenities) {
           const matchingAmenities = warehouse.amenities.filter(amenity =>
-            preferences.preferred_amenities?.some(pref => 
+            preferences.preferred_amenities?.some(pref =>
               amenity.toLowerCase().includes(pref.toLowerCase())
             )
           );
@@ -732,7 +568,7 @@ class WarehouseService {
           // If no amenity preferences or warehouse has no amenities data
           featureScores.amenityScore = warehouse.amenities?.length ? 0.5 : 0.3;
         }
-        
+
         // Compute size score based on minimum area
         if (preferences.min_area) {
           if (warehouse.total_area >= preferences.min_area) {
@@ -746,7 +582,7 @@ class WarehouseService {
           // If no size preference, give neutral score with preference to mid-sized warehouses
           featureScores.sizeScore = Math.exp(-0.5 * Math.pow((Math.log10(warehouse.total_area) - 4.5) / 1.0, 2));
         }
-        
+
         // Calculate total score using a weighted ensemble approach (XGBoost style)
         // The weights simulate what an XGBoost model might learn for feature importance
         const totalScore = (
@@ -757,19 +593,19 @@ class WarehouseService {
           featureScores.ratingScore * 0.10 +    // Ratings matter
           featureScores.availabilityScore * 0.05 // Availability is a factor
         );
-        
+
         return {
           warehouse,
           featureScores,
           totalScore
         };
       });
-      
+
       // Sort by total score (Random Forest / XGBoost predicted probability)
       enhancedWarehouses.sort((a, b) => b.totalScore - a.totalScore);
-      
+
       // Generate recommendations by type using KNN-like approach for diverse recommendations
-      
+
       // Location-based recommendations (closest city match)
       if (preferences.preferred_cities && preferences.preferred_cities.length > 0) {
         const locationMatches = enhancedWarehouses
@@ -797,10 +633,10 @@ class WarehouseService {
           .slice(0, 5);
 
         priceMatches.forEach(item => {
-          const savingsPercent = preferences.max_budget 
+          const savingsPercent = preferences.max_budget
             ? Math.round(((preferences.max_budget - item.warehouse.price_per_sqft) / preferences.max_budget) * 100)
             : 0;
-            
+
           recommendations.push({
             warehouse: item.warehouse,
             similarity_score: item.totalScore,
@@ -822,7 +658,7 @@ class WarehouseService {
 
         featureMatches.forEach(item => {
           const matchingFeatures = item.warehouse.amenities?.filter(amenity =>
-            preferences.preferred_amenities?.some(pref => 
+            preferences.preferred_amenities?.some(pref =>
               amenity.toLowerCase().includes(pref.toLowerCase())
             )
           ) || [];
@@ -853,8 +689,8 @@ class WarehouseService {
             similarity_score: item.totalScore,
             recommendation_reasons: [
               `Optimal size: ${item.warehouse.total_area.toLocaleString()} sq ft`,
-              sizeRatio > 1.1 
-                ? `${Math.round((sizeRatio - 1) * 100)}% extra space compared to minimum` 
+              sizeRatio > 1.1
+                ? `${Math.round((sizeRatio - 1) * 100)}% extra space compared to minimum`
                 : 'Perfect size match',
               `Good layout for efficient operations`
             ],
@@ -882,33 +718,33 @@ class WarehouseService {
           recommendation_type: 'collaborative'
         });
       });
-      
+
       // Remove duplicates and sort by ML score
       console.log(`Generated ${recommendations.length} raw recommendations, deduplicating...`);
       const uniqueRecommendations = recommendations
-        .filter((rec, index, arr) => 
+        .filter((rec, index, arr) =>
           arr.findIndex(r => r.warehouse.id === rec.warehouse.id) === index
         )
         .sort((a, b) => b.similarity_score - a.similarity_score)
         .slice(0, request.limit || 12);
-      
+
       // Scale all scores to 0-1 range for consistency
       const maxScore = Math.max(...uniqueRecommendations.map(r => r.similarity_score));
       uniqueRecommendations.forEach(rec => {
         rec.similarity_score = maxScore > 0 ? rec.similarity_score / maxScore : rec.similarity_score;
       });
-      
+
       console.log(`Returning ${uniqueRecommendations.length} final ML recommendations`);
       return uniqueRecommendations;
 
     } catch (error) {
       console.error('Error generating ML recommendations:', error);
-      
+
       // Fall back to mock recommendations if there was an error
       if (USE_MOCK_DATA_FALLBACK) {
         console.log('Falling back to mock data for ML recommendations after error');
         const mockRecommendations = await this.getMockRecommendations(request.limit || 12);
-        
+
         // Convert to ML recommendation format
         return mockRecommendations.map(warehouse => ({
           warehouse,
@@ -921,7 +757,7 @@ class WarehouseService {
           recommendation_type: Math.random() > 0.5 ? 'collaborative' : 'hybrid'
         }));
       }
-      
+
       return [];
     }
   }
@@ -964,8 +800,35 @@ class WarehouseService {
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, limit);
 
+    // Fetch and attach owner profiles for similar warehouses
+    const uniqueOwnerIds = [...new Set(similarWarehouses.map(w => w.owner_id).filter(Boolean))];
+    
+    if (uniqueOwnerIds.length > 0) {
+      try {
+        const { data: ownerProfiles } = await supabase
+          .from('profiles')
+          .select('id, name, email, phone, profile_image_url, created_at')
+          .in('id', uniqueOwnerIds);
+
+        if (ownerProfiles) {
+          // Create a map for quick lookup
+          const ownerMap = new Map(ownerProfiles.map(owner => [owner.id, owner]));
+          
+          // Attach owner profiles to warehouses
+          similarWarehouses.forEach(warehouse => {
+            if (warehouse.owner_id && ownerMap.has(warehouse.owner_id)) {
+              (warehouse as any).owner = ownerMap.get(warehouse.owner_id);
+            }
+          });
+        }
+      } catch (err) {
+        // Silently continue - profile lookup is optional
+      }
+    }
+
     return similarWarehouses;
   }
+
 
   // Get warehouses by city
   async getWarehousesByCity(city: string, limit = 20): Promise<SupabaseWarehouse[]> {
@@ -978,19 +841,223 @@ class WarehouseService {
     const { data } = await this.getWarehouses({ search: query, limit });
     return data;
   }
-  
+
+  /**
+   * Get warehouses owned by a specific user
+   * Combines both warehouses from the main table and user submissions
+   */
+  async getWarehousesByOwner(ownerId: string): Promise<{ data: SupabaseWarehouse[]; count: number; error?: string }> {
+    try {
+      console.log('🔍 Fetching warehouses for owner:', ownerId);
+
+      // Fetch warehouses from main warehouses table
+      const { data: ownedWarehouses, error: warehousesError } = await supabase
+        .from('warehouses')
+        .select('*')
+        .eq('owner_id', ownerId);
+
+      if (warehousesError) {
+        console.error('❌ Error fetching owned warehouses:', warehousesError);
+        return { data: [], count: 0, error: warehousesError.message };
+      }
+
+      // Fetch owner profile separately
+      if (ownerId && ownedWarehouses && ownedWarehouses.length > 0) {
+        try {
+          const { data: ownerProfile, error: ownerError } = await supabase
+            .from('profiles')
+            .select('id, name, email, phone, profile_image_url, created_at')
+            .eq('id', ownerId)
+            .single();
+          
+          if (!ownerError && ownerProfile) {
+            // Attach owner profile to all warehouses
+            ownedWarehouses.forEach(warehouse => {
+              (warehouse as any).owner = ownerProfile;
+            });
+            console.log('✅ Loaded owner profile for warehouses:', ownerProfile.name);
+          }
+        } catch (ownerErr) {
+          console.warn('⚠️ Could not load owner profile:', ownerErr);
+        }
+      }
+
+      console.log(`✅ Returning ${ownedWarehouses?.length || 0} warehouses for owner`);
+
+      return {
+        data: ownedWarehouses || [],
+        count: ownedWarehouses?.length || 0
+      };
+    } catch (error) {
+      console.error('❌ Error in getWarehousesByOwner:', error);
+      return { data: [], count: 0, error: String(error) };
+    }
+  }
+
+  /**
+   * Get count of warehouses owned by a specific owner
+   */
+  async getOwnerPropertyCount(ownerId: string): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from('warehouses')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', ownerId);
+      
+      if (error) {
+        console.error('Error getting owner property count:', error);
+        return 0;
+      }
+      
+      return count || 0;
+    } catch (error) {
+      console.error('Error in getOwnerPropertyCount:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * LLM-powered recommendations based on user preferences
+   */
+  async getLLMRecommendations(
+    preferences: RecommendationPreferences,
+    limit: number = 12
+  ): Promise<RecommendationResponse> {
+    try {
+      const filters: WarehouseFilters = {
+        city: preferences.district,
+        max_price: preferences.targetPrice,
+        min_area: preferences.minAreaSqft,
+        status: 'active',
+        limit: 500
+      };
+
+      const { data: warehouses } = await this.getWarehouses(filters);
+      const warehouseList = warehouses || [];
+
+      if (warehouseList.length === 0) {
+        return { items: [] };
+      }
+
+      const scored = warehouseList.map(w => {
+        let score = 60;
+        if (preferences.targetPrice) {
+          const priceRatio = w.price_per_sqft / preferences.targetPrice;
+          if (priceRatio <= 1) score += Math.max(0, 20 - Math.round(priceRatio * 10));
+        }
+        if (preferences.minAreaSqft && w.total_area >= preferences.minAreaSqft) score += 10;
+        if (preferences.preferredType && w.warehouse_type?.toLowerCase().includes(preferences.preferredType.toLowerCase())) score += 10;
+        if (preferences.preferVerified && w.verified) score += 5;
+        if (preferences.preferAvailability && w.occupancy < 0.7) score += 5;
+        score += Math.round((w.rating || 4) * 2);
+        return { warehouse: w, score };
+      });
+
+      const candidates = scored
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 40);
+
+      const prompt = `You are an expert warehouse recommender. Pick the top ${Math.min(limit, 12)} matches based on preferences.
+
+Preferences:
+- District: ${preferences.district || 'Any'}
+- Target Price: ${preferences.targetPrice ? `₹${preferences.targetPrice}/sq ft` : 'Any'}
+- Minimum Area: ${preferences.minAreaSqft ? `${preferences.minAreaSqft} sq ft` : 'Any'}
+- Preferred Type: ${preferences.preferredType || 'Any'}
+- Prefer Verified: ${preferences.preferVerified ? 'Yes' : 'No'}
+- Prefer Availability: ${preferences.preferAvailability ? 'Yes' : 'No'}
+
+Candidates (JSON):
+${JSON.stringify(candidates.map(c => ({
+  id: c.warehouse.id,
+  name: c.warehouse.name,
+  city: c.warehouse.city,
+  district: c.warehouse.district,
+  price_per_sqft: c.warehouse.price_per_sqft,
+  total_area: c.warehouse.total_area,
+  warehouse_type: c.warehouse.warehouse_type,
+  rating: c.warehouse.rating,
+  occupancy: c.warehouse.occupancy
+})), null, 2)}
+
+Return JSON only in this format:
+{
+  "recommendations": [
+    { "id": "warehouse-id", "matchScore": 0-100, "reason": "short reason" }
+  ]
+}`;
+
+      let ranked: Array<{ id: string; matchScore: number; reason: string }> | null = null;
+
+      try {
+        const response = await getAIResponse({
+          prompt,
+          systemPrompt: 'You rank warehouses and return JSON only.',
+          temperature: 0.2,
+          maxTokens: 800
+        });
+
+        const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(parsed?.recommendations)) {
+            ranked = parsed.recommendations;
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ LLM ranking failed, falling back to heuristic:', error);
+      }
+
+      const byId = new Map(warehouseList.map(w => [w.id, w]));
+      const results = (ranked && ranked.length > 0)
+        ? ranked
+        : candidates.slice(0, limit).map(c => ({ id: c.warehouse.id, matchScore: Math.min(98, c.score), reason: 'Strong overall match' }));
+
+      const items: RecommendedWarehouse[] = results
+        .map((r, index) => {
+          const w = byId.get(r.id);
+          if (!w) return null;
+          const occupancyRate = (w.occupancy || 0) > 1 ? (w.occupancy || 0) / 100 : (w.occupancy || 0);
+          return {
+            whId: w.id,
+            name: w.name || `Warehouse ${index + 1}`,
+            location: `${w.city || w.district || ''}, ${w.state || 'Maharashtra'}`,
+            district: w.district || w.city || '',
+            state: w.state || 'Maharashtra',
+            pricePerSqFt: w.price_per_sqft || 30,
+            totalAreaSqft: w.total_area || 10000,
+            availableAreaSqft: Math.floor((w.total_area || 10000) * (1 - occupancyRate)),
+            rating: w.rating || 4.0,
+            reviews: w.reviews_count || 10,
+            image: (w.images && w.images.length > 0)
+              ? w.images[0]
+              : 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+            type: w.warehouse_type || 'General Storage',
+            matchScore: Math.round(r.matchScore || 80),
+            reasons: [{ label: r.reason || 'Good match for your preferences' }]
+          };
+        })
+        .filter(Boolean) as RecommendedWarehouse[];
+
+      return { items };
+    } catch (error) {
+      console.error('Error generating LLM recommendations:', error);
+      return { items: [], error: String(error) };
+    }
+  }
+
   // Get recommendations using mock data if needed
   async getMockRecommendations(limit = 6): Promise<SupabaseWarehouse[]> {
     if (!mockData.warehouses || mockData.warehouses.length === 0) {
       return [];
     }
-    
+
     // Get high-rated warehouses
     const topRatedWarehouses = [...mockData.warehouses]
       .sort((a, b) => b.rating - a.rating)
       .slice(0, limit)
       .map(w => this.convertMockToSupabase(w));
-      
+
     return topRatedWarehouses;
   }
 }

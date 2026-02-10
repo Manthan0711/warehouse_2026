@@ -6,32 +6,34 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Building2, Plus, Eye, MessageSquare, Calendar, TrendingUp, Users, MapPin, Star, ChartBar as BarChart3, DollarSign, Clock, Settings, Bell, Heart, Search, Filter, ArrowRight, LogOut, CircleAlert as AlertCircle, Upload, Loader, Bot } from "lucide-react";
+import { Building2, Plus, Eye, MessageSquare, Calendar, TrendingUp, Users, MapPin, Star, ChartBar as BarChart3, DollarSign, Clock, Settings, Bell, Heart, Search, Filter, ArrowRight, LogOut, CircleAlert as AlertCircle, Upload, Loader, Bot, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useWarehouse } from "../contexts/WarehouseContext";
 import { warehouseService, type SupabaseWarehouse } from "@/services/warehouseService";
-import { useSmartRecommendations } from "@/hooks/use-recommendations";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import AdminDashboard from "./AdminDashboard";
 import ProfileCard from "@/components/ui/ProfileCard";
 import { supabase } from "@/lib/supabase";
+import { getAIResponse } from "@/services/aiService";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  
+
   console.log('📊 DASHBOARD LOADED - VERSION 4.0');
   console.log('User:', user?.email);
   console.log('Profile type:', profile?.user_type);
-  
+
   // Always initialize hooks first - never return early before hooks
   const [activeTab, setActiveTab] = useState('overview');
   const [warehouses, setWarehouses] = useState<SupabaseWarehouse[]>([]);
   const [ownerWarehouses, setOwnerWarehouses] = useState<SupabaseWarehouse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiInsights, setAiInsights] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [stats, setStats] = useState({
     totalProperties: 0,
     totalInquiries: 0,
@@ -44,22 +46,16 @@ export default function Dashboard() {
     responseRate: 85,
     totalWarehouses: 0
   });
-  
-  // AI recommendations - always call hooks
-  const { 
-    data: recommendationsData, 
-    isLoading: isLoadingRecommendations 
-  } = useSmartRecommendations();
 
   // Check if user is admin after all hooks are initialized
   const isAdmin = user?.email?.includes('admin') || profile?.user_type === 'admin';
-  
+
   // If admin, show admin dashboard after hooks
   if (isAdmin) {
     console.log('✅ Showing AdminDashboard');
     return <AdminDashboard />;
   }
-  
+
   console.log('✅ Showing', profile?.user_type === 'owner' ? 'Owner' : 'Seeker', 'Dashboard');
 
   useEffect(() => {
@@ -76,113 +72,32 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       if (profile?.user_type === 'owner') {
-        // Load owner's submitted warehouses from Supabase
-        const { data: submissions, error } = await supabase
-          .from('warehouse_submissions')
-          .select('*')
-          .eq('owner_id', user.id)
-          .order('submitted_at', { ascending: false });
+        // Use the new warehouse service method to get ONLY this owner's warehouses
+        const { data: ownerWarehouses, count } = await warehouseService.getWarehousesByOwner(user.id);
 
-        if (error) {
-          console.error('Error fetching owner submissions:', error);
-          // Fallback to localStorage for demo
-          const localSubmissions = JSON.parse(localStorage.getItem('demo-submissions') || '[]');
-          const ownerSubmissions = localSubmissions.filter((sub: any) => sub.owner_id === user.id);
-          
-          setStats({
-            totalProperties: ownerSubmissions.length,
-            totalInquiries: ownerSubmissions.length * 3,
-            monthlyRevenue: ownerSubmissions.length * 50000,
-            occupancyRate: 78,
-            avgRating: 4.7,
-            savedProperties: 0,
-            activeSearches: 0,
-            inquiriesSent: 0,
-            responseRate: 85,
-            totalWarehouses: 8993
-          });
+        console.log('📊 Owner warehouses loaded:', {
+          count,
+          warehouses: ownerWarehouses.map(w => ({ id: w.id, name: w.name, status: w.status }))
+        });
 
-          const ownerWarehouses = ownerSubmissions.map((sub: any) => ({
-            id: sub.id,
-            name: sub.name,
-            description: sub.description,
-            address: sub.address,
-            city: sub.city,
-            state: sub.state,
-            pincode: sub.pincode,
-            total_area: parseInt(sub.total_area) || 0,
-            price_per_sqft: parseInt(sub.price_per_sqft) || 0,
-            amenities: sub.amenities || [],
-            features: sub.features || [],
-            images: sub.image_urls || [],
-            status: sub.status || 'pending',
-            created_at: sub.submitted_at,
-            owner_id: sub.owner_id,
-            occupancy: 22,
-            // Add required SupabaseWarehouse fields
-            latitude: 0,
-            longitude: 0,
-            rating: 4.5,
-            reviews_count: 0,
-            total_blocks: 1,
-            available_blocks: 1,
-            grid_rows: 1,
-            grid_cols: 1,
-            updated_at: new Date().toISOString()
-          }));
-          
-          setOwnerWarehouses(ownerWarehouses);
-        } else {
-          // Use Supabase data
-          const ownerSubmissions = submissions || [];
-          
-          setStats({
-            totalProperties: ownerSubmissions.length,
-            totalInquiries: ownerSubmissions.length * 3,
-            monthlyRevenue: ownerSubmissions.length * 50000,
-            occupancyRate: 78,
-            avgRating: 4.7,
-            savedProperties: 0,
-            activeSearches: 0,
-            inquiriesSent: 0,
-            responseRate: 85,
-            totalWarehouses: 8993
-          });
+        // Update stats
+        setStats({
+          totalProperties: count,
+          totalInquiries: count * 3,
+          monthlyRevenue: count * 50000,
+          occupancyRate: 78,
+          avgRating: 4.7,
+          savedProperties: 0,
+          activeSearches: 0,
+          inquiriesSent: 0,
+          responseRate: 85,
+          totalWarehouses: count
+        });
 
-          // Convert Supabase submissions to warehouse format for display
-          const ownerWarehouses = ownerSubmissions.map((sub: any) => ({
-            id: sub.id,
-            name: sub.name,
-            description: sub.description,
-            address: sub.address,
-            city: sub.city,
-            state: sub.state,
-            pincode: sub.pincode,
-            total_area: sub.total_area || 0,
-            price_per_sqft: sub.price_per_sqft || 0,
-            amenities: sub.amenities || [],
-            features: sub.features || [],
-            images: sub.image_urls || [],
-            status: sub.status || 'pending',
-            created_at: sub.submitted_at,
-            owner_id: sub.owner_id,
-            occupancy: 22,
-            // Add required SupabaseWarehouse fields
-            latitude: 0,
-            longitude: 0,
-            rating: 4.5,
-            reviews_count: 0,
-            total_blocks: 1,
-            available_blocks: 1,
-            grid_rows: 1,
-            grid_cols: 1,
-            updated_at: new Date().toISOString()
-          }));
-          
-          setOwnerWarehouses(ownerWarehouses);
-        }
+        // Set the owner's warehouses
+        setOwnerWarehouses(ownerWarehouses);
       } else {
         // Seeker mock stats
         setStats({
@@ -222,12 +137,12 @@ export default function Dashboard() {
         });
         return;
       }
-      
+
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account",
       });
-      
+
       navigate('/', { replace: true });
     } catch (err) {
       console.error('Sign out error:', err);
@@ -260,6 +175,67 @@ export default function Dashboard() {
 
   const isOwner = profile.user_type === 'owner';
 
+  const generateOwnerInsights = async () => {
+    setAiLoading(true);
+    try {
+      let portfolioWarehouses = ownerWarehouses;
+
+      if (!portfolioWarehouses.length) {
+        const { data: fallbackData, error } = await supabase
+          .from('warehouses')
+          .select('price_per_sqft, occupancy, city')
+          .limit(120);
+
+        if (error) {
+          throw error;
+        }
+
+        portfolioWarehouses = (fallbackData as SupabaseWarehouse[]) || [];
+      }
+
+      if (!portfolioWarehouses.length) {
+        setAiInsights('Add your first property to unlock personalized insights on pricing and demand.');
+        return;
+      }
+
+      const avgPrice = Math.round(
+        portfolioWarehouses.reduce((sum, w) => sum + (w.price_per_sqft || 0), 0) / portfolioWarehouses.length
+      );
+      const avgOccupancy = Math.round(
+        (portfolioWarehouses.reduce((sum, w) => sum + (w.occupancy || 0), 0) / portfolioWarehouses.length) * 100
+      );
+      const topCities = Array.from(new Set(portfolioWarehouses.map(w => w.city))).slice(0, 3).join(', ');
+
+      const prompt = `Create a short owner insight (4-6 sentences) for a warehouse owner dashboard.
+
+Portfolio Summary:
+    - Total Properties: ${ownerWarehouses.length || portfolioWarehouses.length}
+- Avg Price: ₹${avgPrice}/sq ft
+- Avg Occupancy: ${avgOccupancy}%
+- Top Cities: ${topCities || 'N/A'}
+
+Provide 2 actionable tips on pricing, availability, or marketing.`;
+
+      const response = await getAIResponse({
+        prompt,
+        systemPrompt: 'You are a business advisor for warehouse owners. Keep it concise and actionable.',
+        temperature: 0.3,
+        maxTokens: 220
+      });
+
+      setAiInsights(response.text.trim());
+    } catch (error) {
+      console.error('AI insight error:', error);
+      toast({
+        title: "AI insights failed",
+        description: "Unable to generate insights right now.",
+        variant: "destructive"
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const OwnerDashboard = () => (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -275,7 +251,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -287,7 +263,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -299,7 +275,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -314,27 +290,92 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Properties Performance */}
-      <Card>
+      {/* AI Owner Insights */}
+      <Card className="border-blue-200/40 bg-gradient-to-r from-blue-50/60 to-indigo-50/60 dark:from-slate-900/60 dark:to-slate-800/60">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Your Properties</CardTitle>
-            <Button asChild>
-              <Link to="/list-property">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Property
-              </Link>
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5 text-blue-500" />
+              <CardTitle className="text-lg">AI Owner Insights</CardTitle>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={generateOwnerInsights}
+              disabled={aiLoading}
+              className="border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950"
+            >
+              {aiLoading ? (
+                <>
+                  <Loader className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+                  Generate Insights
+                </>
+              )}
             </Button>
           </div>
-          <CardDescription>Active warehouse listings and performance</CardDescription>
+          <CardDescription>Personalized market and pricing guidance for your portfolio</CardDescription>
         </CardHeader>
         <CardContent>
+          {aiInsights ? (
+            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{aiInsights}</p>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Click “Generate Insights” to get AI guidance on pricing, demand, and marketing.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Notifications & Properties Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Actions - Notifications */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-blue-500" />
+              Booking Notifications
+            </CardTitle>
+            <CardDescription>View approved bookings for your properties</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Link to="/owner/notifications">
+                <Bell className="mr-2 h-4 w-4" />
+                View All Notifications
+              </Link>
+            </Button>
+            <p className="text-sm text-gray-500">
+              Get notified when admin approves bookings for your warehouses. View customer details and generate receipts.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Properties Performance */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Your Properties</CardTitle>
+              <Button asChild>
+                <Link to="/list-property">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Property
+                </Link>
+              </Button>
+            </div>
+            <CardDescription>Active warehouse listings and performance</CardDescription>
+          </CardHeader>
+          <CardContent>
           {!loading && ownerWarehouses.length > 0 ? (
             <div className="space-y-4">
               {ownerWarehouses.map((property) => (
                 <div key={property.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                   <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
-                    <img 
+                    <img
                       src={(property.images && property.images.length > 0)
                         ? property.images[0]
                         : "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=200&h=200&fit=crop&crop=center"}
@@ -354,7 +395,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center space-x-4 text-sm">
                         <span className="text-green-600 font-medium">
-                          {Math.floor(property.total_area * (1 - property.occupancy/100)).toLocaleString()} sq ft available
+                          {Math.floor(property.total_area * (1 - property.occupancy / 100)).toLocaleString()} sq ft available
                         </span>
                         <span className="text-gray-500">
                           ₹{property.price_per_sqft}/sq ft
@@ -400,6 +441,7 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+      </div>
 
       {/* CSV Upload Section for Owners */}
       <Card>
@@ -436,7 +478,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -448,7 +490,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -460,7 +502,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -540,9 +582,9 @@ export default function Dashboard() {
                 warehouses.slice(0, 6).map((warehouse) => (
                   <div key={warehouse.id} className="border rounded-lg p-4 hover:border-blue-300 transition-colors">
                     <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-gray-200">
-                      <img 
-                        src={(warehouse.images && warehouse.images.length > 0) 
-                          ? warehouse.images[0] 
+                      <img
+                        src={(warehouse.images && warehouse.images.length > 0)
+                          ? warehouse.images[0]
                           : "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&crop=center"}
                         alt={warehouse.name || "Warehouse"}
                         className="w-full h-full object-cover"
@@ -597,7 +639,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       {/* User Quick Actions */}
       <div className="bg-card border-b px-4">
         <div className="container mx-auto flex justify-end items-center h-12">
@@ -631,7 +673,7 @@ export default function Dashboard() {
                 enableTilt={false}
                 enableMobileTilt={false}
                 showBehindGradient={false}
-                onContactClick={() => {}}
+                onContactClick={() => { }}
               />
             </div>
           </div>
@@ -700,7 +742,7 @@ export default function Dashboard() {
                   {isOwner ? 'Property Management' : 'Saved Properties'}
                 </CardTitle>
                 <CardDescription>
-                  {isOwner 
+                  {isOwner
                     ? 'Detailed management tools for your warehouse listings'
                     : 'Properties you have bookmarked for future reference'
                   }
@@ -733,7 +775,7 @@ export default function Dashboard() {
                   {isOwner ? 'Inquiries & Messages' : 'Activity & Communications'}
                 </CardTitle>
                 <CardDescription>
-                  {isOwner 
+                  {isOwner
                     ? 'Manage tenant inquiries and communications'
                     : 'Track your inquiries and communications with property owners'
                   }

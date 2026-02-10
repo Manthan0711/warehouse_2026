@@ -147,44 +147,44 @@ Looking forward to discussing this opportunity.`;
     onClick: () => void;
   }) => (
     <Card 
-      className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}
+      className={`cursor-pointer transition-all border-gray-600 ${isSelected ? 'ring-2 ring-blue-500 bg-blue-900/30 border-blue-500' : 'bg-gray-800/50 hover:bg-gray-700/50 hover:border-gray-500'}`}
       onClick={onClick}
     >
       <CardContent className="p-4 text-center">
-        <Icon className={`h-8 w-8 mx-auto mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
-        <h3 className="font-semibold text-sm">{title}</h3>
-        <p className="text-xs text-gray-600 mt-1">{description}</p>
+        <Icon className={`h-8 w-8 mx-auto mb-2 ${isSelected ? 'text-blue-400' : 'text-gray-400'}`} />
+        <h3 className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-gray-200'}`}>{title}</h3>
+        <p className="text-xs text-gray-400 mt-1">{description}</p>
       </CardContent>
     </Card>
   );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-blue-200 shadow-glow shadow-blue-200/50">
-        <DialogHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-          <DialogTitle className="flex items-center space-x-2">
-            <MessageSquare className="h-5 w-5 text-blue-600" />
-            <span className="text-gradient">Send Inquiry to Warehouse Owner</span>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700 text-white">
+        <DialogHeader className="border-b border-gray-700 pb-4">
+          <DialogTitle className="flex items-center space-x-2 text-white">
+            <MessageSquare className="h-5 w-5 text-blue-400" />
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Send Inquiry to Warehouse Owner</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-400">
             Choose your inquiry type and contact the owner directly
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pt-4">
           {/* Warehouse Info */}
-          <Card className="bg-gray-50">
+          <Card className="bg-gray-800/80 border-gray-700">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold text-lg">{warehouseName}</h3>
-                  <p className="text-gray-600 flex items-center">
+                  <h3 className="font-semibold text-lg text-white">{warehouseName}</h3>
+                  <p className="text-gray-400 flex items-center">
                     <MapPin className="h-4 w-4 mr-1" />
                     {warehouseLocation}
                   </p>
                   <div className="flex items-center space-x-4 mt-2">
-                    <span className="text-blue-600 font-semibold">₹{pricePerSqFt}/sq ft</span>
-                    <Badge variant="secondary">{availableArea.toLocaleString()} sq ft available</Badge>
+                    <span className="text-blue-400 font-semibold">₹{pricePerSqFt}/sq ft</span>
+                    <Badge variant="secondary" className="bg-blue-900/50 text-blue-300 border-blue-700">{availableArea.toLocaleString()} sq ft available</Badge>
                   </div>
                 </div>
               </div>
@@ -193,7 +193,7 @@ Looking forward to discussing this opportunity.`;
 
           {/* Inquiry Type Selection */}
           <div>
-            <Label className="text-base font-semibold mb-3 block">Select Inquiry Type</Label>
+            <Label className="text-base font-semibold mb-3 block text-gray-200">Select Inquiry Type</Label>
             <div className="grid grid-cols-3 gap-3">
               <InquiryTypeCard
                 type="general"
@@ -226,18 +226,18 @@ Looking forward to discussing this opportunity.`;
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Your Name *</Label>
+                <Label htmlFor="name" className="text-gray-300">Your Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="Enter your full name"
                   required
-                  className="glow-input"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="email" className="text-gray-300">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -245,31 +245,31 @@ Looking forward to discussing this opportunity.`;
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   placeholder="your.email@company.com"
                   required
-                  className="glow-input"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="phone">Phone Number *</Label>
+                <Label htmlFor="phone" className="text-gray-300">Phone Number *</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="+91 98765 43210"
                   required
-                  className="glow-input"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <Label htmlFor="company">Company Name</Label>
+                <Label htmlFor="company" className="text-gray-300">Company Name</Label>
                 <Input
                   id="company"
                   value={formData.company}
                   onChange={(e) => handleInputChange("company", e.target.value)}
                   placeholder="Your company name"
-                  className="glow-input"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -277,7 +277,7 @@ Looking forward to discussing this opportunity.`;
             {inquiryType === "booking" && (
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="requiredSpace">Required Space (sq ft) *</Label>
+                  <Label htmlFor="requiredSpace" className="text-gray-300">Required Space (sq ft) *</Label>
                   <Input
                     id="requiredSpace"
                     type="number"
@@ -285,11 +285,11 @@ Looking forward to discussing this opportunity.`;
                     onChange={(e) => handleInputChange("requiredSpace", e.target.value)}
                     placeholder="1000"
                     required
-                    className="glow-input"
+                    className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="duration">Duration (months) *</Label>
+                  <Label htmlFor="duration" className="text-gray-300">Duration (months) *</Label>
                   <Input
                     id="duration"
                     type="number"
@@ -297,17 +297,17 @@ Looking forward to discussing this opportunity.`;
                     onChange={(e) => handleInputChange("duration", e.target.value)}
                     placeholder="6"
                     required
-                    className="glow-input"
+                    className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="startDate">Start Date</Label>
+                  <Label htmlFor="startDate" className="text-gray-300">Start Date</Label>
                   <Input
                     id="startDate"
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange("startDate", e.target.value)}
-                    className="glow-input"
+                    className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -315,20 +315,20 @@ Looking forward to discussing this opportunity.`;
 
             {inquiryType === "partnership" && (
               <div>
-                <Label htmlFor="requiredSpace">Required Space (sq ft)</Label>
+                <Label htmlFor="requiredSpace" className="text-gray-300">Required Space (sq ft)</Label>
                 <Input
                   id="requiredSpace"
                   type="number"
                   value={formData.requiredSpace}
                   onChange={(e) => handleInputChange("requiredSpace", e.target.value)}
                   placeholder="5000"
-                  className="glow-input"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             )}
 
             <div>
-              <Label htmlFor="message">
+              <Label htmlFor="message" className="text-gray-300">
                 {inquiryType === "partnership" ? "Partnership Details" : "Additional Message"}
               </Label>
               <Textarea
@@ -343,18 +343,18 @@ Looking forward to discussing this opportunity.`;
                     : "Partnership type, business model, requirements..."
                 }
                 rows={4}
-                className="glow-input resize-none"
+                className="bg-gray-800 border-gray-600 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 resize-none"
               />
             </div>
           </div>
 
           {/* Contact Options */}
-          <div className="border-t pt-6">
-            <Label className="text-base font-semibold mb-4 block">Contact Owner</Label>
+          <div className="border-t border-gray-700 pt-6">
+            <Label className="text-base font-semibold mb-4 block text-gray-200">Contact Owner</Label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <Button 
                 onClick={handleWhatsAppContact}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-900/30"
                 disabled={!formData.name || !formData.email || !formData.phone}
               >
                 <MessageSquare className="h-4 w-4 mr-2" />
@@ -364,7 +364,7 @@ Looking forward to discussing this opportunity.`;
                 variant="outline"
                 onClick={handleEmailContact}
                 disabled={!formData.name || !formData.email || !formData.phone}
-                className="border-blue-200 hover:bg-blue-50"
+                className="border-gray-600 text-gray-200 hover:bg-gray-800 hover:border-blue-500 hover:text-blue-400"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Email
@@ -372,7 +372,7 @@ Looking forward to discussing this opportunity.`;
               <Button 
                 variant="outline"
                 onClick={handlePhoneContact}
-                className="border-blue-200 hover:bg-blue-50"
+                className="border-gray-600 text-gray-200 hover:bg-gray-800 hover:border-blue-500 hover:text-blue-400"
               >
                 <Phone className="h-4 w-4 mr-2" />
                 Call Now
@@ -382,27 +382,27 @@ Looking forward to discussing this opportunity.`;
 
           {/* Cost Estimate for Booking */}
           {inquiryType === "booking" && formData.requiredSpace && formData.duration && (
-            <Card className="bg-glass border-blue-200 shadow-glow shadow-blue-200/30">
-              <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <CardTitle className="text-sm text-gradient">Cost Estimate</CardTitle>
+            <Card className="bg-gray-800/80 border-blue-900/50">
+              <CardHeader className="pb-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-t-lg">
+                <CardTitle className="text-sm bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Cost Estimate</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-gray-300">
                     <span>Monthly Rent:</span>
-                    <span className="font-medium">₹{(parseInt(formData.requiredSpace) * pricePerSqFt).toLocaleString()}</span>
+                    <span className="font-medium text-white">₹{(parseInt(formData.requiredSpace) * pricePerSqFt).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-gray-300">
                     <span>Duration:</span>
-                    <span className="font-medium">{formData.duration} month(s)</span>
+                    <span className="font-medium text-white">{formData.duration} month(s)</span>
                   </div>
-                  <div className="flex justify-between font-semibold text-base pt-2 border-t">
-                    <span>Total Cost:</span>
-                    <span className="text-gradient">
+                  <div className="flex justify-between font-semibold text-base pt-2 border-t border-gray-700">
+                    <span className="text-gray-200">Total Cost:</span>
+                    <span className="text-green-400">
                       ₹{(parseInt(formData.requiredSpace) * pricePerSqFt * parseInt(formData.duration)).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 mt-2">
+                  <p className="text-xs text-gray-500 mt-2">
                     *Estimated cost. Final pricing may include additional charges for utilities, security deposit, etc.
                   </p>
                 </div>
@@ -411,17 +411,17 @@ Looking forward to discussing this opportunity.`;
           )}
 
           {/* Owner Info */}
-          <Card className="bg-glass border-blue-200">
+          <Card className="bg-gray-800/80 border-gray-700">
             <CardContent className="p-4">
               <div className="text-center">
-                <h4 className="font-semibold text-gradient">{ownerName}</h4>
-                <p className="text-sm text-gray-600">Property Owner</p>
+                <h4 className="font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{ownerName}</h4>
+                <p className="text-sm text-gray-400">Property Owner</p>
                 <div className="flex justify-center items-center space-x-4 mt-2 text-sm">
-                  <span className="flex items-center text-green-600">
+                  <span className="flex items-center text-green-400">
                     <Clock className="h-3 w-3 mr-1" />
                     Usually responds within 2 hours
                   </span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200">
+                  <Badge variant="secondary" className="bg-green-900/50 text-green-400 border-green-700">
                     ✓ Verified
                   </Badge>
                 </div>

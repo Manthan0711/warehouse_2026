@@ -1,850 +1,311 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
+import { getPendingVerifications, getAdminNotifications } from '../services/verificationService';
+import { Navbar } from '../components/Navbar';
+import { Button } from '../components/ui/button';
+import { Progress } from '../components/ui/progress';
+import { Link } from 'react-router-dom';
+import { isDemoSession } from '../services/demoAuth';
 import {
-  Building2, Users, TrendingUp, DollarSign, BarChart3,
-  Settings, Shield, AlertCircle, CheckCircle, Clock,
-  MapPin, Star, Eye, Edit, Trash, Filter, Search,
-  UserCheck, UserX, FileText, Activity, Download,
-  Flame, ExternalLink, Zap, Calendar, Package
-} from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
-import { Navbar } from "@/components/Navbar";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import showSimpleNotification from "@/utils/simpleNotification";
+  Users,
+  Warehouse,
+  DollarSign,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Bell,
+  FileText,
+  ShieldCheck,
+  RefreshCw,
+  Eye
+} from 'lucide-react';
 
-// Modal Components
-function WarehouseReviewModal({
-  warehouse,
-  onApprove,
-  onReject,
-  loading
-}: {
-  warehouse: PendingWarehouse;
-  onApprove: () => void;
-  onReject: (reason: string) => void;
-  loading: boolean;
-}) {
-  return (
-    <div className="space-y-6">
-      {/* Basic Info */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Warehouse Details</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <Label>Name</Label>
-            <p className="text-sm text-gray-600">{warehouse.name}</p>
-          </div>
-          <div>
-            <Label>Location</Label>
-            <p className="text-sm text-gray-600">{warehouse.address}, {warehouse.city}, {warehouse.state}</p>
-          </div>
-          <div>
-            <Label>Area</Label>
-            <p className="text-sm text-gray-600">{warehouse.total_area.toLocaleString()} sq ft</p>
-          </div>
-          <div>
-            <Label>Price</Label>
-            <p className="text-sm text-gray-600">₹{warehouse.price_per_sqft}/sq ft</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Description */}
-      <div>
-        <Label>Description</Label>
-        <p className="text-sm text-gray-600 mt-2">{warehouse.description}</p>
-      </div>
-
-      {/* Amenities & Features */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <Label>Amenities</Label>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {warehouse.amenities.map((amenity, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {amenity}
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <div>
-          <Label>Features</Label>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {warehouse.features.map((feature, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {feature}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Images */}
-      {warehouse.image_urls && warehouse.image_urls.length > 0 && (
-        <div>
-          <Label>Property Images</Label>
-          <div className="grid grid-cols-3 gap-4 mt-2">
-            {warehouse.image_urls.slice(0, 6).map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Property ${index + 1}`}
-                className="w-full h-24 object-cover rounded border"
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Document Validation */}
-      <div>
-        <Label>Document Verification</Label>
-        <div className="space-y-4 mt-2">
-          {/* GST Certificate */}
-          {warehouse.document_urls?.gst_certificate && (
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  GST Certificate
-                </h4>
-                <Badge variant={warehouse.ocr_results?.gst_certificate?.is_valid ? "default" : "destructive"}>
-                  {warehouse.ocr_results?.gst_certificate?.is_valid ? 'Valid' : 'Issues Found'}
-                </Badge>
-              </div>
-              <div className="text-sm text-gray-600">
-                <p>Confidence: {warehouse.ocr_results?.gst_certificate?.confidence ? (warehouse.ocr_results.gst_certificate.confidence * 100).toFixed(1) : 'N/A'}%</p>
-                {warehouse.ocr_results?.gst_certificate?.anomalies && warehouse.ocr_results.gst_certificate.anomalies.length > 0 && (
-                  <div className="mt-2">
-                    <p className="font-medium text-red-600">Issues:</p>
-                    <ul className="text-xs text-red-500 mt-1">
-                      {warehouse.ocr_results.gst_certificate.anomalies.map((anomaly, i) => (
-                        <li key={i}>• {anomaly}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <Button size="sm" variant="outline" className="mt-2" asChild>
-                <a
-                  href={warehouse.document_urls.gst_certificate.includes('placeholder') ? '#' : warehouse.document_urls.gst_certificate}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    if (warehouse.document_urls?.gst_certificate?.includes('placeholder')) {
-                      e.preventDefault();
-                      alert('This is demo data. Real documents will be uploaded by warehouse owners when they submit properties.');
-                    }
-                  }}
-                >
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  {warehouse.document_urls.gst_certificate.includes('placeholder') ? 'Demo Document (Not Available)' : 'View GST Certificate'}
-                </a>
-              </Button>
-            </div>
-          )}
-
-          {/* Property Papers */}
-          {warehouse.document_urls?.property_papers && (
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Property Papers
-                </h4>
-                <Badge variant={warehouse.ocr_results?.property_papers?.is_valid ? "default" : "destructive"}>
-                  {warehouse.ocr_results?.property_papers?.is_valid ? 'Valid' : 'Issues Found'}
-                </Badge>
-              </div>
-              <div className="text-sm text-gray-600">
-                <p>Confidence: {warehouse.ocr_results?.property_papers?.confidence ? (warehouse.ocr_results.property_papers.confidence * 100).toFixed(1) : 'N/A'}%</p>
-                {warehouse.ocr_results?.property_papers?.anomalies && warehouse.ocr_results.property_papers.anomalies.length > 0 && (
-                  <div className="mt-2">
-                    <p className="font-medium text-red-600">Issues:</p>
-                    <ul className="text-xs text-red-500 mt-1">
-                      {warehouse.ocr_results.property_papers.anomalies.map((anomaly, i) => (
-                        <li key={i}>• {anomaly}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <Button size="sm" variant="outline" className="mt-2" asChild>
-                <a href={warehouse.document_urls.property_papers} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  View Property Papers
-                </a>
-              </Button>
-            </div>
-          )}
-
-          {/* Fire Safety Certificate */}
-          {warehouse.document_urls?.fire_certificate && (
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium flex items-center">
-                  <Flame className="h-4 w-4 mr-2" />
-                  Fire Safety Certificate
-                </h4>
-                <Badge variant={warehouse.ocr_results?.fire_certificate?.is_valid ? "default" : "destructive"}>
-                  {warehouse.ocr_results?.fire_certificate?.is_valid ? 'Valid' : 'Issues Found'}
-                </Badge>
-              </div>
-              <div className="text-sm text-gray-600">
-                <p>Confidence: {warehouse.ocr_results?.fire_certificate?.confidence ? (warehouse.ocr_results.fire_certificate.confidence * 100).toFixed(1) : 'N/A'}%</p>
-                {warehouse.ocr_results?.fire_certificate?.anomalies && warehouse.ocr_results.fire_certificate.anomalies.length > 0 && (
-                  <div className="mt-2">
-                    <p className="font-medium text-red-600">Issues:</p>
-                    <ul className="text-xs text-red-500 mt-1">
-                      {warehouse.ocr_results.fire_certificate.anomalies.map((anomaly, i) => (
-                        <li key={i}>• {anomaly}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <Button size="sm" variant="outline" className="mt-2" asChild>
-                <a href={warehouse.document_urls.fire_certificate} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  View Fire Certificate
-                </a>
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-4 pt-4 border-t">
-        <Button
-          onClick={onApprove}
-          disabled={loading}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          {loading ? 'Approving...' : 'Approve Warehouse'}
-        </Button>
-        <Button
-          variant="destructive"
-          disabled={loading}
-          onClick={() => onReject('Document validation failed')}
-        >
-          <AlertCircle className="h-4 w-4 mr-2" />
-          Reject
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function RejectWarehouseModal({
-  warehouse,
-  onConfirm,
-  loading
-}: {
-  warehouse: PendingWarehouse;
-  onConfirm: (reason: string) => void;
-  loading: boolean;
-}) {
-  const [reason, setReason] = useState('');
-
-  const commonReasons = [
-    'Document verification failed',
-    'Invalid property papers',
-    'Fire safety certificate expired',
-    'GST certificate invalid',
-    'Location not suitable',
-    'Pricing not competitive',
-    'Other'
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <Label>Rejection Reason</Label>
-        <div className="flex flex-wrap gap-2 mt-2 mb-4">
-          {commonReasons.map((commonReason) => (
-            <Button
-              key={commonReason}
-              size="sm"
-              variant={reason === commonReason ? "default" : "outline"}
-              onClick={() => setReason(commonReason)}
-            >
-              {commonReason}
-            </Button>
-          ))}
-        </div>
-        <Textarea
-          placeholder="Enter specific rejection reason..."
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-        />
-      </div>
-
-      <div className="flex gap-2 pt-4">
-        <Button
-          variant="destructive"
-          onClick={() => onConfirm(reason)}
-          disabled={!reason || loading}
-        >
-          {loading ? 'Rejecting...' : 'Confirm Rejection'}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-interface AdminStats {
+interface DashboardStats {
   totalUsers: number;
   totalWarehouses: number;
-  pendingApprovals: number;
-  monthlyRevenue: number;
-  growthRate: number;
-  activeUsers: number;
-  verifiedWarehouses: number;
-  totalInquiries: number;
+  pendingVerifications: number;
+  pendingWarehouseSubmissions: number;
+  totalBookings: number;
+  totalRevenue: number;
+  seekerCount: number;
+  ownerCount: number;
+  pendingBookings: number;
+  approvedBookings: number;
+  totalStorageSqft: number;
+  occupiedStorageSqft: number;
+  availableStorageSqft: number;
 }
 
-interface AdminUser {
+interface RecentActivity {
   id: string;
-  name: string;
-  email: string;
-  userType: 'owner' | 'seeker';
-  status: 'active' | 'pending' | 'suspended';
-  joinedDate: string;
-  lastActive: string;
-  totalBookings?: number;
-  warehousesOwned?: number;
-}
-
-interface PendingWarehouse {
-  id: string;
-  name: string;
-  description: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
-  total_area: string | number;
-  price_per_sqft: string | number;
-  amenities: string[];
-  features: string[];
-  image_urls: string[];
-  document_urls?: {
-    gst_certificate?: string;
-    property_papers?: string;
-    fire_certificate?: string;
-  };
-  documents?: {
-    gst_certificate?: string;
-    property_papers?: string;
-    fire_certificate?: string;
-    validation?: {
-      gst_certificate?: { text: string; confidence: number; isValid: boolean; anomalies: string[] };
-      property_papers?: { text: string; confidence: number; isValid: boolean; anomalies: string[] };
-      fire_certificate?: { text: string; confidence: number; isValid: boolean; anomalies: string[] };
-    };
-  };
-  ocr_results?: {
-    gst_certificate?: { text: string; confidence: number; is_valid: boolean; anomalies: string[] };
-    property_papers?: { text: string; confidence: number; is_valid: boolean; anomalies: string[] };
-    fire_certificate?: { text: string; confidence: number; is_valid: boolean; anomalies: string[] };
-  };
-  owner_id: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submitted_at: string;
-  reviewed_at?: string;
-  reviewed_by?: string;
-  admin_notes?: string;
-  rejection_reason?: string;
-  // Joined data
-  owner_name?: string;
-  owner_email?: string;
-  owner_phone?: string;
+  type: string;
+  message: string;
+  timestamp: string;
 }
 
 export default function AdminDashboard() {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
-
-  const [activeTab, setActiveTab] = useState('overview');
+  const demoMode = isDemoSession();
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [pendingWarehouses, setPendingWarehouses] = useState<PendingWarehouse[]>([]);
-  const [selectedWarehouse, setSelectedWarehouse] = useState<PendingWarehouse | null>(null);
-  const [reviewLoading, setReviewLoading] = useState(false);
-
-  // Booking management state
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [bookingStats, setBookingStats] = useState<any>(null);
-  const [bookingLoading, setBookingLoading] = useState(false);
-
-  // Real admin stats from Supabase
-  const [stats, setStats] = useState<AdminStats>({
+  const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalWarehouses: 0,
-    pendingApprovals: 0,
-    monthlyRevenue: 0,
-    growthRate: 0,
-    activeUsers: 0,
-    verifiedWarehouses: 0,
-    totalInquiries: 0
+    pendingVerifications: 0,
+    pendingWarehouseSubmissions: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
+    seekerCount: 0,
+    ownerCount: 0,
+    pendingBookings: 0,
+    approvedBookings: 0,
+    totalStorageSqft: 0,
+    occupiedStorageSqft: 0,
+    availableStorageSqft: 0
   });
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [bookingTrend, setBookingTrend] = useState<Array<{ label: string; count: number }>>([]);
 
-  // Mock recent activity data
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'approval',
-      message: 'Warehouse approved - Prime Storage Hub, Gurgaon',
-      timestamp: '2 hours ago',
-      icon: CheckCircle,
-      iconColor: 'text-green-600'
-    },
-    {
-      id: 2,
-      type: 'registration',
-      message: 'New user registration - Storage Seeker from Mumbai',
-      timestamp: '4 hours ago',
-      icon: UserCheck,
-      iconColor: 'text-blue-600'
-    },
-    {
-      id: 3,
-      type: 'payment',
-      message: '₹45,000 booking payment confirmed',
-      timestamp: '6 hours ago',
-      icon: DollarSign,
-      iconColor: 'text-green-600'
-    },
-    {
-      id: 4,
-      type: 'verification',
-      message: 'Document verification pending - 3 warehouses awaiting review',
-      timestamp: '8 hours ago',
-      icon: FileText,
-      iconColor: 'text-orange-600'
-    }
-  ];
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  // Fetch real admin stats from Supabase
-  const fetchAdminStats = async () => {
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
-      console.log('📊 Fetching admin stats from Supabase...');
+      if (isDemoSession()) {
+        const trend: Array<{ label: string; count: number }> = [];
+        for (let i = 5; i >= 0; i--) {
+          const start = new Date();
+          start.setDate(1);
+          start.setMonth(start.getMonth() - i);
+          start.setHours(0, 0, 0, 0);
+          trend.push({
+            label: start.toLocaleDateString('en-IN', { month: 'short' }),
+            count: 0
+          });
+        }
 
-      // Fetch total users (using users table instead of profiles)
-      const { count: totalUsers } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch total warehouses
-      const { count: totalWarehouses } = await supabase
-        .from('warehouses')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch pending approvals
-      const { count: pendingApprovals } = await supabase
-        .from('warehouse_submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-
-      // Fetch verified warehouses (check if is_verified column exists)
-      const { count: verifiedWarehouses } = await supabase
-        .from('warehouses')
-        .select('*', { count: 'exact', head: true });
-
-      // Calculate monthly revenue (approximate) - using correct column names
-      const { data: revenueData } = await supabase
-        .from('warehouses')
-        .select('total_area, price_per_sqft');
-
-      const monthlyRevenue = revenueData?.reduce((total, warehouse) => {
-        const area = warehouse.total_area || 0;
-        const price = warehouse.price_per_sqft || 0;
-        const occupancy = 0.7; // Default occupancy rate
-        return total + (area * price * occupancy);
-      }, 0) || 0;
-
-      // Calculate growth rate (mock for now)
-      const growthRate = 12.5; // This would need historical data to calculate properly
-
-      setStats({
-        totalUsers: totalUsers || 0,
-        totalWarehouses: totalWarehouses || 0,
-        pendingApprovals: pendingApprovals || 0,
-        monthlyRevenue: monthlyRevenue,
-        growthRate: growthRate,
-        activeUsers: Math.floor((totalUsers || 0) * 0.7), // Assume 70% are active
-        verifiedWarehouses: verifiedWarehouses || 0,
-        totalInquiries: Math.floor((totalWarehouses || 0) * 2.5) // Estimate based on warehouses
-      });
-
-      console.log('✅ Admin stats updated:', {
-        totalUsers: totalUsers || 0,
-        totalWarehouses: totalWarehouses || 0,
-        pendingApprovals: pendingApprovals || 0,
-        monthlyRevenue: monthlyRevenue
-      });
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
-    }
-  };
-
-  // Fetch real data from Supabase
-  const fetchPendingWarehouses = async () => {
-    try {
-      console.log('📋 Loading submissions from Supabase for admin review');
-
-      // Load from Supabase warehouse_submissions table (simplified query)
-      const { data: submissions, error } = await supabase
-        .from('warehouse_submissions')
-        .select('*')
-        .eq('status', 'pending')
-        .order('submitted_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching submissions:', error);
-        // Fallback to localStorage if Supabase fails
-        const localSubmissions = JSON.parse(localStorage.getItem('demo-submissions') || '[]');
-        const pendingSubmissions = localSubmissions.filter((sub: any) => sub.status === 'pending' || !sub.status);
-        console.log(`Fallback: Found ${pendingSubmissions.length} pending submissions from localStorage`);
-        setPendingWarehouses(pendingSubmissions);
+        setBookingTrend(trend);
+        setStats({
+          totalUsers: 0,
+          totalWarehouses: 0,
+          pendingVerifications: 0,
+          pendingWarehouseSubmissions: 0,
+          totalBookings: 0,
+          totalRevenue: 0,
+          seekerCount: 0,
+          ownerCount: 0,
+          pendingBookings: 0,
+          approvedBookings: 0,
+          totalStorageSqft: 0,
+          occupiedStorageSqft: 0,
+          availableStorageSqft: 0
+        });
+        setNotifications([]);
+        setRecentActivities([]);
+        setLoading(false);
         return;
       }
 
-      // Transform data to match our interface (simplified since we don't have user join)
-      const transformedData: PendingWarehouse[] = submissions?.map(submission => ({
-        ...submission,
-        owner_name: 'Demo Owner', // Default name since we don't have user data
-        owner_email: 'demo.owner@example.com',
-        owner_phone: '+91-9876543210'
-      })) || [];
-
-      console.log(`Found ${transformedData.length} pending submissions for admin review`);
-      setPendingWarehouses(transformedData);
-    } catch (error) {
-      console.error('Error loading warehouse submissions:', error);
-      setPendingWarehouses([]);
-    }
-  };
-
-  // Mock user management data
-  const users: AdminUser[] = [
-    {
-      id: '1',
-      name: 'Rajesh Kumar',
-      email: 'rajesh@example.com',
-      userType: 'owner',
-      status: 'active',
-      joinedDate: '2024-01-15',
-      lastActive: '2 hours ago',
-      warehousesOwned: 3
-    },
-    {
-      id: '2',
-      name: 'Priya Sharma',
-      email: 'priya@example.com',
-      userType: 'seeker',
-      status: 'active',
-      joinedDate: '2024-01-10',
-      lastActive: '1 day ago',
-      totalBookings: 5
-    },
-    {
-      id: '3',
-      name: 'Amit Patel',
-      email: 'amit@example.com',
-      userType: 'owner',
-      status: 'pending',
-      joinedDate: '2024-01-18',
-      lastActive: '5 hours ago',
-      warehousesOwned: 1
-    },
-    {
-      id: '4',
-      name: 'Sunita Singh',
-      email: 'sunita@example.com',
-      userType: 'seeker',
-      status: 'active',
-      joinedDate: '2024-01-12',
-      lastActive: '3 hours ago',
-      totalBookings: 2
-    }
-  ];
-
-  // Fetch bookings from admin API
-  const fetchBookings = async () => {
-    setBookingLoading(true);
-    try {
-      const response = await fetch('/api/admin/bookings');
-      const data = await response.json();
-      if (data.success) {
-        setBookings(data.bookings || []);
-        console.log(`✅ Loaded ${data.bookings?.length || 0} bookings`);
-      }
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-      showSimpleNotification('error', 'Error', 'Failed to fetch bookings');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
-
-  // Fetch booking statistics
-  const fetchBookingStats = async () => {
-    try {
-      const response = await fetch('/api/admin/bookings/stats');
-      const data = await response.json();
-      if (data.success) {
-        setBookingStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Error fetching booking stats:', error);
-    }
-  };
-
-  // Handle booking approval
-  const handleApproveBooking = async (bookingId: string) => {
-    setBookingLoading(true);
-    try {
-      const response = await fetch('/api/admin/bookings/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId,
-          status: 'approved',
-          adminNotes: 'Booking approved by admin'
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        showSimpleNotification('success', 'Booking Approved', data.message);
-        await Promise.all([fetchBookings(), fetchBookingStats()]);
-      } else {
-        showSimpleNotification('error', 'Error', data.error || 'Failed to approve booking');
-      }
-    } catch (error) {
-      console.error('Error approving booking:', error);
-      showSimpleNotification('error', 'Error', 'Failed to approve booking');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
-
-  // Handle booking rejection
-  const handleRejectBooking = async (bookingId: string, reason: string) => {
-    setBookingLoading(true);
-    try {
-      const response = await fetch('/api/admin/bookings/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId,
-          status: 'rejected',
-          adminNotes: reason
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        showSimpleNotification('success', 'Booking Rejected', data.message);
-        await Promise.all([fetchBookings(), fetchBookingStats()]);
-      } else {
-        showSimpleNotification('error', 'Error', data.error || 'Failed to reject booking');
-      }
-    } catch (error) {
-      console.error('Error rejecting booking:', error);
-      showSimpleNotification('error', 'Error', 'Failed to reject booking');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const loadData = async () => {
-      await Promise.all([
-        fetchAdminStats(),
-        fetchPendingWarehouses(),
-        fetchBookings(),
-        fetchBookingStats()
+      // Fetch all data in parallel
+      const [
+        seekersData,
+        ownersData,
+        warehousesData,
+        warehouseCapacityData,
+        submissionsData,
+        pendingVerifs,
+        bookingsData,
+        notifsData
+      ] = await Promise.all([
+        supabase.from('seeker_profiles').select('*', { count: 'exact' }),
+        supabase.from('owner_profiles').select('*', { count: 'exact' }),
+        supabase.from('warehouses').select('id', { count: 'exact' }),
+        supabase.from('warehouses').select('total_area, occupancy'),
+        supabase.from('warehouse_submissions').select('id', { count: 'exact' }).eq('status', 'pending'),
+        getPendingVerifications(),
+        // Fetch bookings from activity_logs where type='booking'
+        supabase.from('activity_logs').select('*').eq('type', 'booking').order('created_at', { ascending: false }),
+        getAdminNotifications()
       ]);
+
+      // Calculate stats
+      const seekerCount = seekersData.count || 0;
+      const ownerCount = ownersData.count || 0;
+      const totalUsers = seekerCount + ownerCount;
+
+      const warehouses = warehousesData.count || 0;
+
+      const bookings = bookingsData.data || [];
+      const totalBookings = bookings.length;
+      const pendingBookings = bookings.filter((b: any) => b.metadata?.booking_status === 'pending').length;
+      const approvedBookings = bookings.filter((b: any) => b.metadata?.booking_status === 'approved').length;
+
+      // Calculate revenue from approved bookings
+      const totalRevenue = bookings.reduce((sum: number, b: any) => {
+        if (b.metadata?.booking_status === 'approved') {
+          return sum + (parseFloat(b.metadata?.total_amount) || 0);
+        }
+        return sum;
+      }, 0);
+
+      // Build booking trend (last 6 months)
+      const trend: Array<{ label: string; count: number }> = [];
+      for (let i = 5; i >= 0; i--) {
+        const start = new Date();
+        start.setDate(1);
+        start.setMonth(start.getMonth() - i);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 1);
+
+        const label = start.toLocaleDateString('en-IN', { month: 'short' });
+        const count = bookings.filter((b: any) => {
+          const created = new Date(b.created_at);
+          return created >= start && created < end;
+        }).length;
+
+        trend.push({ label, count });
+      }
+
+      setBookingTrend(trend);
+
+      const capacityRows = warehouseCapacityData.data || [];
+      const totalStorageSqft = capacityRows.reduce((sum: number, w: any) => sum + (Number(w.total_area) || 0), 0);
+      const occupiedStorageSqft = capacityRows.reduce((sum: number, w: any) => {
+        const total = Number(w.total_area) || 0;
+        const occupancy = Number(w.occupancy) || 0;
+        return sum + Math.round(total * occupancy);
+      }, 0);
+      const availableStorageSqft = Math.max(0, totalStorageSqft - occupiedStorageSqft);
+
+      setStats({
+        totalUsers,
+        totalWarehouses: warehouses,
+        pendingVerifications: pendingVerifs.length,
+        pendingWarehouseSubmissions: submissionsData.count || 0,
+        totalBookings,
+        totalRevenue,
+        seekerCount,
+        ownerCount,
+        pendingBookings,
+        approvedBookings,
+        totalStorageSqft,
+        occupiedStorageSqft,
+        availableStorageSqft
+      });
+
+      setNotifications(notifsData);
+
+      // Build recent activities from real data
+      const activities: RecentActivity[] = [];
+
+      // Add verification submissions
+      pendingVerifs.slice(0, 3).forEach((verif: any) => {
+        activities.push({
+          id: verif.id,
+          type: 'verification',
+          message: `New ${verif.profile_type} verification: ${verif.user_name} (${verif.company_name})`,
+          timestamp: verif.created_at
+        });
+      });
+
+      // Add recent bookings from activity_logs
+      const recentBookings = bookings.slice(0, 5);
+
+      recentBookings.forEach((booking: any) => {
+        const status = booking.metadata?.booking_status || 'pending';
+        const warehouseName = booking.metadata?.warehouse_name || 'Warehouse';
+        const amount = booking.metadata?.total_amount || 0;
+        const customerName = booking.metadata?.customer_details?.name || 'Customer';
+        
+        activities.push({
+          id: booking.id,
+          type: 'booking',
+          message: `${status === 'approved' ? '✅ Approved' : status === 'rejected' ? '❌ Rejected' : '⏳ New'} booking: ${warehouseName} by ${customerName} - ₹${amount.toLocaleString()}`,
+          timestamp: booking.created_at
+        });
+      });
+
+      // Sort by timestamp
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setRecentActivities(activities.slice(0, 8));
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
       setLoading(false);
-    };
-
-    loadData();
-
-    // Set up periodic refresh to check for new submissions and bookings
-    const interval = setInterval(() => {
-      fetchAdminStats();
-      fetchPendingWarehouses();
-      fetchBookings();
-      fetchBookingStats();
-    }, 10000); // Refresh every 10 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleApproveWarehouse = async (warehouseId: string) => {
-    setReviewLoading(true);
-    try {
-      const warehouse = pendingWarehouses.find(w => w.id === warehouseId);
-      if (!warehouse) return;
-
-      // Update warehouse_submissions status in Supabase
-      const { error: updateError } = await supabase
-        .from('warehouse_submissions')
-        .update({
-          status: 'approved',
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id || 'demo-admin',
-          admin_notes: 'Approved after document verification'
-        })
-        .eq('id', warehouseId);
-
-      if (updateError) {
-        console.error('Error updating submission:', updateError);
-        throw updateError;
-      }
-
-      console.log('✅ Warehouse approved:', warehouse.name);
-
-      // Prefer a server-side approval endpoint that returns the created
-      // warehouse id (the DB trigger will insert the row) so notifications
-      // can link directly to the public warehouse listing.
-      try {
-        const resp = await fetch('/api/approve-submission', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ submissionId: warehouseId })
-        });
-        const json = await resp.json();
-        const createdWarehouseId = json?.warehouseId || null;
-
-        // Create notification for the owner using the returned id when available
-        await supabase.from('notifications').insert({
-          user_id: warehouse.owner_id,
-          type: 'approval',
-          title: 'Warehouse Approved! 🎉',
-          message: `Your warehouse "${warehouse.name}" has been approved and is now visible to seekers.`,
-          link: createdWarehouseId ? `/warehouses/${createdWarehouseId}` : `/warehouses`
-        });
-      } catch (err) {
-        console.warn('Server-side approval endpoint failed, falling back to direct notification');
-        await supabase.from('notifications').insert({
-          user_id: warehouse.owner_id,
-          type: 'approval',
-          title: 'Warehouse Approved! 🎉',
-          message: `Your warehouse "${warehouse.name}" has been approved and is now visible to seekers.`,
-          link: `/warehouses`
-        });
-      }
-
-      toast({
-        title: "Warehouse Approved! 🎉",
-        description: `${warehouse.name} has been approved and is now visible to seekers.`,
-      });
-
-      // Refresh data
-      await Promise.all([
-        fetchAdminStats(),
-        fetchPendingWarehouses()
-      ]);
-    } catch (error) {
-      console.error('Error approving warehouse:', error);
-      const msg = (error && (error as any).message) ? (error as any).message : String(error);
-      toast({
-        title: "Approval Failed",
-        description: `There was an error approving the warehouse: ${msg}`,
-        variant: "destructive"
-      });
-    } finally {
-      setReviewLoading(false);
     }
   };
 
-  const handleRejectWarehouse = async (warehouseId: string, reason: string) => {
-    setReviewLoading(true);
-    try {
-      const warehouse = pendingWarehouses.find(w => w.id === warehouseId);
-      if (!warehouse) return;
-
-      // Update warehouse_submissions status in Supabase
-      const { error: updateError } = await supabase
-        .from('warehouse_submissions')
-        .update({
-          status: 'rejected',
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id || 'demo-admin',
-          rejection_reason: reason,
-          admin_notes: `Rejected: ${reason}`
-        })
-        .eq('id', warehouseId);
-
-      if (updateError) {
-        console.error('Error updating submission:', updateError);
-        throw updateError;
-      }
-
-      console.log('🚫 Warehouse rejected:', warehouse.name, 'Reason:', reason);
-
-      // Create notification for the owner
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: warehouse.owner_id,
-          type: 'rejection',
-          title: 'Warehouse Rejected ❌',
-          message: `Your warehouse "${warehouse.name}" has been rejected. Reason: ${reason}`,
-          link: `/list-property`
-        });
-
-      toast({
-        title: "Warehouse Rejected ❌",
-        description: `${warehouse.name} has been rejected. Reason: ${reason}`,
-      });
-
-      // Refresh data
-      await Promise.all([
-        fetchAdminStats(),
-        fetchPendingWarehouses()
-      ]);
-    } catch (error) {
-      console.error('Error rejecting warehouse:', error);
-      toast({
-        title: "Rejection Failed",
-        description: "There was an error rejecting the warehouse. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setReviewLoading(false);
+  const formatCurrency = (amount: number) => {
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(2)}L`;
+    } else if (amount >= 1000) {
+      return `₹${(amount / 1000).toFixed(1)}K`;
     }
+    return `₹${amount.toFixed(0)}`;
   };
 
-  const handleUserStatusChange = (userId: string, newStatus: 'active' | 'suspended') => {
-    console.log('Changing user status:', userId, newStatus);
-    // TODO: Implement actual user status change logic
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+    return `${Math.floor(seconds / 86400)} days ago`;
   };
+
+  const maxTrendCount = Math.max(1, ...bookingTrend.map(t => t.count));
+  const trendPoints = bookingTrend.map((t, i) => ({ x: i, y: t.count }));
+  const trendCount = trendPoints.length;
+  const trendSlope = trendCount > 1
+    ? (() => {
+        const sumX = trendPoints.reduce((sum, p) => sum + p.x, 0);
+        const sumY = trendPoints.reduce((sum, p) => sum + p.y, 0);
+        const sumXY = trendPoints.reduce((sum, p) => sum + p.x * p.y, 0);
+        const sumXX = trendPoints.reduce((sum, p) => sum + p.x * p.x, 0);
+        const denom = trendCount * sumXX - sumX * sumX;
+        return denom === 0 ? 0 : (trendCount * sumXY - sumX * sumY) / denom;
+      })()
+    : 0;
+  const trendIntercept = trendCount > 0
+    ? (() => {
+        const sumX = trendPoints.reduce((sum, p) => sum + p.x, 0);
+        const sumY = trendPoints.reduce((sum, p) => sum + p.y, 0);
+        return (sumY - trendSlope * sumX) / trendCount;
+      })()
+    : 0;
+  const trendLabel = trendSlope > 0.2 ? 'Rising' : trendSlope < -0.2 ? 'Falling' : 'Stable';
+
+  if (profile?.user_type !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-[80vh]">
+          <div className="text-center">
+            <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+            <p className="text-slate-400">Only administrators can access this page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="flex items-center justify-center h-[80vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading admin dashboard...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-slate-300">Loading dashboard...</p>
           </div>
         </div>
       </div>
@@ -852,630 +313,290 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Manage users, warehouses, and platform operations
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+            <p className="text-slate-400 mt-1">Real-time platform overview and management</p>
+          </div>
+          <Button onClick={fetchDashboardData} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
         </div>
 
-        {/* Admin Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card className="bg-white dark:bg-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.totalUsers.toLocaleString()}
-                  </p>
-                </div>
+        {demoMode && (
+          <div className="mb-6 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-4 text-sm text-yellow-100">
+            Demo mode is active. Admin analytics are shown as 0 until you create real data (users, submissions, bookings).
+          </div>
+        )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total Users */}
+          <div className="glass-dark rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-blue-500/20 p-3 rounded-lg">
+                <Users className="w-6 h-6 text-blue-400" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <Building2 className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Warehouses</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.totalWarehouses}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Pending Approvals</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.pendingApprovals}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    ₹{(stats.monthlyRevenue / 100000).toFixed(1)}L
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-indigo-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Growth</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    +{stats.growthRate}%
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Admin Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 mb-8 bg-white dark:bg-gray-800 p-1 rounded-lg">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="warehouse-approvals" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              Warehouse Approvals
-            </TabsTrigger>
-            <TabsTrigger value="bookings" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Bookings
-              {bookingStats && bookingStats.pending_bookings > 0 && (
-                <Badge className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500">
-                  {bookingStats.pending_bookings}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="user-management" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Analytics
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Recent Activity
-                  </CardTitle>
-                  <CardDescription>Latest platform activities and updates</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <activity.icon className={`h-5 w-5 ${activity.iconColor} mt-0.5`} />
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">{activity.timestamp}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>Common administrative tasks</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      className="h-20 bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => setActiveTab('warehouse-approvals')}
-                    >
-                      <div className="text-center">
-                        <Shield className="h-6 w-6 mx-auto mb-1" />
-                        <div className="text-sm">Verify Documents</div>
-                      </div>
-                    </Button>
-                    <Button
-                      className="h-20 bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => toast({ title: "Feature Coming Soon", description: "Report generation will be available in the next update." })}
-                    >
-                      <div className="text-center">
-                        <FileText className="h-6 w-6 mx-auto mb-1" />
-                        <div className="text-sm">Generate Reports</div>
-                      </div>
-                    </Button>
-                    <Button
-                      className="h-20 bg-purple-600 hover:bg-purple-700 text-white"
-                      onClick={() => setActiveTab('user-management')}
-                    >
-                      <div className="text-center">
-                        <Users className="h-6 w-6 mx-auto mb-1" />
-                        <div className="text-sm">Manage Users</div>
-                      </div>
-                    </Button>
-                    <Button
-                      className="h-20 bg-orange-600 hover:bg-orange-700 text-white"
-                      onClick={() => toast({ title: "Feature Coming Soon", description: "System settings will be available in the next update." })}
-                    >
-                      <div className="text-center">
-                        <Settings className="h-6 w-6 mx-auto mb-1" />
-                        <div className="text-sm">System Settings</div>
-                      </div>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <span className="text-green-400 text-sm">Live</span>
             </div>
-          </TabsContent>
+            <h3 className="text-slate-400 text-sm mb-1">Total Users</h3>
+            <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
+            <p className="text-slate-500 text-xs mt-2">
+              {stats.seekerCount} seekers • {stats.ownerCount} owners
+            </p>
+          </div>
 
-          {/* Warehouse Approvals Tab */}
-          <TabsContent value="warehouse-approvals" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Pending Warehouse Approvals</CardTitle>
-                    <CardDescription>Review and approve warehouse listings</CardDescription>
+          {/* Total Warehouses */}
+          <div className="glass-dark rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-purple-500/20 p-3 rounded-lg">
+                <Warehouse className="w-6 h-6 text-purple-400" />
+              </div>
+              <span className="text-green-400 text-sm">Live</span>
+            </div>
+            <h3 className="text-slate-400 text-sm mb-1">Warehouses</h3>
+            <p className="text-3xl font-bold text-white">{stats.totalWarehouses.toLocaleString()}</p>
+            <p className="text-slate-500 text-xs mt-2">Active listings</p>
+          </div>
+
+          {/* Pending Verifications */}
+          <div className="glass-dark rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-yellow-500/20 p-3 rounded-lg">
+                <ShieldCheck className="w-6 h-6 text-yellow-400" />
+              </div>
+              <Link to="/admin-verification">
+                <Button size="sm" variant="ghost" className="text-xs text-blue-400 hover:text-blue-300">
+                  Review →
+                </Button>
+              </Link>
+            </div>
+            <h3 className="text-slate-400 text-sm mb-1">Pending Verifications</h3>
+            <p className="text-3xl font-bold text-white">{stats.pendingVerifications}</p>
+            <p className="text-slate-500 text-xs mt-2">Awaiting review</p>
+          </div>
+
+          {/* Total Revenue */}
+          <div className="glass-dark rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-green-500/20 p-3 rounded-lg">
+                <DollarSign className="w-6 h-6 text-green-400" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            </div>
+            <h3 className="text-slate-400 text-sm mb-1">Total Revenue</h3>
+            <p className="text-3xl font-bold text-white">{formatCurrency(stats.totalRevenue)}</p>
+            <p className="text-slate-500 text-xs mt-2">From {stats.totalBookings} bookings</p>
+          </div>
+        </div>
+
+        {/* Secondary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="glass-dark rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">Total Bookings</p>
+                <p className="text-2xl font-bold text-white">{stats.totalBookings}</p>
+              </div>
+              <FileText className="w-8 h-8 text-blue-400" />
+            </div>
+          </div>
+          <div className="glass-dark rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">Pending Bookings</p>
+                <p className="text-2xl font-bold text-yellow-400">{stats.pendingBookings}</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-400" />
+            </div>
+          </div>
+          <div className="glass-dark rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">Approved Bookings</p>
+                <p className="text-2xl font-bold text-green-400">{stats.approvedBookings}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-400" />
+            </div>
+          </div>
+          <div className="glass-dark rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">Warehouse Submissions</p>
+                <p className="text-2xl font-bold text-blue-400">{stats.pendingWarehouseSubmissions}</p>
+                <Link to="/admin/warehouse-submissions" className="text-xs text-blue-400 hover:text-blue-300">
+                  Review submissions →
+                </Link>
+              </div>
+              <Warehouse className="w-8 h-8 text-blue-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Storage Utilization */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="glass-dark rounded-xl p-6">
+            <h3 className="text-slate-400 text-sm mb-1">Total Storage Capacity</h3>
+            <p className="text-2xl font-bold text-white">{stats.totalStorageSqft.toLocaleString()} sq ft</p>
+          </div>
+          <div className="glass-dark rounded-xl p-6">
+            <h3 className="text-slate-400 text-sm mb-1">Occupied Storage</h3>
+            <p className="text-2xl font-bold text-orange-400">{stats.occupiedStorageSqft.toLocaleString()} sq ft</p>
+            <div className="mt-2">
+              <Progress value={stats.totalStorageSqft ? (stats.occupiedStorageSqft / stats.totalStorageSqft) * 100 : 0} className="h-2" />
+            </div>
+          </div>
+          <div className="glass-dark rounded-xl p-6">
+            <h3 className="text-slate-400 text-sm mb-1">Available Storage</h3>
+            <p className="text-2xl font-bold text-green-400">{stats.availableStorageSqft.toLocaleString()} sq ft</p>
+          </div>
+        </div>
+
+        {/* Booking Trend Chart */}
+        <div className="glass-dark rounded-xl p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Bookings Trend (Last 6 Months)</h3>
+              <p className="text-slate-400 text-sm">Monthly booking volume</p>
+            </div>
+            <TrendingUp className="w-5 h-5 text-blue-400" />
+          </div>
+          <div className="w-full h-40 bg-gray-900/40 rounded-lg p-4">
+            <svg viewBox="0 0 300 100" className="w-full h-full">
+              <polyline
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="2"
+                points={bookingTrend.map((t, i) => {
+                  const x = (i / Math.max(1, bookingTrend.length - 1)) * 300;
+                  const y = 100 - (t.count / maxTrendCount) * 80 - 10;
+                  return `${x},${y}`;
+                }).join(' ')}
+              />
+              {bookingTrend.length > 1 && (
+                <polyline
+                  fill="none"
+                  stroke="#22c55e"
+                  strokeWidth="2"
+                  strokeDasharray="4 3"
+                  points={bookingTrend.map((_, i) => {
+                    const x = (i / Math.max(1, bookingTrend.length - 1)) * 300;
+                    const predicted = trendSlope * i + trendIntercept;
+                    const y = 100 - (predicted / maxTrendCount) * 80 - 10;
+                    return `${x},${y}`;
+                  }).join(' ')}
+                />
+              )}
+            </svg>
+            <div className="mt-3 flex justify-between text-xs text-slate-400">
+              {bookingTrend.map((t) => (
+                <span key={t.label}>{t.label}</span>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-slate-400">
+              Trend: <span className="text-slate-200">{trendLabel}</span> • Regression slope: <span className="text-slate-200">{trendSlope.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activity */}
+          <div className="glass-dark rounded-xl p-6">
+            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <Bell className="w-5 h-5 text-blue-400" />
+              Recent Activity
+            </h2>
+            {recentActivities.length === 0 ? (
+              <p className="text-slate-400 text-center py-8">No recent activity</p>
+            ) : (
+              <div className="space-y-3">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg">
+                    <div className={`p-2 rounded-full ${activity.type === 'verification' ? 'bg-yellow-500/20' : 'bg-blue-500/20'
+                      }`}>
+                      {activity.type === 'verification' ? (
+                        <ShieldCheck className="w-4 h-4 text-yellow-400" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-blue-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-slate-200 text-sm">{activity.message}</p>
+                      <p className="text-slate-500 text-xs mt-1">{formatTimeAgo(activity.timestamp)}</p>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Filter
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Export
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {pendingWarehouses.map((warehouse) => (
-                    <div key={warehouse.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{warehouse.name}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {warehouse.city}, {warehouse.state}
-                          </p>
-                        </div>
-                        <Badge variant="secondary">Pending</Badge>
-                      </div>
-
-                      <div className="grid md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-gray-500">Owner</p>
-                          <p className="font-medium">{warehouse.owner_name}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Area</p>
-                          <p className="font-medium">{warehouse.total_area.toLocaleString()} sq ft</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Price</p>
-                          <p className="font-medium">₹{warehouse.price_per_sqft}/sq ft</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Submitted</p>
-                          <p className="font-medium">{new Date(warehouse.submitted_at).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500 mb-2">Documents & Validation:</p>
-                        <div className="flex gap-2 flex-wrap">
-                          {warehouse.document_urls?.gst_certificate && (
-                            <Badge
-                              variant={warehouse.ocr_results?.gst_certificate?.is_valid ? "default" : "destructive"}
-                              className="text-xs"
-                            >
-                              GST Certificate {warehouse.ocr_results?.gst_certificate?.is_valid ? '✓' : '✗'}
-                            </Badge>
-                          )}
-                          {warehouse.document_urls?.property_papers && (
-                            <Badge
-                              variant={warehouse.ocr_results?.property_papers?.is_valid ? "default" : "destructive"}
-                              className="text-xs"
-                            >
-                              Property Papers {warehouse.ocr_results?.property_papers?.is_valid ? '✓' : '✗'}
-                            </Badge>
-                          )}
-                          {warehouse.document_urls?.fire_certificate && (
-                            <Badge
-                              variant={warehouse.ocr_results?.fire_certificate?.is_valid ? "default" : "destructive"}
-                              className="text-xs"
-                            >
-                              Fire Certificate {warehouse.ocr_results?.fire_certificate?.is_valid ? '✓' : '✗'}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="outline" onClick={() => setSelectedWarehouse(warehouse)}>
-                              <Eye className="h-4 w-4 mr-1" />
-                              Review
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>Review Warehouse Submission</DialogTitle>
-                            </DialogHeader>
-                            {selectedWarehouse && (
-                              <WarehouseReviewModal
-                                warehouse={selectedWarehouse}
-                                onApprove={() => handleApproveWarehouse(selectedWarehouse.id)}
-                                onReject={(reason) => handleRejectWarehouse(selectedWarehouse.id, reason)}
-                                loading={reviewLoading}
-                              />
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() => handleApproveWarehouse(warehouse.id)}
-                          disabled={reviewLoading}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Approve
-                        </Button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={reviewLoading}
-                            >
-                              <AlertCircle className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Reject Warehouse</DialogTitle>
-                            </DialogHeader>
-                            <RejectWarehouseModal
-                              warehouse={warehouse}
-                              onConfirm={(reason) => handleRejectWarehouse(warehouse.id, reason)}
-                              loading={reviewLoading}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Bookings Management Tab */}
-          <TabsContent value="bookings" className="space-y-6">
-            {/* Booking Statistics Cards */}
-            {bookingStats && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Total Bookings</p>
-                        <p className="text-2xl font-bold">{bookingStats.total_bookings}</p>
-                      </div>
-                      <Package className="h-8 w-8 text-blue-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
-                        <p className="text-2xl font-bold text-yellow-600">{bookingStats.pending_bookings}</p>
-                      </div>
-                      <Clock className="h-8 w-8 text-yellow-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Approved</p>
-                        <p className="text-2xl font-bold text-green-600">{bookingStats.approved_bookings}</p>
-                      </div>
-                      <CheckCircle className="h-8 w-8 text-green-600" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Revenue</p>
-                        <p className="text-2xl font-bold text-purple-600">₹{(bookingStats.total_revenue / 1000).toFixed(0)}K</p>
-                      </div>
-                      <DollarSign className="h-8 w-8 text-purple-600" />
-                    </div>
-                  </CardContent>
-                </Card>
+                ))}
               </div>
             )}
+          </div>
 
-            {/* Bookings List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Booking Requests</CardTitle>
-                <CardDescription>Manage incoming booking requests from seekers</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {bookingLoading ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : bookings.length === 0 ? (
-                  <div className="text-center p-8 text-gray-500">
-                    <Package className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p>No booking requests found</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {bookings.map((booking) => (
-                      <div key={booking.id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="font-semibold text-lg">{booking.warehouse_name}</h4>
-                              <Badge className={
-                                booking.status === 'pending' ? 'bg-yellow-500' :
-                                  booking.status === 'approved' ? 'bg-green-500' :
-                                    'bg-red-500'
-                              }>
-                                {booking.status}
-                              </Badge>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-4 text-sm mb-3">
-                              <div>
-                                <p className="text-gray-600 dark:text-gray-400">Customer</p>
-                                <p className="font-medium">{booking.seeker_name}</p>
-                                <p className="text-xs text-gray-500">{booking.seeker_email}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600 dark:text-gray-400">Location</p>
-                                <p className="font-medium">{booking.warehouse_location}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600 dark:text-gray-400">Booking Period</p>
-                                <p className="font-medium">
-                                  {booking.start_date ? new Date(booking.start_date).toLocaleDateString() : 'N/A'} -
-                                  {booking.end_date ? new Date(booking.end_date).toLocaleDateString() : 'N/A'}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600 dark:text-gray-400">Amount</p>
-                                <p className="font-medium text-lg">₹{booking.total_amount?.toLocaleString() || 'N/A'}</p>
-                              </div>
-                            </div>
-                            {booking.area_sqft && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Area: {booking.area_sqft.toLocaleString()} sq ft
-                              </p>
-                            )}
-                            {booking.booking_notes && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                Notes: {booking.booking_notes}
-                              </p>
-                            )}
-                            <p className="text-xs text-gray-500 mt-2">
-                              Booked: {new Date(booking.created_at).toLocaleString()}
-                            </p>
-                          </div>
-                          {booking.status === 'pending' && (
-                            <div className="flex gap-2 ml-4">
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700"
-                                onClick={() => handleApproveBooking(booking.id)}
-                                disabled={bookingLoading}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => {
-                                  const reason = prompt('Enter rejection reason:');
-                                  if (reason) handleRejectBooking(booking.id, reason);
-                                }}
-                                disabled={bookingLoading}
-                              >
-                                <AlertCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Quick Actions */}
+          <div className="glass-dark rounded-xl p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <Link to="/admin-verification">
+                <Button className="w-full h-24 bg-blue-600 hover:bg-blue-700 flex flex-col items-center justify-center gap-2">
+                  <ShieldCheck className="w-6 h-6" />
+                  <span>Profile Verification</span>
+                  {stats.pendingVerifications > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {stats.pendingVerifications}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              <Link to="/admin/bookings">
+                <Button className="w-full h-24 bg-purple-600 hover:bg-purple-700 flex flex-col items-center justify-center gap-2">
+                  <FileText className="w-6 h-6" />
+                  <span>Manage Bookings</span>
+                  {stats.pendingBookings > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {stats.pendingBookings}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              <Link to="/admin/users">
+                <Button className="w-full h-24 bg-green-600 hover:bg-green-700 flex flex-col items-center justify-center gap-2">
+                  <Users className="w-6 h-6" />
+                  <span>User Management</span>
+                  <span className="text-xs opacity-80">{stats.totalUsers} users</span>
+                </Button>
+              </Link>
+              <Link to="/admin/warehouses">
+                <Button className="w-full h-24 bg-orange-600 hover:bg-orange-700 flex flex-col items-center justify-center gap-2">
+                  <Warehouse className="w-6 h-6" />
+                  <span>Warehouses</span>
+                  <span className="text-xs opacity-80">{stats.totalWarehouses}</span>
+                </Button>
+              </Link>
+            </div>
 
-          {/* User Management Tab */}
-          <TabsContent value="user-management" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>User Management</CardTitle>
-                    <CardDescription>Manage user accounts and verification status</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                      <Input
-                        placeholder="Search users..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                          <span className="font-semibold text-blue-600">
-                            {user.name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">{user.name}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
-                          <p className="text-xs text-gray-500">
-                            {user.userType === 'owner' ? 'Warehouse Owner' : 'Storage Seeker'} •
-                            Joined {user.joinedDate} • Last active {user.lastActive}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <Badge
-                            variant={user.status === 'active' ? 'default' : user.status === 'pending' ? 'secondary' : 'destructive'}
-                          >
-                            {user.status}
-                          </Badge>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {user.userType === 'owner' ? `${user.warehousesOwned} warehouses` : `${user.totalBookings} bookings`}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {user.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => handleUserStatusChange(user.id, 'active')}
-                            >
-                              <UserCheck className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {user.status === 'active' && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleUserStatusChange(user.id, 'suspended')}
-                            >
-                              <UserX className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+            {/* Admin Notifications */}
+            {notifications.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-slate-400 mb-2 flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Unread Notifications ({notifications.length})
+                </h3>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {notifications.slice(0, 5).map((notif) => (
+                    <div key={notif.id} className="bg-blue-500/10 border border-blue-500/30 rounded p-2">
+                      <p className="text-blue-300 text-xs">{notif.title}</p>
+                      <p className="text-blue-400 text-xs mt-1">{notif.message}</p>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Revenue Analytics</CardTitle>
-                  <CardDescription>Monthly revenue trends</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                    <div className="text-center">
-                      <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">Revenue chart will be implemented here</p>
-                      <p className="text-sm text-gray-400">Integration with Chart.js or Recharts</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Growth</CardTitle>
-                  <CardDescription>User registration trends</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                    <div className="text-center">
-                      <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">User growth chart will be implemented here</p>
-                      <p className="text-sm text-gray-400">Integration with Chart.js or Recharts</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

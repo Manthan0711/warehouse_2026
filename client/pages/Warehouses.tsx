@@ -5,14 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Building2, Star, ArrowRight, Bot, Filter, Phone, Calendar, Truck, Package, TrendingUp, Users, Shield, Loader } from "lucide-react";
+import { Search, MapPin, Building2, Star, ArrowRight, Bot, Filter, Phone, Calendar, Truck, Package, TrendingUp, Users, Shield, Loader, SlidersHorizontal, Grid3x3, List, Heart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import MLRecommendations from "@/components/MLRecommendations";
+import { useSmartRecommendations } from "@/hooks/use-recommendations";
 import { warehouseService, type SupabaseWarehouse } from "@/services/warehouseService";
 import { filterOptions } from "@/data/warehouses";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGateModal from "@/components/AuthGateModal";
+import CityDistrictFilters from "@/components/CityDistrictFilters";
+import { RecommendationPreferences, RecommendedWarehouse } from "../../shared/api";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface FilterState {
   district: string;
@@ -27,6 +33,21 @@ interface FilterState {
 export default function Warehouses() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  
+  // LLM Recommendations hook for the AI recommendations tab
+  const {
+    data: mlData,
+    isLoading: mlLoading,
+    error: mlError,
+    refetch: mlRefetch,
+    preferences: mlPreferences,
+    setPreferences: setMlPreferences,
+    customizeMode: mlCustomizeMode,
+    setCustomizeMode: setMlCustomizeMode,
+    clearPreferences: mlClearPreferences,
+    limit: mlLimit,
+    setLimit: setMlLimit
+  } = useSmartRecommendations();
   const [searchQuery, setSearchQuery] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingWarehouseId, setPendingWarehouseId] = useState<string | null>(null);
@@ -45,6 +66,12 @@ export default function Warehouses() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalWarehouses, setTotalWarehouses] = useState(0);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [customizeMode, setCustomizeMode] = useState(false);
+  const [limit, setLimit] = useState(50);
+  const [cityFilters, setCityFilters] = useState<{ city?: string; district?: string }>({});
+  const [savedWarehouseIds, setSavedWarehouseIds] = useState<Set<string>>(new Set());
+  const [savingWarehouseId, setSavingWarehouseId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalWarehouses: 0,
     totalArea: 0,
@@ -53,9 +80,81 @@ export default function Warehouses() {
     citiesCount: 0,
     averageRating: 0
   });
-  
+
   const WAREHOUSES_PER_PAGE = 50;
-  
+
+  // Fetch saved warehouses on mount
+  useEffect(() => {
+    if (user?.id) {
+      fetchSavedWarehouseIds();
+    }
+  }, [user?.id]);
+
+  // Fetch saved warehouse IDs
+  const fetchSavedWarehouseIds = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await fetch(`/api/saved/${user.id}`);
+      const data = await response.json();
+      if (data.success && data.warehouses) {
+        const ids = new Set(data.warehouses.map((sw: any) => sw.warehouse_id));
+        setSavedWarehouseIds(ids as Set<string>);
+      }
+    } catch (error) {
+      console.error('Error fetching saved warehouses:', error);
+    }
+  };
+
+  // Toggle save warehouse
+  const toggleSaveWarehouse = async (warehouseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login as a seeker to save warehouses",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    setSavingWarehouseId(warehouseId);
+    try {
+      const response = await fetch('/api/saved/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seekerId: user.id, warehouseId })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setSavedWarehouseIds(prev => {
+          const newSet = new Set(prev);
+          if (data.saved) {
+            newSet.add(warehouseId);
+            toast({ title: "Saved!", description: "Warehouse added to your saved list" });
+          } else {
+            newSet.delete(warehouseId);
+            toast({ title: "Removed", description: "Warehouse removed from saved list" });
+          }
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling save:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save warehouse. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingWarehouseId(null);
+    }
+  };
+
   // Fetch warehouses on component mount
   useEffect(() => {
     loadWarehouses(1);
@@ -67,7 +166,7 @@ export default function Warehouses() {
     const timer = setTimeout(() => {
       loadWarehouses(1);
     }, 300); // Debounce 300ms
-    
+
     return () => clearTimeout(timer);
   }, [searchQuery, filters.district, filters.priceRange, filters.status]);
 
@@ -81,7 +180,7 @@ export default function Warehouses() {
       }
 
       const offset = (page - 1) * WAREHOUSES_PER_PAGE;
-      const { data, count} = await warehouseService.getWarehouses({
+      const { data, count } = await warehouseService.getWarehouses({
         limit: WAREHOUSES_PER_PAGE,
         offset: offset,
         search: searchQuery.trim() || undefined, // Pass search query to API
@@ -145,7 +244,7 @@ export default function Warehouses() {
 
     // Warehouse type filter (using description for Supabase data)
     if (filters.warehouseType) {
-      result = result.filter(warehouse => 
+      result = result.filter(warehouse =>
         warehouse.description && warehouse.description.includes(filters.warehouseType)
       );
     }
@@ -154,9 +253,9 @@ export default function Warehouses() {
     if (filters.capacityRange) {
       const range = filterOptions.capacityRanges.find(r => r.label === filters.capacityRange);
       if (range) {
-        const minArea = range.min * 10; 
+        const minArea = range.min * 10;
         const maxArea = range.max * 10;
-        result = result.filter(warehouse => 
+        result = result.filter(warehouse =>
           warehouse.total_area >= minArea && warehouse.total_area <= maxArea
         );
       }
@@ -166,7 +265,7 @@ export default function Warehouses() {
     if (filters.occupancyRange) {
       const range = filterOptions.occupancyRanges.find(r => r.label === filters.occupancyRange);
       if (range) {
-        result = result.filter(warehouse => 
+        result = result.filter(warehouse =>
           warehouse.occupancy >= range.min * 100 && warehouse.occupancy <= range.max * 100
         );
       }
@@ -195,21 +294,21 @@ export default function Warehouses() {
   };
 
   const WarehouseCard = ({ warehouse }: { warehouse: SupabaseWarehouse }) => {
-    // Calculate occupancy as decimal (0-1) for consistency
-    const occupancyDecimal = warehouse.occupancy / 100;
+    // Occupancy is already stored as decimal (0-1) in database
+    const occupancyDecimal = warehouse.occupancy;
     const availability = getAvailabilityText(occupancyDecimal);
-    
+
     // Calculate capacity from area (approximate)
     const estimatedCapacity = Math.floor(warehouse.total_area / 10);
-    
+
     // Get warehouse type from description or default
     const warehouseType = warehouse.description?.split(' ')[0] || 'General Storage';
-    
+
     // Use first image or placeholder
     const imageUrl = (warehouse.images && warehouse.images.length > 0)
       ? warehouse.images[0]
       : 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80';
-    
+
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-shadow relative">
         <div className="aspect-video overflow-hidden relative">
@@ -220,25 +319,38 @@ export default function Warehouses() {
           />
           {/* Status Badge */}
           <div className="absolute top-3 left-3">
-            <Badge className={`text-white text-xs ${
-              warehouse.status === 'approved' ? 'bg-green-600' : 
+            <Badge className={`text-white text-xs ${warehouse.status === 'approved' ? 'bg-green-600' :
               warehouse.status === 'pending' ? 'bg-yellow-600' : 'bg-red-600'
-            }`}>
-              {warehouse.status === 'approved' ? 'Active' : 
-               warehouse.status === 'pending' ? 'Pending' : warehouse.status}
+              }`}>
+              {warehouse.status === 'approved' ? 'Active' :
+                warehouse.status === 'pending' ? 'Pending' : warehouse.status}
             </Badge>
           </div>
-          
+
+          {/* Save Button */}
+          <button
+            onClick={(e) => toggleSaveWarehouse(warehouse.id, e)}
+            disabled={savingWarehouseId === warehouse.id}
+            className={`absolute top-3 right-3 p-2 rounded-full transition-all ${
+              savedWarehouseIds.has(warehouse.id)
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-black/50 text-white hover:bg-black/70'
+            } ${savingWarehouseId === warehouse.id ? 'opacity-50 cursor-wait' : ''}`}
+            title={savedWarehouseIds.has(warehouse.id) ? 'Remove from Saved' : 'Save Warehouse'}
+          >
+            <Heart className={`h-4 w-4 ${savedWarehouseIds.has(warehouse.id) ? 'fill-white' : ''}`} />
+          </button>
+
           {/* Verification Badge */}
           {warehouse.amenities?.includes('Verified') && (
-            <div className="absolute top-3 right-3">
+            <div className="absolute top-12 right-3">
               <Badge className="bg-blue-600 text-white text-xs">
                 <Shield className="w-3 h-3 mr-1" />
                 Verified
               </Badge>
             </div>
           )}
-          
+
           {/* Capacity Badge */}
           <div className="absolute bottom-3 right-3">
             <Badge className="bg-purple-600 text-white text-xs">
@@ -273,7 +385,7 @@ export default function Warehouses() {
               <div className="font-medium text-blue-600">{warehouse.total_area.toLocaleString()} sq ft</div>
             </div>
           </div>
-          
+
           <div className="flex justify-between items-center">
             <div>
               <span className="text-2xl font-bold text-green-600">₹{warehouse.price_per_sqft}</span>
@@ -291,16 +403,15 @@ export default function Warehouses() {
               <span>{Math.round(occupancyDecimal * 100)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className={`h-2 rounded-full progress-bar ${
-                  occupancyDecimal < 0.3 ? 'bg-green-500' : 
+              <div
+                className={`h-2 rounded-full progress-bar ${occupancyDecimal < 0.3 ? 'bg-green-500' :
                   occupancyDecimal < 0.7 ? 'bg-blue-500' : 'bg-orange-500'
-                }`}
+                  }`}
                 style={{ width: `${Math.min(occupancyDecimal * 100, 100)}%` }}
               ></div>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex flex-wrap gap-1">
               {warehouse.amenities && warehouse.amenities.slice(0, 3).map((amenity) => (
@@ -319,7 +430,7 @@ export default function Warehouses() {
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span className="flex items-center">
                 <Phone className="w-3 h-3 mr-1" />
-                {warehouse.owner_id ? `+91-${Math.floor(Math.random() * 9000000000 + 1000000000)}` : "Contact Owner"}
+                {warehouse.contact_phone || "Contact Owner"}
               </span>
               <span className="flex items-center">
                 <Users className="w-3 h-3 mr-1" />
@@ -332,7 +443,7 @@ export default function Warehouses() {
               <span>Listed {new Date(warehouse.created_at).toLocaleDateString()}</span>
             </div>
           </div>
-          
+
           <Button
             className="w-full"
             onClick={() => handleViewDetails(warehouse.wh_id || warehouse.id)}
@@ -350,11 +461,11 @@ export default function Warehouses() {
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
-          {/* Platform Stats */}
+        {/* Platform Stats */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Maharashtra Warehouse Directory</h1>
           <p className="text-gray-600 dark:text-gray-300 mb-6">Comprehensive database of verified warehouse facilities across Maharashtra</p>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -406,7 +517,18 @@ export default function Warehouses() {
           </TabsList>
 
           <TabsContent value="ai-recommendations">
-            <MLRecommendations />
+            <MLRecommendations
+              recommendations={mlData?.items || []}
+              preferences={mlPreferences}
+              setPreferences={setMlPreferences}
+              isLoading={mlLoading}
+              error={mlError}
+              refetch={mlRefetch}
+              customizeMode={mlCustomizeMode}
+              setCustomizeMode={setMlCustomizeMode}
+              limit={mlLimit}
+              setLimit={setMlLimit}
+            />
           </TabsContent>
 
           <TabsContent value="browse">
@@ -438,7 +560,7 @@ export default function Warehouses() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-2 block">District</label>
-                      <Select value={filters.district} onValueChange={(value) => 
+                      <Select value={filters.district} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, district: value }))
                       }>
                         <SelectTrigger>
@@ -455,7 +577,7 @@ export default function Warehouses() {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">Warehouse Type</label>
-                      <Select value={filters.warehouseType} onValueChange={(value) => 
+                      <Select value={filters.warehouseType} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, warehouseType: value }))
                       }>
                         <SelectTrigger>
@@ -472,7 +594,7 @@ export default function Warehouses() {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">Capacity Range</label>
-                      <Select value={filters.capacityRange} onValueChange={(value) => 
+                      <Select value={filters.capacityRange} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, capacityRange: value }))
                       }>
                         <SelectTrigger>
@@ -489,7 +611,7 @@ export default function Warehouses() {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">Price Range</label>
-                      <Select value={filters.priceRange} onValueChange={(value) => 
+                      <Select value={filters.priceRange} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, priceRange: value }))
                       }>
                         <SelectTrigger>
@@ -506,7 +628,7 @@ export default function Warehouses() {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">Availability</label>
-                      <Select value={filters.occupancyRange} onValueChange={(value) => 
+                      <Select value={filters.occupancyRange} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, occupancyRange: value }))
                       }>
                         <SelectTrigger>
@@ -523,7 +645,7 @@ export default function Warehouses() {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">Certification</label>
-                      <Select value={filters.certificate} onValueChange={(value) => 
+                      <Select value={filters.certificate} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, certificate: value }))
                       }>
                         <SelectTrigger>
@@ -540,7 +662,7 @@ export default function Warehouses() {
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">Status</label>
-                      <Select value={filters.status} onValueChange={(value) => 
+                      <Select value={filters.status} onValueChange={(value) =>
                         setFilters(prev => ({ ...prev, status: value }))
                       }>
                         <SelectTrigger>
@@ -565,28 +687,28 @@ export default function Warehouses() {
               )}
             </div>
 
-          {/* Results Summary */}
-          <div className="mb-6 flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-400">
-              {loading ? (
-                <div className="flex items-center">
-                  <Loader className="h-4 w-4 animate-spin mr-2" />
-                  <span>Loading warehouses...</span>
-                </div>
-              ) : (
-                <>
-                  <strong>{filteredWarehouses.length.toLocaleString()}</strong> of {totalWarehouses.toLocaleString()} warehouses found
-                  {searchQuery && <span> for "{searchQuery}"</span>}
-                </>
-              )}
-            </span>
-            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-              <TrendingUp className="h-4 w-4" />
-              <span>Real-time verified data</span>
+            {/* Results Summary */}
+            <div className="mb-6 flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">
+                {loading ? (
+                  <div className="flex items-center">
+                    <Loader className="h-4 w-4 animate-spin mr-2" />
+                    <span>Loading warehouses...</span>
+                  </div>
+                ) : (
+                  <>
+                    <strong>{filteredWarehouses.length.toLocaleString()}</strong> of {totalWarehouses.toLocaleString()} warehouses found
+                    {searchQuery && <span> for "{searchQuery}"</span>}
+                  </>
+                )}
+              </span>
+              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                <TrendingUp className="h-4 w-4" />
+                <span>Real-time verified data</span>
+              </div>
             </div>
-          </div>
 
-          {/* Loading State */}
+            {/* Loading State */}
             {loading ? (
               <div className="text-center py-16">
                 <Loader className="h-16 w-16 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
@@ -639,9 +761,9 @@ export default function Warehouses() {
                 {/* Load More Button - for pagination */}
                 {filteredWarehouses.length > 0 && warehouses.length < totalWarehouses && (
                   <div className="text-center mt-12">
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
+                    <Button
+                      variant="outline"
+                      size="lg"
                       onClick={loadMoreWarehouses}
                       disabled={loadingMore}
                       className="min-w-[200px]"

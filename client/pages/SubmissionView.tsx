@@ -22,6 +22,8 @@ interface WarehouseSubmission {
   features: string[];
   images: string[];
   documents: any;
+  warehouse_type?: string;
+  allowed_goods_types?: string[];
   status: 'pending' | 'approved' | 'rejected';
   admin_notes?: string;
   rejection_reason?: string;
@@ -200,6 +202,32 @@ export default function SubmissionView() {
                 </p>
               </CardContent>
             </Card>
+
+            {(submission.warehouse_type || (submission.allowed_goods_types && submission.allowed_goods_types.length > 0)) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Warehouse Type & Goods</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {submission.warehouse_type && (
+                    <div>
+                      <p className="text-sm text-gray-500">Warehouse Type</p>
+                      <p className="font-medium text-gray-900">{submission.warehouse_type}</p>
+                    </div>
+                  )}
+                  {submission.allowed_goods_types && submission.allowed_goods_types.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">Allowed Goods Types</p>
+                      <div className="flex flex-wrap gap-2">
+                        {submission.allowed_goods_types.map((g) => (
+                          <Badge key={g} variant="outline">{g}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Amenities & Features */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

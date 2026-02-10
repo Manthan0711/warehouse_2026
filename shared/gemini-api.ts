@@ -2,8 +2,23 @@
  * Real Gemini API integration for warehouse recommendations
  */
 
-// Get API key from environment variables
-const GEMINI_API_KEY = import.meta.env?.VITE_GEMINI_API_KEY;
+// Get API key from environment variables - works for both server and client
+const getGeminiApiKey = (): string => {
+  // Server-side (Node.js) - check process.env first
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+    if (process.env.VITE_GEMINI_API_KEY) return process.env.VITE_GEMINI_API_KEY;
+  }
+  
+  // Client-side (Vite) - use import.meta.env
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (import.meta.env.VITE_GEMINI_API_KEY) return import.meta.env.VITE_GEMINI_API_KEY;
+  }
+  
+  return '';
+};
+
+const GEMINI_API_KEY = getGeminiApiKey();
 
 /**
  * Gemini API client for making requests to Google's Generative AI

@@ -41,8 +41,8 @@ export default function MLRecommendations({
 }: MLRecommendationsProps) {
   const queryClient = useQueryClient();
 
-  // Simple debug log
-  if (recommendations.length > 0) {
+  // Simple debug log with safety check
+  if (recommendations && recommendations.length > 0) {
     console.log(`🎨 Rendering ${recommendations.length} warehouses. First: ${recommendations[0]?.name} (${recommendations[0]?.district})`);
   }
 
@@ -89,7 +89,7 @@ export default function MLRecommendations({
               <Bot className="h-6 w-6 text-blue-600" />
               <Sparkles className="h-3 w-3 text-blue-400 absolute -top-1 -right-1 animate-pulse" />
             </div>
-            <h3 className="text-lg font-semibold text-gradient">AI is analyzing warehouses for you...</h3>
+            <h3 className="text-lg font-semibold text-gradient">LLM is analyzing warehouses for you...</h3>
           </div>
           <div className="space-y-3">
             <div className="animate-pulse">
@@ -112,7 +112,7 @@ export default function MLRecommendations({
 
   return (
     <div className="space-y-6">
-      {/* AI Recommendations Header */}
+      {/* ML Recommendations Header */}
       <Card className="glass-card shadow-professional-xl">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -122,10 +122,10 @@ export default function MLRecommendations({
                 <Sparkles className="h-3 w-3 text-blue-300 absolute -top-1 -right-1 animate-pulse-soft" />
               </div>
               <div>
-                <CardTitle className="text-lg text-gradient-blue">ML-Powered Recommendations</CardTitle>
+                <CardTitle className="text-lg text-gradient-blue">LLM-Powered Recommendations</CardTitle>
                 <CardDescription>
-                  {recommendations.length > 0
-                    ? `Showing top ${recommendations.length} warehouses selected by ML algorithms`
+                  {recommendations && recommendations.length > 0
+                    ? `Showing top ${recommendations.length} warehouses ranked by the LLM`
                     : "Personalized warehouse suggestions based on your preferences"
                   }
                 </CardDescription>
@@ -193,7 +193,7 @@ export default function MLRecommendations({
       )}
 
       {/* Recommendations Grid */}
-      {recommendations.length > 0 ? (
+      {recommendations && recommendations.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendations.map((warehouse, index) => (
             <Card

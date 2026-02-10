@@ -9,32 +9,56 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 export function Navbar() {
   const { pathname } = useLocation();
-  const { user, signOut } = useAuth();
-  const { isProfessional } = useTheme();
+  const { user, profile, signOut } = useAuth();
+  // TEMPORARY: Handle missing ThemeProvider gracefully
+  let isProfessional = false;
+  try {
+    const theme = useTheme();
+    isProfessional = theme.isProfessional;
+  } catch {
+    // ThemeProvider disabled - use default
+    isProfessional = true; // Default to professional look
+  }
 
+  // Get user role from profile
+  const userRole = profile?.user_type || '';
+  const isSeeker = userRole === 'seeker';
+  const isOwner = userRole === 'owner';
+  const isAdmin = userRole === 'admin';
+
+  // Role-based navigation items
   const navItems = [
-    { name: "Find Warehouses", path: "/warehouses" },
-    { name: "ML Recommendations", path: "/ml-recommendations" },
-    { name: "List Your Property", path: "/list-property" },
-    { name: "About", path: "/about" },
-    { name: "Contact", path: "/contact" },
-  ];
+    { name: "Find Warehouses", path: "/warehouses", showFor: ['seeker', 'owner'] },
+    { name: "AI Recommendations", path: "/ml-recommendations", showFor: ['seeker'] },
+    { name: "Smart Booking", path: "/smart-booking", showFor: ['seeker'] },
+    { name: "My Hub", path: "/seeker-hub", showFor: ['seeker'] },
+    { name: "List Your Property", path: "/list-property", showFor: ['owner'] },
+    { name: "Profile Verification", path: "/admin-verification", showFor: ['admin'] },
+    { name: "Warehouse Submissions", path: "/admin/warehouse-submissions", showFor: ['admin'] },
+    { name: "User Management", path: "/admin/users", showFor: ['admin'] },
+    { name: "About", path: "/about", showFor: ['all'] },
+    { name: "Contact", path: "/contact", showFor: ['all'] },
+  ].filter(item =>
+    item.showFor.includes('all') ||
+    item.showFor.includes(userRole) ||
+    (!user && item.showFor.includes('all'))
+  );
 
   return (
     <header className={cn(
       "border-b sticky top-0 z-50",
-      isProfessional 
-        ? "navbar-professional border-blue-900/10" 
+      isProfessional
+        ? "navbar-professional border-blue-900/10"
         : "dark:border-gray-800 bg-background/95 backdrop-blur-sm"
     )}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <Link to="/" className="flex items-center space-x-2">
             <div className="relative">
               <Building2 className={cn(
                 "h-8 w-8",
-                isProfessional 
-                  ? "text-blue-400 glow-blue" 
+                isProfessional
+                  ? "text-blue-400 glow-blue"
                   : "text-blue-600 dark:text-blue-400"
               )} />
               {isProfessional && (
@@ -42,29 +66,29 @@ export function Navbar() {
               )}
             </div>
             <span className={cn(
-              "font-bold text-xl",
-              isProfessional 
-                ? "text-gradient-blue" 
+              "font-bold text-xl whitespace-nowrap",
+              isProfessional
+                ? "text-gradient-blue"
                 : "text-foreground"
             )}>
-              Smart Space
+              SmartSpace
             </span>
           </Link>
         </div>
 
-        <nav className="hidden md:flex items-center space-x-8">
+        <nav className="hidden lg:flex items-center space-x-6 mx-4">
           {navItems.map(item => (
-            <Link 
-              key={item.path} 
-              to={item.path} 
+            <Link
+              key={item.path}
+              to={item.path}
               className={cn(
-                "font-medium transition-colors",
-                isProfessional 
-                  ? "text-slate-400 hover:text-blue-400" 
+                "font-medium transition-colors whitespace-nowrap text-sm",
+                isProfessional
+                  ? "text-slate-400 hover:text-blue-400"
                   : "text-muted-foreground hover:text-foreground",
                 pathname === item.path && (
-                  isProfessional 
-                    ? "text-blue-400 font-semibold" 
+                  isProfessional
+                    ? "text-blue-400 font-semibold"
                     : "text-foreground font-semibold"
                 )
               )}
@@ -76,24 +100,34 @@ export function Navbar() {
 
         <div className="flex items-center space-x-2">
           <ThemeToggle />
-          
+
           {user ? (
             <div className="flex items-center space-x-3">
               <NotificationBell />
               <div className="hidden sm:block">
                 <p className="text-sm text-muted-foreground">
-                  Welcome back, {user?.email?.includes('admin') ? 'System Administrator' : 'Storage Seeker'}
+                  Welcome back, {isAdmin ? 'Admin' : isOwner ? 'Owner' : 'Seeker'}
                 </p>
               </div>
-              <Button 
-                variant="ghost" 
+              {/* My Profile Link - only for seekers and owners, NOT admins */}
+              {!isAdmin && (
+                <Button
+                  variant="ghost"
+                  asChild
+                  className={isProfessional ? "text-slate-300 hover:text-blue-400" : ""}
+                >
+                  <Link to={isOwner ? "/owner-profile" : "/seeker-profile"}>My Profile</Link>
+                </Button>
+              )}
+              <Button
+                variant="ghost"
                 asChild
                 className={isProfessional ? "text-slate-300 hover:text-blue-400" : ""}
               >
-                <Link to="/dashboard">Dashboard</Link>
+                <Link to={isAdmin ? "/admin" : "/dashboard"}>Dashboard</Link>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => signOut()}
                 className={isProfessional ? "btn-professional-outline" : ""}
               >
@@ -102,14 +136,14 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 asChild
                 className={isProfessional ? "text-slate-300 hover:text-blue-400" : ""}
               >
                 <Link to="/login">Sign In</Link>
               </Button>
-              <Button 
+              <Button
                 asChild
                 className={isProfessional ? "btn-professional-gradient" : ""}
               >

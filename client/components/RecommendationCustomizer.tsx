@@ -37,7 +37,7 @@ export default function RecommendationCustomizer({
   isOpen
 }: RecommendationCustomizerProps) {
   const queryClient = useQueryClient();
-  
+
   // Always initialize state hooks at the top level, never conditionally
   const [localPrefs, setLocalPrefs] = useState<RecommendationPreferences>(preferences);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
@@ -49,7 +49,7 @@ export default function RecommendationCustomizer({
   ) => {
     setLocalPrefs(prev => ({ ...prev, [key]: value }));
   };
-  
+
   // Early return pattern after all hooks are defined
   if (!isOpen) return null;
 
@@ -58,7 +58,7 @@ export default function RecommendationCustomizer({
     queryClient.clear();
     queryClient.removeQueries({ queryKey: ['recommendations'] });
     queryClient.invalidateQueries({ queryKey: ['recommendations'] });
-    
+
     console.log('🧹 CLEARED ALL CACHE - Applying new preferences:', localPrefs);
     onPreferencesChange(localPrefs);
     onClose();
@@ -74,19 +74,19 @@ export default function RecommendationCustomizer({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto border-blue-200 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto glass-dark border-white/10 shadow-professional-xl">
+        <CardHeader className="bg-slate-800/50 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Brain className="h-5 w-5 text-indigo-600" />
               <div className="flex flex-col">
-                <CardTitle className="text-gradient">ML Recommendation Engine</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gradient-blue text-lg">ML Recommendation Engine</CardTitle>
+                <CardDescription className="text-slate-400">
                   Configure your preferences to get personalized AI-powered warehouse recommendations
                 </CardDescription>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-300 hover:text-white hover:bg-slate-700">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -111,11 +111,11 @@ export default function RecommendationCustomizer({
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-orange-600" />
-                  <Label className="text-sm font-medium">Location</Label>
+                  <Label className="text-base font-medium text-slate-200">Location</Label>
                 </div>
                 <div className="grid gap-3">
                   <div>
-                    <Label htmlFor="district" className="text-sm">Preferred District</Label>
+                    <Label htmlFor="district" className="text-sm text-slate-300">Preferred District</Label>
                     <Select
                       value={localPrefs.district || "any"}
                       onValueChange={(value) => updatePref('district', value === "any" ? undefined : value)}
@@ -142,11 +142,11 @@ export default function RecommendationCustomizer({
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <DollarSign className="h-4 w-4 text-green-600" />
-                  <Label className="text-sm font-medium">Budget & Space</Label>
+                  <Label className="text-base font-medium text-slate-200">Budget & Space</Label>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="targetPrice" className="text-sm">Target Price (₹/sqft/month)</Label>
+                    <Label htmlFor="targetPrice" className="text-sm text-slate-300">Target Price (₹/sqft/month)</Label>
                     <Input
                       id="targetPrice"
                       type="number"
@@ -159,7 +159,7 @@ export default function RecommendationCustomizer({
                     />
                   </div>
                   <div>
-                    <Label htmlFor="minArea" className="text-sm">Minimum Area (sqft)</Label>
+                    <Label htmlFor="minArea" className="text-sm text-slate-300">Minimum Area (sqft)</Label>
                     <Input
                       id="minArea"
                       type="number"
@@ -179,7 +179,7 @@ export default function RecommendationCustomizer({
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Building2 className="h-4 w-4 text-purple-600" />
-                  <Label className="text-sm font-medium">Warehouse Type</Label>
+                  <Label className="text-base font-medium text-slate-200">Warehouse Type</Label>
                 </div>
                 <Select
                   value={localPrefs.preferredType || "any"}
@@ -205,13 +205,13 @@ export default function RecommendationCustomizer({
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-blue-600" />
-                  <Label className="text-sm font-medium">Quality Preferences</Label>
+                  <Label className="text-base font-medium text-slate-200">Quality Preferences</Label>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label className="text-sm">Prefer Verified Facilities</Label>
-                    <p className="text-xs text-gray-500">Prioritize warehouses with verified ownership certificates</p>
+                    <Label className="text-sm text-slate-200">Prefer Verified Facilities</Label>
+                    <p className="text-xs text-slate-400">Prioritize warehouses with verified ownership certificates</p>
                   </div>
                   <Switch
                     checked={localPrefs.preferVerified || false}
@@ -221,8 +221,8 @@ export default function RecommendationCustomizer({
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <Label className="text-sm">Prefer High Availability</Label>
-                    <p className="text-xs text-gray-500">Prioritize warehouses with more available space</p>
+                    <Label className="text-sm text-slate-200">Prefer High Availability</Label>
+                    <p className="text-xs text-slate-400">Prioritize warehouses with more available space</p>
                   </div>
                   <Switch
                     checked={localPrefs.preferAvailability || false}
@@ -233,105 +233,105 @@ export default function RecommendationCustomizer({
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-6">
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-100">
+              <div className="glass-dark rounded-lg p-4 border border-white/10">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Brain className="h-5 w-5 text-purple-600" />
-                  <h3 className="font-semibold text-purple-900">ML Recommendation Engine</h3>
+                  <Brain className="h-5 w-5 text-purple-400" />
+                  <h3 className="font-semibold text-slate-100">ML Recommendation Engine</h3>
                 </div>
-                <p className="text-sm text-gray-700 mb-3">
-                  Our AI uses advanced machine learning algorithms including Random Forest and K-Nearest Neighbors 
+                <p className="text-sm text-slate-300 mb-3">
+                  Our AI uses advanced machine learning algorithms including Random Forest and K-Nearest Neighbors
                   to find the best warehouse matches based on your preferences.
                 </p>
-                
+
                 {/* Algorithm Selection */}
                 <div className="space-y-4 mt-4">
                   <Label className="text-sm">Recommendation Algorithm</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-white p-3 rounded-lg border border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50 transition-all">
+                    <div className="glass-dark p-3 rounded-lg border border-white/10 cursor-pointer hover:border-purple-400/50 transition-all">
                       <div className="text-center mb-2">
                         <div className="h-8 w-8 mx-auto bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
                           <Sparkles className="h-4 w-4 text-white" />
                         </div>
                       </div>
-                      <h4 className="text-xs font-medium text-center">Hybrid</h4>
-                      <p className="text-xs text-gray-500 text-center mt-1">Combines all algorithms</p>
+                      <h4 className="text-xs font-medium text-center text-slate-100">Hybrid</h4>
+                      <p className="text-xs text-slate-400 text-center mt-1">Combines all algorithms</p>
                     </div>
-                    
-                    <div className="bg-white p-3 rounded-lg border border-blue-100 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all">
+
+                    <div className="glass-dark p-3 rounded-lg border border-white/10 cursor-pointer hover:border-green-400/50 transition-all">
                       <div className="text-center mb-2">
                         <div className="h-8 w-8 mx-auto bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
                           <AreaChart className="h-4 w-4 text-white" />
                         </div>
                       </div>
-                      <h4 className="text-xs font-medium text-center">Random Forest</h4>
-                      <p className="text-xs text-gray-500 text-center mt-1">Best for diverse options</p>
+                      <h4 className="text-xs font-medium text-center text-slate-100">Random Forest</h4>
+                      <p className="text-xs text-slate-400 text-center mt-1">Best for diverse options</p>
                     </div>
-                    
-                    <div className="bg-white p-3 rounded-lg border border-green-100 cursor-pointer hover:border-green-300 hover:bg-green-50 transition-all">
+
+                    <div className="glass-dark p-3 rounded-lg border border-white/10 cursor-pointer hover:border-orange-400/50 transition-all">
                       <div className="text-center mb-2">
                         <div className="h-8 w-8 mx-auto bg-gradient-to-br from-orange-600 to-amber-500 rounded-full flex items-center justify-center">
                           <Target className="h-4 w-4 text-white" />
                         </div>
                       </div>
-                      <h4 className="text-xs font-medium text-center">KNN</h4>
-                      <p className="text-xs text-gray-500 text-center mt-1">Best for precision</p>
+                      <h4 className="text-xs font-medium text-center text-slate-100">KNN</h4>
+                      <p className="text-xs text-slate-400 text-center mt-1">Best for precision</p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Preference Weights */}
                 <div className="mt-6 space-y-5">
-                  <h4 className="text-sm font-medium text-purple-900">Feature Importance</h4>
-                  <p className="text-xs text-gray-600">Adjust the importance of each factor in the recommendation algorithm</p>
-                  
+                  <h4 className="text-sm font-medium text-slate-200">Feature Importance</h4>
+                  <p className="text-xs text-slate-400">Adjust the importance of each factor in the recommendation algorithm</p>
+
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs text-gray-700">Location</Label>
-                        <span className="text-xs font-medium text-purple-900">High</span>
+                        <Label className="text-xs text-slate-300">Location</Label>
+                        <span className="text-xs font-medium text-purple-400">High</span>
                       </div>
-                      <Slider 
-                        defaultValue={[80]} 
+                      <Slider
+                        defaultValue={[80]}
                         max={100}
                         step={1}
                         className="py-1"
                       />
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs text-gray-700">Price</Label>
-                        <span className="text-xs font-medium text-purple-900">Medium</span>
+                        <Label className="text-xs text-slate-300">Price</Label>
+                        <span className="text-xs font-medium text-purple-400">Medium</span>
                       </div>
-                      <Slider 
-                        defaultValue={[60]} 
-                        max={100} 
+                      <Slider
+                        defaultValue={[60]}
+                        max={100}
                         step={1}
                         className="py-1"
                       />
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs text-gray-700">Size</Label>
-                        <span className="text-xs font-medium text-purple-900">Medium</span>
+                        <Label className="text-xs text-slate-300">Size</Label>
+                        <span className="text-xs font-medium text-purple-400">Medium</span>
                       </div>
-                      <Slider 
-                        defaultValue={[60]} 
-                        max={100} 
+                      <Slider
+                        defaultValue={[60]}
+                        max={100}
                         step={1}
                         className="py-1"
                       />
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs text-gray-700">Amenities</Label>
-                        <span className="text-xs font-medium text-purple-900">Low</span>
+                        <Label className="text-xs text-slate-300">Amenities</Label>
+                        <span className="text-xs font-medium text-purple-400">Low</span>
                       </div>
-                      <Slider 
-                        defaultValue={[40]} 
-                        max={100} 
+                      <Slider
+                        defaultValue={[40]}
+                        max={100}
                         step={1}
                         className="py-1"
                       />
@@ -349,7 +349,7 @@ export default function RecommendationCustomizer({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Gauge className="h-4 w-4 text-orange-600" />
-                  <Label className="text-sm font-medium">Active Filters</Label>
+                  <Label className="text-base font-medium text-slate-200">Active Filters</Label>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {localPrefs.district && (
@@ -388,15 +388,15 @@ export default function RecommendationCustomizer({
           )}
 
           {/* ML Explanation */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100 mt-4">
+          <div className="glass-dark rounded-lg p-4 border border-white/10 mt-4">
             <div className="flex items-center space-x-2 mb-2">
-              <Brain className="h-5 w-5 text-blue-600" />
-              <h3 className="font-medium text-blue-900">How Our ML Algorithms Work</h3>
+              <Brain className="h-5 w-5 text-blue-400" />
+              <h3 className="font-medium text-slate-100">How Our ML Algorithms Work</h3>
             </div>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-slate-300">
               Our smart recommendation engine combines multiple ML approaches:
             </p>
-            <ul className="text-xs text-gray-600 mt-2 space-y-1 ml-5 list-disc">
+            <ul className="text-xs text-slate-400 mt-2 space-y-1 ml-5 list-disc">
               <li>Random Forest creates multiple decision trees to find the best warehouses for your needs</li>
               <li>K-Nearest Neighbors matches warehouses with similar properties to your preferences</li>
               <li>Hybrid approach blends different algorithms for optimal results</li>
@@ -405,19 +405,19 @@ export default function RecommendationCustomizer({
 
           {/* Actions */}
           <div className="flex justify-between pt-6">
-            <Button variant="outline" onClick={handleReset} className="hover:bg-red-50 border-red-200 text-red-700">
+            <Button variant="outline" onClick={handleReset} className="hover:bg-red-900/30 border-red-500/50 text-red-400">
               Reset to Default
             </Button>
             <div className="space-x-2">
-              <Button variant="outline" onClick={onClose} className="hover:bg-gray-100">
+              <Button variant="outline" onClick={onClose} className="hover:bg-slate-700 border-slate-600 text-slate-300">
                 Cancel
               </Button>
-              <Button 
-                onClick={handleApply} 
+              <Button
+                onClick={handleApply}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                Apply AI Preferences
+                Apply ML Preferences
               </Button>
             </div>
           </div>
