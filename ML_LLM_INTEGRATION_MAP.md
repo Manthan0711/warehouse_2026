@@ -24,11 +24,11 @@
 
 ### LLM API Keys (in .env):
 ```
-VITE_OPENROUTER_API_KEY=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
-VITE_GROQ_API_KEY=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
-VITE_GEMINI_API_KEY=AIzaSyB5j082mdn_XKKR-9oKrdXQ12KKRvQXOpk
-VITE_CLOUDFLARE_ACCOUNT_ID=f66b88314a90c4f22f2c6bd3cf7343ab
-VITE_CLOUDFLARE_API_TOKEN=1dfa3e25aad546c...
+VITE_OPENROUTER_API_KEY=sk-or-v1-your_openrouter_key_here
+VITE_GROQ_API_KEY=gsk_your_groq_api_key_here
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id_here
+VITE_CLOUDFLARE_API_TOKEN=your_cloudflare_token_here
 ```
 
 ---

@@ -110,12 +110,12 @@ Due to bolt.new compatibility and file size restrictions, the following are **ex
 
 ### Files INCLUDED (Unusual but Intentional)
 
-⚠️ **`.env` file IS included** for bolt.new compatibility:
-- Contains working demo API keys
-- **IMPORTANT**: These are for development/demo only
+✅ **`.env` file IS included** for bolt.new compatibility:
+- Contains placeholder API keys (NOT working keys for security)
+- **REQUIRED**: You MUST replace all placeholder values with your own API keys
 - For production deployment:
   1. Create your own API keys (see Environment Setup below)
-  2. Replace all keys in `.env`
+  2. Replace all placeholders in `.env`
   3. Never commit production keys to public repos
 
 ## 🔐 Environment Setup
