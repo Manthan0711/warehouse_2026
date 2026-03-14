@@ -6,6 +6,8 @@ import { Navbar } from '../components/Navbar';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Progress } from '../components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 import {
     User,
     Building2,
@@ -47,6 +49,7 @@ interface OwnerProfileData {
 
 export default function OwnerProfilePage() {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -72,6 +75,20 @@ export default function OwnerProfilePage() {
         total_warehouses: 0,
         total_bookings: 0
     });
+
+    const completionChecks = [
+        profile.full_name.trim().length > 0,
+        profile.phone.trim().length > 0,
+        profile.company_name.trim().length > 0,
+        profile.gst_number.trim().length > 0,
+        profile.pan_number.trim().length > 0,
+        profile.business_address.trim().length > 0,
+        profile.city.trim().length > 0,
+        profile.pincode.trim().length > 0,
+        profile.documents.length >= 2,
+    ];
+    const completedFields = completionChecks.filter(Boolean).length;
+    const profileCompletionPct = Math.round((completedFields / completionChecks.length) * 100);
 
     // Fetch existing profile
     useEffect(() => {
@@ -163,13 +180,51 @@ export default function OwnerProfilePage() {
                 setProfile(prev => ({ ...prev, ...data }));
             }
 
-            alert('Profile saved successfully!');
+            toast({
+                title: 'Profile saved',
+                description: 'Your owner profile draft has been saved successfully.'
+            });
         } catch (err) {
             console.error('Error saving profile:', err);
-            alert('Failed to save profile. Please try again.');
+            toast({
+                title: 'Save failed',
+                description: 'Unable to save profile. Please try again.',
+                variant: 'destructive'
+            });
         } finally {
             setSaving(false);
         }
+    };
+
+    const validateBeforeVerificationSubmit = () => {
+        if (!profile.full_name.trim() || !profile.phone.trim() || !profile.company_name.trim()) {
+            toast({
+                title: 'Missing required fields',
+                description: 'Please fill full name, phone number, and company name.',
+                variant: 'destructive'
+            });
+            return false;
+        }
+
+        if (!profile.gst_number.trim() || !profile.pan_number.trim()) {
+            toast({
+                title: 'GST and PAN required',
+                description: 'Please provide valid GST and PAN details before submitting.',
+                variant: 'destructive'
+            });
+            return false;
+        }
+
+        if ((profile.documents || []).length < 2) {
+            toast({
+                title: 'More documents required',
+                description: 'Upload at least 2 verification documents before submitting.',
+                variant: 'destructive'
+            });
+            return false;
+        }
+
+        return true;
     };
 
     // Submit for verification
@@ -177,6 +232,10 @@ export default function OwnerProfilePage() {
         if (!user?.id || !profile.id) {
             // First save the profile
             await saveProfile();
+        }
+
+        if (!validateBeforeVerificationSubmit()) {
+            return;
         }
 
         setSubmitting(true);
@@ -207,16 +266,59 @@ export default function OwnerProfilePage() {
 
             if (result.success) {
                 setProfile(prev => ({ ...prev, verification_status: 'submitted' }));
-                alert('Profile submitted for verification! Admin will review your documents.');
+                toast({
+                    title: 'Submitted for verification',
+                    description: 'Admin will review your profile and documents shortly.'
+                });
             } else {
                 throw new Error(result.error);
             }
         } catch (err: any) {
             console.error('Error submitting for verification:', err);
-            alert(err.message || 'Failed to submit for verification');
+            toast({
+                title: 'Submission failed',
+                description: err.message || 'Failed to submit for verification',
+                variant: 'destructive'
+            });
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const uploadDocumentToServer = async (file: File): Promise<string> => {
+        const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = String(reader.result || '');
+                const content = result.includes(',') ? result.split(',')[1] : '';
+                if (!content) {
+                    reject(new Error('Failed to process file for upload'));
+                    return;
+                }
+                resolve(content);
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(file);
+        });
+
+        const response = await fetch('/api/warehouse-submissions/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fileName: file.name,
+                fileBase64: base64,
+                contentType: file.type || 'application/octet-stream',
+                bucket: 'user-documents',
+                folder: `owner-profiles/${user?.id || 'unknown'}`,
+            }),
+        });
+
+        const body = await response.json();
+        if (!response.ok || !body.success || !body.url) {
+            throw new Error(body.error || 'Document upload failed');
+        }
+
+        return body.url as string;
     };
 
     // Upload document to Supabase Storage
@@ -224,27 +326,28 @@ export default function OwnerProfilePage() {
         const file = e.target.files?.[0];
         if (!file || !user?.id) return;
 
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+            toast({
+                title: 'Unsupported file type',
+                description: 'Please upload PDF, JPG, or PNG files only.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast({
+                title: 'File too large',
+                description: 'Maximum allowed file size is 5MB.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
         setUploadingDoc(true);
         try {
-            const timestamp = Date.now();
-            const fileName = `${user.id}/${timestamp}-${file.name}`;
-
-            // Try to upload to Supabase Storage
-            const { error: uploadError, data: uploadData } = await supabase.storage
-                .from('user-documents')
-                .upload(fileName, file);
-
-            let docUrl = '';
-            if (uploadError) {
-                console.warn('Storage upload failed, using local reference:', uploadError);
-                // Fallback: create a local blob URL for demo
-                docUrl = URL.createObjectURL(file);
-            } else {
-                const { data: urlData } = supabase.storage
-                    .from('user-documents')
-                    .getPublicUrl(fileName);
-                docUrl = urlData.publicUrl;
-            }
+            const docUrl = await uploadDocumentToServer(file);
 
             const newDoc = {
                 name: file.name,
@@ -258,12 +361,20 @@ export default function OwnerProfilePage() {
                 documents: [...prev.documents, newDoc]
             }));
 
-            alert('Document uploaded successfully!');
+            toast({
+                title: 'Document uploaded',
+                description: `${file.name} has been uploaded successfully.`
+            });
         } catch (err) {
             console.error('Error uploading document:', err);
-            alert('Failed to upload document');
+            toast({
+                title: 'Upload failed',
+                description: 'Failed to upload document. Please try again.',
+                variant: 'destructive'
+            });
         } finally {
             setUploadingDoc(false);
+            e.target.value = '';
         }
     };
 
@@ -327,6 +438,17 @@ export default function OwnerProfilePage() {
                         <p className="text-slate-400 mt-1">Complete your profile to list warehouses</p>
                     </div>
                     {getVerificationBadge()}
+                </div>
+
+                <div className="glass-dark rounded-xl p-5 mb-6 border border-slate-700/60">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-slate-200">Profile Completeness</p>
+                        <p className="text-sm text-slate-300">{profileCompletionPct}%</p>
+                    </div>
+                    <Progress value={profileCompletionPct} className="h-2 bg-slate-800" />
+                    <p className="text-xs text-slate-400 mt-2">
+                        Complete all required details and upload at least 2 documents for faster verification.
+                    </p>
                 </div>
 
                 {/* Verification Warning */}
@@ -562,6 +684,7 @@ export default function OwnerProfilePage() {
                                         </div>
                                     </div>
                                     <button
+                                        title="Remove document"
                                         onClick={() => removeDocument(index)}
                                         className="text-red-400 hover:text-red-300"
                                     >

@@ -49,13 +49,40 @@ export default function AdminWarehouseSubmissionsPage() {
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
+      console.log('📦 Admin: Fetching warehouse submissions...');
       const response = await fetch("/api/admin/warehouse-submissions");
+      
+      if (!response.ok) {
+        console.error('❌ Admin submissions API error:', response.status, response.statusText);
+        toast({
+          title: 'Failed to load submissions',
+          description: `Server returned ${response.status}. Check server logs.`,
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const data = await response.json();
+      console.log('📦 Admin submissions response:', data);
+      
       if (data.success) {
         setSubmissions(data.submissions || []);
+        console.log(`✅ Loaded ${data.submissions?.length || 0} submissions`);
+      } else {
+        console.error('❌ API returned error:', data.error);
+        toast({
+          title: 'Error loading submissions',
+          description: data.error || 'Unknown error',
+          variant: 'destructive'
+        });
       }
-    } catch (error) {
-      console.error('Error loading submissions:', error);
+    } catch (error: any) {
+      console.error('❌ Error loading submissions:', error);
+      toast({
+        title: 'Connection error',
+        description: 'Could not reach the server. Make sure the dev server is running.',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }

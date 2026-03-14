@@ -20,7 +20,7 @@ async function callOpenRouterAI(prompt: string, systemPrompt?: string): Promise<
             return null;
         }
 
-        console.log('🌐 Calling OpenRouter AI (llama-3.2-3b - FREE)...');
+        console.log('🌐 Calling OpenRouter AI (qwen-2.5-72b - FREE)...');
 
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -31,7 +31,7 @@ async function callOpenRouterAI(prompt: string, systemPrompt?: string): Promise<
                 'X-Title': 'SmartWarehouse'
             },
             body: JSON.stringify({
-                model: 'meta-llama/llama-3.2-3b-instruct:free', // FREE model!
+                model: 'qwen/qwen-2.5-72b-instruct:free', // FREE model!
                 messages: [
                     {
                         role: 'system',
@@ -144,7 +144,7 @@ async function callGroqAPI(prompt: string, systemPrompt?: string): Promise<strin
             return null;
         }
 
-        console.log('🚀 Calling Groq API (llama-3-70b)...');
+        console.log('🚀 Calling Groq API (llama-3.3-70b)...');
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -153,7 +153,7 @@ async function callGroqAPI(prompt: string, systemPrompt?: string): Promise<strin
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'llama-3.1-70b-versatile', // Free, fast model
+                model: 'llama-3.3-70b-versatile', // Free, fast model
                 messages: [
                     {
                         role: 'system',
@@ -300,17 +300,17 @@ ${analysis.strengths.join('\n')}
 
 Provide a professional 3-4 sentence assessment with your recommendation (APPROVE/REVIEW/REJECT).`;
 
-    // Try OpenRouter first (100+ models, easy signup with Google)
+    // Try Groq first (fastest, free)
+    const groqResult = await callGroqAPI(prompt);
+    if (groqResult) return groqResult;
+
+    // Try OpenRouter (100+ models, free tier)
     const openRouterResult = await callOpenRouterAI(prompt);
     if (openRouterResult) return openRouterResult;
 
     // Try Cloudflare Workers AI (free, global edge)
     const cloudflareResult = await callCloudflareAI(prompt);
     if (cloudflareResult) return cloudflareResult;
-
-    // Try Groq (fast, free)
-    const groqResult = await callGroqAPI(prompt);
-    if (groqResult) return groqResult;
 
     // Try HuggingFace
     const hfResult = await callHuggingFaceAPI(prompt);
@@ -356,7 +356,14 @@ ${warehouse.reasons?.join('\n') || 'No specific reasons provided'}
 Provide a 2-3 sentence natural language explanation of why this warehouse is a great match. Focus on the key value propositions.`;
 
     try {
-        // Try OpenRouter first (100+ models, easy signup with Google)
+        // Try Groq first (fastest, free)
+        const groqExplanation = await callGroqAPI(prompt, systemPrompt);
+        if (groqExplanation) {
+            console.log('✅ Groq LLM generated recommendation explanation');
+            return groqExplanation;
+        }
+
+        // Try OpenRouter (free models)
         const openRouterExplanation = await callOpenRouterAI(prompt, systemPrompt);
         if (openRouterExplanation) {
             console.log('✅ OpenRouter AI generated recommendation explanation');
@@ -368,13 +375,6 @@ Provide a 2-3 sentence natural language explanation of why this warehouse is a g
         if (cloudflareExplanation) {
             console.log('✅ Cloudflare AI generated recommendation explanation');
             return cloudflareExplanation;
-        }
-
-        // Try Groq as fallback
-        const groqExplanation = await callGroqAPI(prompt, systemPrompt);
-        if (groqExplanation) {
-            console.log('✅ Groq LLM generated recommendation explanation');
-            return groqExplanation;
         }
     } catch (error) {
         console.error('LLM recommendation explanation error:', error);

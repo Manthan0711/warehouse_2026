@@ -46,6 +46,13 @@ export default function Dashboard() {
     responseRate: 85,
     totalWarehouses: 0
   });
+  const [ownerOps, setOwnerOps] = useState({
+    pendingBookings: 0,
+    approvedBookings: 0,
+    rejectedBookings: 0,
+    pendingSubmissions: 0,
+    approvedSubmissions: 0,
+  });
 
   // Check if user is admin after all hooks are initialized
   const isAdmin = user?.email?.includes('admin') || profile?.user_type === 'admin';
@@ -75,7 +82,36 @@ export default function Dashboard() {
 
       if (profile?.user_type === 'owner') {
         // Use the new warehouse service method to get ONLY this owner's warehouses
-        const { data: ownerWarehouses, count } = await warehouseService.getWarehousesByOwner(user.id);
+        const [{ data: ownerWarehouses, count }, bookingsResp, submissionsResp] = await Promise.all([
+          warehouseService.getWarehousesByOwner(user.id),
+          fetch(`/api/owner/bookings?owner_id=${encodeURIComponent(user.id)}`),
+          fetch(`/api/warehouse-submissions/owner/${encodeURIComponent(user.id)}`),
+        ]);
+
+        const bookingsPayload = bookingsResp.ok ? await bookingsResp.json() : { success: false, bookings: [] };
+        const submissionsPayload = submissionsResp.ok ? await submissionsResp.json() : { success: false, submissions: [] };
+
+        const ownerBookings = (bookingsPayload.bookings || []) as Array<{ booking_status?: string; total_amount?: number }>;
+        const ownerSubmissions = (submissionsPayload.submissions || []) as Array<{ status?: string }>;
+
+        const pendingBookings = ownerBookings.filter(b => b.booking_status === 'pending').length;
+        const approvedBookings = ownerBookings.filter(b => b.booking_status === 'approved').length;
+        const rejectedBookings = ownerBookings.filter(b => b.booking_status === 'rejected' || b.booking_status === 'cancelled').length;
+        const approvedRevenue = ownerBookings
+          .filter(b => b.booking_status === 'approved')
+          .reduce((sum, b) => sum + Number(b.total_amount || 0), 0);
+
+        const pendingSubmissions = ownerSubmissions.filter(s => s.status === 'pending').length;
+        const approvedSubmissions = ownerSubmissions.filter(s => s.status === 'approved').length;
+
+        const occupancyRate = ownerWarehouses.length
+          ? Math.round(
+            ownerWarehouses.reduce((sum, w) => {
+              const raw = Number(w.occupancy || 0);
+              return sum + (raw <= 1 ? raw * 100 : raw);
+            }, 0) / ownerWarehouses.length
+          )
+          : 0;
 
         console.log('📊 Owner warehouses loaded:', {
           count,
@@ -85,15 +121,23 @@ export default function Dashboard() {
         // Update stats
         setStats({
           totalProperties: count,
-          totalInquiries: count * 3,
-          monthlyRevenue: count * 50000,
-          occupancyRate: 78,
+          totalInquiries: pendingBookings,
+          monthlyRevenue: approvedRevenue,
+          occupancyRate,
           avgRating: 4.7,
           savedProperties: 0,
           activeSearches: 0,
           inquiriesSent: 0,
           responseRate: 85,
           totalWarehouses: count
+        });
+
+        setOwnerOps({
+          pendingBookings,
+          approvedBookings,
+          rejectedBookings,
+          pendingSubmissions,
+          approvedSubmissions,
         });
 
         // Set the owner's warehouses
@@ -268,7 +312,7 @@ Provide 2 actionable tips on pricing, availability, or marketing.`;
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">New Inquiries</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending Requests</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalInquiries}</p>
               </div>
               <MessageSquare className="h-8 w-8 text-purple-600" />
@@ -340,17 +384,31 @@ Provide 2 actionable tips on pricing, availability, or marketing.`;
               <Bell className="h-5 w-5 text-blue-500" />
               Booking Notifications
             </CardTitle>
-            <CardDescription>View approved bookings for your properties</CardDescription>
+            <CardDescription>View and respond to booking requests for your properties</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              <Badge variant="outline" className="justify-center text-xs border-amber-500/50 text-amber-600">
+                Pending bookings: {ownerOps.pendingBookings}
+              </Badge>
+              <Badge variant="outline" className="justify-center text-xs border-blue-500/50 text-blue-600">
+                Pending listings: {ownerOps.pendingSubmissions}
+              </Badge>
+            </div>
             <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
               <Link to="/owner/notifications">
                 <Bell className="mr-2 h-4 w-4" />
                 View All Notifications
               </Link>
             </Button>
+            <Button asChild variant="outline" className="w-full border-purple-500/40 text-purple-400 hover:bg-purple-500/10">
+              <Link to="/owner/analytics">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                View Analytics
+              </Link>
+            </Button>
             <p className="text-sm text-gray-500">
-              Get notified when admin approves bookings for your warehouses. View customer details and generate receipts.
+              Receive booking requests instantly. Accept or reject them, view customer details, and generate receipts for confirmed bookings.
             </p>
           </CardContent>
         </Card>
@@ -395,22 +453,28 @@ Provide 2 actionable tips on pricing, availability, or marketing.`;
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center space-x-4 text-sm">
                         <span className="text-green-600 font-medium">
-                          {Math.floor(property.total_area * (1 - property.occupancy / 100)).toLocaleString()} sq ft available
+                          {Math.floor(property.total_area * (1 - ((Number(property.occupancy || 0) <= 1 ? Number(property.occupancy || 0) : Number(property.occupancy || 0) / 100)))).toLocaleString()} sq ft available
                         </span>
                         <span className="text-gray-500">
                           ₹{property.price_per_sqft}/sq ft
                         </span>
                       </div>
-                      <Badge variant={property.status === 'approved' ? "default" : property.status === 'rejected' ? "destructive" : "secondary"}>
-                        {property.status === 'approved' ? 'Approved' : property.status === 'rejected' ? 'Rejected' : 'Pending'}
+                      <Badge variant={
+                        property.status === 'active' || property.status === 'approved' ? "default" :
+                        property.status === 'rejected' ? "destructive" : "secondary"
+                      }>
+                        {property.status === 'active' ? 'Active' :
+                         property.status === 'approved' ? 'Approved' :
+                         property.status === 'rejected' ? 'Rejected' :
+                         property.status === 'pending_approval' ? '⏳ Pending Review' : 'Pending'}
                       </Badge>
                     </div>
                   </div>
                   <div className="flex flex-col space-y-1">
                     <Button size="sm" variant="outline" asChild>
-                      <Link to={property.status === 'approved' ? `/warehouses/${property.id}` : `/submission/${property.id}`}>
+                      <Link to={property.status === 'active' || property.status === 'approved' ? `/warehouses/${property.id}` : '#'}>
                         <Eye className="h-4 w-4 mr-1" />
-                        View
+                        {property.status === 'pending_approval' ? 'Pending' : 'View'}
                       </Link>
                     </Button>
                     <Button size="sm" variant="ghost">
@@ -534,46 +598,45 @@ Provide 2 actionable tips on pricing, availability, or marketing.`;
           {/* Show ML recommendations if available, otherwise show regular warehouses */}
           {!loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Display either ML recommendations or regular warehouses */}
-              {recommendationsData && recommendationsData.items && recommendationsData.items.length > 0 ? (
-                // Show ML recommendations
-                recommendationsData.items.slice(0, 6).map((item) => (
-                  <div key={item.whId} className="border rounded-lg p-4 hover:border-blue-300 transition-colors">
-                    <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-gray-200 relative">
+              {/* Display warehouses */}
+              {warehouses.length > 0 ? (
+                // Show warehouses
+                warehouses.slice(0, 6).map((warehouse) => (
+                  <div key={warehouse.id} className="border rounded-lg p-4 hover:border-blue-300 transition-colors">
+                    <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-gray-200">
                       <img
-                        src={item.image || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&crop=center"}
-                        alt={item.name}
+                        src={(warehouse.images && warehouse.images.length > 0)
+                          ? warehouse.images[0]
+                          : "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&crop=center"}
+                        alt={warehouse.name || "Warehouse"}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&crop=center";
+                        }}
                       />
-                      <Badge className="absolute top-2 left-2 bg-blue-600 text-white">
-                        <Bot className="w-3 h-3 mr-1" />
-                        ML Match: {item.matchScore}%
-                      </Badge>
                     </div>
-                    <h4 className="font-medium mb-1">{item.name}</h4>
+                    <h4 className="font-medium mb-1">{warehouse.name || `Warehouse in ${warehouse.city}`}</h4>
                     <p className="text-sm text-gray-600 flex items-center mb-2">
                       <MapPin className="h-3 w-3 mr-1" />
-                      {item.location}
+                      {warehouse.city}, {warehouse.state}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-blue-600">₹{item.pricePerSqFt}/sq ft</span>
+                      <span className="text-sm font-medium text-blue-600">₹{warehouse.price_per_sqft}/sq ft</span>
                       <Button size="sm" asChild>
-                        <Link to={`/warehouses/${item.whId}`}>View Details</Link>
+                        <Link to={`/warehouses/${warehouse.id}`}>View Details</Link>
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      {item.totalAreaSqft?.toLocaleString()} sq ft • {item.type}
+                      {warehouse.total_area?.toLocaleString()} sq ft • {warehouse.warehouse_type || "General Storage"}
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center space-x-1">
                         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs">{item.rating} ({item.reviews})</span>
+                        <span className="text-xs">{warehouse.rating} ({warehouse.reviews_count})</span>
                       </div>
-                      {item.reasons && item.reasons.length > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {item.reasons[0].label}
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {warehouse.amenities?.includes('Verified') ? 'Verified' : 'New'}
+                      </Badge>
                     </div>
                   </div>
                 ))
@@ -680,48 +743,52 @@ Provide 2 actionable tips on pricing, availability, or marketing.`;
         )}
 
         {/* Page Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Welcome, {profile.name}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              {isOwner
-                ? 'Manage your warehouse properties and track performance'
-                : 'Find and book warehouse spaces for your business'
-              } • {profile.user_type === 'owner' ? 'Property Owner' : 'Space Seeker'}
-            </p>
-          </div>
-          <div className="flex space-x-3">
-            {isOwner ? (
-              <Button asChild>
-                <Link to="/list-property">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Property
-                </Link>
-              </Button>
-            ) : (
-              <>
-                <Button variant="outline" asChild>
-                  <Link to="/ml-recommendations">
-                    <Bot className="mr-2 h-4 w-4" />
-                    ML Recommendations
-                  </Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/warehouses">
-                    <Search className="mr-2 h-4 w-4" />
-                    Find Warehouses
-                  </Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <Card className="mb-8 border-slate-700/60 bg-slate-900/40 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Welcome, {profile.name}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
+                  {isOwner
+                    ? 'Manage your warehouse properties and track performance'
+                    : 'Find and book warehouse spaces for your business'
+                  } • {profile.user_type === 'owner' ? 'Property Owner' : 'Space Seeker'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {isOwner ? (
+                  <Button asChild>
+                    <Link to="/list-property">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Property
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link to="/ml-recommendations">
+                        <Bot className="mr-2 h-4 w-4" />
+                        ML Recommendations
+                      </Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/warehouses">
+                        <Search className="mr-2 h-4 w-4" />
+                        Find Warehouses
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Dashboard Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-900/60 border border-slate-700/60">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value={isOwner ? 'properties' : 'saved'}>
               {isOwner ? 'Properties' : 'Saved'}

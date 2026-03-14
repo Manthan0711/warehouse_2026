@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { getAIResponse } from '@/services/aiService';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Bell, 
   Package, 
@@ -17,12 +18,16 @@ import {
   Mail, 
   Clock,
   CheckCircle,
+  XCircle,
   FileText,
   Building2,
   ArrowLeft,
   RefreshCw,
   Eye,
-  Sparkles
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+  AlertCircle
 } from 'lucide-react';
 import BookingReceipt from '@/components/BookingReceipt';
 
@@ -33,13 +38,14 @@ interface OwnerNotification {
   created_at: string;
   metadata: {
     notification_type: string;
+    booking_status?: string;
     booking_id: string;
     warehouse_id: string;
     warehouse_name: string;
     seeker_name: string;
     seeker_email: string;
     seeker_phone: string;
-    blocks_booked: Array<{ id: string; block_number: number }>;
+    blocks_booked: Array<{ id?: string; block_number?: number }> | number[];
     area_sqft: number;
     start_date: string;
     end_date: string;
@@ -58,6 +64,8 @@ export default function OwnerNotificationsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [draftReplies, setDraftReplies] = useState<Record<string, string>>({});
   const [draftLoadingId, setDraftLoadingId] = useState<string | null>(null);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user || profile?.user_type !== 'owner') {
@@ -69,39 +77,98 @@ export default function OwnerNotificationsPage() {
 
   const fetchNotifications = async () => {
     if (!user) return;
-    
     setLoading(true);
     try {
-      console.log('📬 Fetching owner notifications for user:', user.id);
-      
-      const { data, error } = await supabase
+      console.log('📬 Fetching owner bookings & notifications for user:', user.id);
+
+      // 1. Get ALL bookings for this owner's warehouses via the server API
+      //    (works even when warehouse_owner_id was not stored in booking metadata)
+      const bookingsRes = await fetch(`/api/owner/bookings?owner_id=${encodeURIComponent(user.id)}`);
+      const bookingsData = bookingsRes.ok ? await bookingsRes.json() : { success: false, bookings: [] };
+
+      const ownerBookingNotifications: OwnerNotification[] = (bookingsData.bookings || []).map((b: any) => ({
+        id: `booking-log-${b.id}`,
+        type: 'booking',
+        description: `Booking for ${b.warehouse_name}`,
+        created_at: b.created_at,
+        metadata: {
+          notification_type: 'booking_activity',
+          booking_status: b.booking_status || 'pending',
+          booking_id: b.id,
+          warehouse_id: b.warehouse_id || '',
+          warehouse_name: b.warehouse_name || 'Warehouse',
+          seeker_name: b.seeker_name || 'Customer',
+          seeker_email: b.seeker_email || '',
+          seeker_phone: b.seeker_phone || '',
+          blocks_booked: b.blocks_booked || [],
+          area_sqft: b.area_sqft || 0,
+          start_date: b.start_date || '',
+          end_date: b.end_date || '',
+          total_amount: b.total_amount || 0,
+          payment_method: b.payment_method || 'N/A',
+          read: b.booking_status !== 'pending',
+        },
+      }));
+
+      // 2. Also get explicit notification records (visit requests, booking status change alerts)
+      const { data: notifData } = await supabase
         .from('activity_logs')
         .select('*')
         .eq('seeker_id', user.id)
         .eq('type', 'notification')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ Error fetching notifications:', error);
-        throw error;
-      }
-
-      console.log('📬 Raw notifications from DB:', data?.length || 0, 'records');
-      console.log('📬 Notification data:', data);
-
-      // Filter for booking-related notifications
-      const bookingNotifications = (data || []).filter(
-        n => n.metadata?.notification_type === 'booking_approved' || 
-             n.metadata?.notification_type === 'visit_request'
+      const explicitNotifs = (notifData || []).filter((n: any) =>
+        n.metadata?.notification_type === 'visit_request'
       );
-      
-      console.log('📬 Filtered booking notifications:', bookingNotifications.length);
-      
-      setNotifications(bookingNotifications);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+
+      // Merge: owner bookings first (most important), then explicit notifications
+      // De-duplicate by booking_id to avoid double-showing if both types exist
+      const bookingIdsSeen = new Set(ownerBookingNotifications.map(n => n.metadata.booking_id));
+      const uniqueNotifs = (explicitNotifs as OwnerNotification[]).filter(
+        n => !bookingIdsSeen.has(n.metadata?.booking_id)
+      );
+
+      const merged = [...ownerBookingNotifications, ...uniqueNotifs]
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      console.log(`📬 Owner can see ${merged.length} total items (${ownerBookingNotifications.length} bookings, ${uniqueNotifs.length} notifications)`);
+      setNotifications(merged);
+    } catch (err) {
+      console.error('Error fetching owner notifications:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOwnerRespond = async (notification: OwnerNotification, action: 'approve' | 'reject') => {
+    const bookingId = notification.metadata?.booking_id;
+    if (!bookingId || !user) return;
+
+    setRespondingId(bookingId);
+    try {
+      const res = await fetch('/api/owner/bookings/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: bookingId, owner_id: user.id, action }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: action === 'approve' ? '✅ Booking Approved' : '❌ Booking Rejected',
+          description: action === 'approve'
+            ? 'The seeker has been notified. Blocks are now marked as occupied.'
+            : 'The booking has been rejected and blocks released.',
+        });
+        // Refresh the list
+        await fetchNotifications();
+      } else {
+        toast({ title: 'Action failed', description: data.error || 'Unknown error', variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Network error', description: 'Could not reach server', variant: 'destructive' });
+    } finally {
+      setRespondingId(null);
     }
   };
 
@@ -226,46 +293,64 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
           <Card className="bg-gray-800/50 border-gray-700">
             <CardContent className="py-12 text-center">
               <Bell className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Notifications Yet</h3>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Booking Requests Yet</h3>
               <p className="text-gray-500">
-                You'll receive notifications here when bookings are approved for your warehouses
+                Pending and approved booking requests for your warehouses will appear here
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
-            {notifications.map((notification) => (
+            {notifications.map((notification) => {
+              const status = notification.metadata?.booking_status || 'pending';
+              const isPending = status === 'pending';
+              const isApproved = status === 'approved';
+              const isRejected = status === 'rejected' || status === 'cancelled';
+              const isResponding = respondingId === notification.metadata?.booking_id;
+
+              return (
               <Card
                 key={notification.id}
                 className={`border transition-all duration-200 ${
-                  notification.metadata?.read
-                    ? 'bg-gray-800/30 border-gray-700'
-                    : 'bg-gray-800/60 border-blue-500/50 shadow-lg shadow-blue-500/10'
+                  isPending
+                    ? 'bg-amber-900/20 border-amber-500/50 shadow-lg shadow-amber-500/10'
+                    : isApproved
+                      ? 'bg-green-900/10 border-green-700/50'
+                      : isRejected
+                        ? 'bg-gray-800/20 border-gray-700'
+                        : 'bg-gray-800/60 border-blue-500/50 shadow-lg shadow-blue-500/10'
                 }`}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
                       <div className={`p-3 rounded-xl ${
-                        notification.metadata?.notification_type === 'booking_approved'
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-blue-500/20 text-blue-400'
+                        isPending ? 'bg-amber-500/20 text-amber-400'
+                        : isApproved ? 'bg-green-500/20 text-green-400'
+                        : isRejected ? 'bg-gray-500/20 text-gray-400'
+                        : 'bg-blue-500/20 text-blue-400'
                       }`}>
-                        {notification.metadata?.notification_type === 'booking_approved' 
-                          ? <CheckCircle className="h-6 w-6" />
-                          : <Calendar className="h-6 w-6" />
-                        }
+                        {isPending ? <AlertCircle className="h-6 w-6" />
+                          : isApproved ? <CheckCircle className="h-6 w-6" />
+                          : isRejected ? <XCircle className="h-6 w-6" />
+                          : <Calendar className="h-6 w-6" />}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-white">
-                            {notification.metadata?.notification_type === 'booking_approved'
-                              ? 'New Booking Approved!'
-                              : 'Visit Request'
-                            }
+                            {notification.metadata?.notification_type === 'visit_request'
+                              ? 'Visit Request'
+                              : isPending ? 'New Booking Request'
+                              : `Booking ${status.toUpperCase()}`}
                           </h3>
-                          {!notification.metadata?.read && (
-                            <Badge className="bg-blue-500/20 text-blue-400 text-xs">New</Badge>
+                          {isPending && (
+                            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs">Awaiting Your Response</Badge>
+                          )}
+                          {isApproved && (
+                            <Badge className="bg-green-500/20 text-green-300 border-green-500/40 text-xs">Approved</Badge>
+                          )}
+                          {isRejected && (
+                            <Badge className="bg-gray-500/20 text-gray-300 border-gray-500/40 text-xs">{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
                           )}
                         </div>
                         
@@ -277,7 +362,7 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
                           <span>{formatDateTime(notification.created_at)}</span>
                         </div>
 
-                        {notification.metadata?.notification_type === 'booking_approved' && (
+                        {notification.metadata?.notification_type !== 'visit_request' && (
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-900/50 rounded-lg p-4 mb-4">
                             <div>
                               <p className="text-gray-500 text-xs">Customer</p>
@@ -292,7 +377,7 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
                             <div>
                               <p className="text-gray-500 text-xs">Duration</p>
                               <p className="text-white text-sm font-medium">
-                                {formatDate(notification.metadata?.start_date)} - {formatDate(notification.metadata?.end_date)}
+                                {formatDate(notification.metadata?.start_date)} → {formatDate(notification.metadata?.end_date)}
                               </p>
                             </div>
                             <div>
@@ -305,7 +390,7 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
                         )}
 
                         {/* Expanded Details */}
-                        {expandedId === notification.id && notification.metadata?.notification_type === 'booking_approved' && (
+                        {expandedId === notification.id && notification.metadata?.notification_type !== 'visit_request' && (
                           <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700 space-y-3">
                             <h4 className="text-sm font-semibold text-gray-300 mb-3">Customer Details</h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -332,8 +417,32 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-2 ml-4">
-                      {notification.metadata?.notification_type === 'booking_approved' && (
+                    <div className="flex flex-col gap-2 ml-4 min-w-[120px]">
+                      {/* Pending booking: show Accept / Reject */}
+                      {isPending && notification.metadata?.notification_type !== 'visit_request' && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={isResponding}
+                            onClick={() => handleOwnerRespond(notification, 'approve')}
+                          >
+                            <ThumbsUp className="h-4 w-4 mr-1" />
+                            {isResponding ? '...' : 'Accept'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-500/60 text-red-400 hover:bg-red-500/10"
+                            disabled={isResponding}
+                            onClick={() => handleOwnerRespond(notification, 'reject')}
+                          >
+                            <ThumbsDown className="h-4 w-4 mr-1" />
+                            {isResponding ? '...' : 'Reject'}
+                          </Button>
+                        </>
+                      )}
+                      {notification.metadata?.notification_type !== 'visit_request' && (
                         <>
                           <Button
                             size="sm"
@@ -344,17 +453,19 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
                             <Eye className="h-4 w-4 mr-1" />
                             {expandedId === notification.id ? 'Hide' : 'Details'}
                           </Button>
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => {
-                              markAsRead(notification.id);
-                              setSelectedReceipt(notification);
-                            }}
-                          >
-                            <FileText className="h-4 w-4 mr-1" />
-                            Receipt
-                          </Button>
+                          {(isApproved || !isPending) && (
+                            <Button
+                              size="sm"
+                              className="bg-slate-700 hover:bg-slate-600"
+                              onClick={() => {
+                                markAsRead(notification.id);
+                                setSelectedReceipt(notification);
+                              }}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              Receipt
+                            </Button>
+                          )}
                         </>
                       )}
                       <Button
@@ -390,7 +501,8 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
                   )}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -411,7 +523,14 @@ Tone: polite, business-friendly, and action-oriented. Keep it under 80 words.`;
             start_date: selectedReceipt.metadata?.start_date || '',
             end_date: selectedReceipt.metadata?.end_date || '',
             area_sqft: selectedReceipt.metadata?.area_sqft || 0,
-            blocks_booked: selectedReceipt.metadata?.blocks_booked?.map((b: any) => b.block_number) || [],
+            blocks_booked: (selectedReceipt.metadata?.blocks_booked || []).map((b: any, idx: number) => {
+              if (typeof b === 'number') return b;
+              if (typeof b === 'string') {
+                const parsed = Number(b.replace(/[^0-9]/g, ''));
+                return Number.isFinite(parsed) ? parsed : idx + 1;
+              }
+              return Number(b?.block_number || idx + 1);
+            }),
             total_amount: selectedReceipt.metadata?.total_amount || 0,
             payment_method: selectedReceipt.metadata?.payment_method || 'Not specified',
             status: 'approved',

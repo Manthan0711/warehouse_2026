@@ -1,6 +1,82 @@
 import { RequestHandler } from "express";
 import { supabase } from "../lib/supabaseClient";
 
+const normalizeBookingBlockIds = (blocks: any[]): string[] => {
+    return (blocks || []).map((b: any, idx: number) => {
+        if (typeof b === 'number') return `block_${b}`;
+        if (typeof b === 'string') return b;
+        if (b?.id) return String(b.id);
+        return `block_${Number(b?.block_number || idx + 1)}`;
+    });
+};
+
+const releaseWarehouseBlocks = async (warehouseId: string, blockIds: string[]) => {
+    if (!warehouseId || !blockIds.length) return;
+
+    let warehouseData: any = null;
+    let table = 'warehouses';
+    let key = 'wh_id';
+
+    let { data: mainWarehouse } = await supabase
+        .from('warehouses')
+        .select('id, wh_id, blocks, total_blocks')
+        .eq('wh_id', warehouseId)
+        .maybeSingle();
+
+    if (!mainWarehouse) {
+        const { data: byId } = await supabase
+            .from('warehouses')
+            .select('id, wh_id, blocks, total_blocks')
+            .eq('id', warehouseId)
+            .maybeSingle();
+        mainWarehouse = byId;
+        key = 'id';
+    }
+
+    if (mainWarehouse) {
+        warehouseData = mainWarehouse;
+    } else {
+        const { data: submissionWarehouse } = await supabase
+            .from('warehouse_submissions')
+            .select('id, blocks, total_blocks')
+            .eq('id', warehouseId)
+            .eq('status', 'approved')
+            .maybeSingle();
+        if (submissionWarehouse) {
+            warehouseData = submissionWarehouse;
+            table = 'warehouse_submissions';
+            key = 'id';
+        }
+    }
+
+    if (!warehouseData || !Array.isArray(warehouseData.blocks) || warehouseData.blocks.length === 0) return;
+
+    const blockSet = new Set(blockIds);
+    const updatedBlocks = warehouseData.blocks.map((block: any) => {
+        const blockId = String(block?.id || `block_${block?.block_number}`);
+        if (!blockSet.has(blockId)) return block;
+        return {
+            ...block,
+            status: 'available',
+            booking_id: null,
+            booked_by: null,
+            booking_dates: null,
+            reserved_at: null,
+            occupied_at: null,
+        };
+    });
+
+    const totalBlocks = Number(warehouseData.total_blocks) || updatedBlocks.length;
+    const unavailableCount = updatedBlocks.filter((b: any) => ['reserved', 'occupied', 'booked'].includes(String(b.status))).length;
+    const availableBlocks = Math.max(0, totalBlocks - unavailableCount);
+    const occupancy = totalBlocks > 0 ? unavailableCount / totalBlocks : 0;
+
+    await supabase
+        .from(table)
+        .update({ blocks: updatedBlocks, available_blocks: availableBlocks, occupancy })
+        .eq(key, warehouseId);
+};
+
 /**
  * Get all bookings for a specific seeker
  * Maps admin approval statuses to seeker-friendly statuses
@@ -208,6 +284,11 @@ export const cancelBooking: RequestHandler = async (req, res) => {
             });
         }
 
+        const blockIds = normalizeBookingBlockIds(existingBooking.metadata?.blocks_booked || []);
+        if (blockIds.length > 0 && existingBooking.metadata?.warehouse_id) {
+            await releaseWarehouseBlocks(existingBooking.metadata.warehouse_id, blockIds);
+        }
+
         console.log(`✅ Booking ${booking_id} cancelled successfully`);
 
         return res.json({
@@ -273,11 +354,44 @@ export const generateInvoice: RequestHandler = async (req, res) => {
             });
         }
 
+        // Fetch warehouse details from database for accurate data
+        let warehouseData: any = null;
+        const warehouseId = metadata.warehouse_id;
+        if (warehouseId) {
+            // Try by wh_id first (LIC format)
+            let { data: wh } = await supabase
+                .from('warehouses')
+                .select('name, address, city, state, total_area, price_per_sqft, owner_id')
+                .eq('wh_id', warehouseId)
+                .maybeSingle();
+
+            // Try by id (UUID format)
+            if (!wh) {
+                const { data: whById } = await supabase
+                    .from('warehouses')
+                    .select('name, address, city, state, total_area, price_per_sqft, owner_id')
+                    .eq('id', warehouseId)
+                    .maybeSingle();
+                wh = whById;
+            }
+            warehouseData = wh;
+        }
+
+        // Use warehouse DB data as fallback for missing metadata
+        const areaSqft = metadata.area_sqft || warehouseData?.total_area || 0;
+        const pricePerSqft = warehouseData?.price_per_sqft || 0;
+
         // Calculate invoice details
         const startDate = new Date(metadata.start_date);
         const endDate = new Date(metadata.end_date);
         const durationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        const baseAmount = metadata.total_amount || 0;
+        
+        // Recalculate amount properly: area * price_per_sqft * months (or use stored amount)
+        const durationMonths = Math.max(1, Math.ceil(durationDays / 30));
+        const calculatedAmount = areaSqft * pricePerSqft * durationMonths;
+        const baseAmount = metadata.total_amount && metadata.total_amount > 0 
+            ? metadata.total_amount 
+            : calculatedAmount > 0 ? calculatedAmount : 0;
         const tax = baseAmount * 0.18; // 18% GST
         const insurance = baseAmount * 0.02; // 2% insurance
         const totalAmount = baseAmount + tax + insurance;
@@ -296,9 +410,9 @@ export const generateInvoice: RequestHandler = async (req, res) => {
 
             // Warehouse details
             warehouse: {
-                name: metadata.warehouse_name || 'Unknown Warehouse',
-                location: `${metadata.warehouse_city || 'Unknown'}, ${metadata.warehouse_state || 'Unknown'}`,
-                address: metadata.warehouse_address || 'Address not available'
+                name: warehouseData?.name || metadata.warehouse_name || 'Unknown Warehouse',
+                location: `${warehouseData?.city || metadata.warehouse_city || 'Unknown'}, ${warehouseData?.state || metadata.warehouse_state || 'Unknown'}`,
+                address: warehouseData?.address || metadata.warehouse_address || 'Address not available'
             },
 
             // Booking details
@@ -306,7 +420,9 @@ export const generateInvoice: RequestHandler = async (req, res) => {
                 start_date: metadata.start_date,
                 end_date: metadata.end_date,
                 duration_days: durationDays,
-                area_sqft: metadata.area_sqft || 0,
+                duration_months: durationMonths,
+                area_sqft: areaSqft,
+                price_per_sqft: pricePerSqft,
                 booking_type: metadata.booking_type || 'standard',
                 goods_type: metadata.goods_type || 'General Goods'
             },

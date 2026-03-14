@@ -12,10 +12,116 @@ import citiesRouter from "./routes/cities";
 
 // Create Supabase client directly to avoid module resolution issues
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 console.log('🔧 Server index loaded - Supabase configured');
+
+const normalizeBookingBlockIds = (blocks: any[]): string[] => {
+  return (blocks || []).map((b: any, idx: number) => {
+    if (typeof b === 'number') return `block_${b}`;
+    if (typeof b === 'string') return b;
+    if (b?.id) return String(b.id);
+    const blockNum = Number(b?.block_number || idx + 1);
+    return `block_${blockNum}`;
+  });
+};
+
+const applyBlockStateTransition = async (
+  warehouseId: string,
+  blockIds: string[],
+  status: 'approved' | 'rejected' | 'cancelled' | 'pending',
+  bookingMeta: any,
+  bookingId: string
+) => {
+  if (!warehouseId || !blockIds.length) return;
+
+  let warehouseData: any = null;
+  let warehouseTable = 'warehouses';
+  let idColumn = 'wh_id';
+
+  let { data: mainWarehouse } = await supabase
+    .from('warehouses')
+    .select('id, wh_id, blocks, total_blocks')
+    .eq('wh_id', warehouseId)
+    .maybeSingle();
+
+  if (!mainWarehouse) {
+    const { data: byId } = await supabase
+      .from('warehouses')
+      .select('id, wh_id, blocks, total_blocks')
+      .eq('id', warehouseId)
+      .maybeSingle();
+    mainWarehouse = byId;
+    idColumn = 'id';
+  }
+
+  if (mainWarehouse) {
+    warehouseData = mainWarehouse;
+  } else {
+    const { data: submissionWarehouse } = await supabase
+      .from('warehouse_submissions')
+      .select('id, blocks, total_blocks')
+      .eq('id', warehouseId)
+      .eq('status', 'approved')
+      .maybeSingle();
+
+    if (submissionWarehouse) {
+      warehouseData = submissionWarehouse;
+      warehouseTable = 'warehouse_submissions';
+      idColumn = 'id';
+    }
+  }
+
+  if (!warehouseData || !Array.isArray(warehouseData.blocks) || warehouseData.blocks.length === 0) return;
+
+  const blockSet = new Set(blockIds);
+  const nextBlockState = status === 'approved' ? 'occupied' : status === 'pending' ? 'reserved' : 'available';
+
+  const updatedBlocks = warehouseData.blocks.map((block: any) => {
+    const blockId = String(block?.id || `block_${block?.block_number}`);
+    if (!blockSet.has(blockId)) return block;
+
+    if (nextBlockState === 'available') {
+      return {
+        ...block,
+        status: 'available',
+        booking_id: null,
+        booked_by: null,
+        booking_dates: null,
+        reserved_at: null,
+        occupied_at: null,
+      };
+    }
+
+    return {
+      ...block,
+      status: nextBlockState,
+      booking_id: bookingId,
+      booked_by: bookingMeta?.customer_details?.email || bookingMeta?.customer_details?.name || block.booked_by,
+      booking_dates: {
+        start: bookingMeta?.start_date,
+        end: bookingMeta?.end_date,
+      },
+      reserved_at: nextBlockState === 'reserved' ? new Date().toISOString() : (block.reserved_at || new Date().toISOString()),
+      occupied_at: nextBlockState === 'occupied' ? new Date().toISOString() : null,
+    };
+  });
+
+  const totalBlocks = Number(warehouseData.total_blocks) || updatedBlocks.length;
+  const unavailableCount = updatedBlocks.filter((b: any) => ['reserved', 'occupied', 'booked'].includes(String(b.status))).length;
+  const availableBlocks = Math.max(0, totalBlocks - unavailableCount);
+  const occupancy = totalBlocks > 0 ? unavailableCount / totalBlocks : 0;
+
+  const { error: blockUpdateError } = await supabase
+    .from(warehouseTable)
+    .update({ blocks: updatedBlocks, available_blocks: availableBlocks, occupancy })
+    .eq(idColumn, warehouseId);
+
+  if (blockUpdateError) {
+    console.error(`⚠️ Failed to update block status:`, blockUpdateError);
+  }
+};
 
 // Admin booking handlers defined inline
 const getAdminBookings: RequestHandler = async (req, res) => {
@@ -132,85 +238,18 @@ const updateBookingStatus: RequestHandler = async (req, res) => {
       return res.status(500).json({ success: false, error: updateError.message });
     }
 
-    // If booking is approved, notify the warehouse owner and update block status
-    if (status === 'approved' && existing.metadata?.warehouse_id) {
+    // Update warehouse block states for status transition
+    if (existing.metadata?.warehouse_id) {
       const warehouseId = existing.metadata.warehouse_id;
-      const blocksBooked = existing.metadata.blocks_booked || [];
-      
-      // Update block status to 'occupied' for approved bookings
-      if (blocksBooked.length > 0) {
-        // Get current warehouse data
-        let warehouseData: any = null;
-        let warehouseTable = 'warehouses';
-        
-        // Try by wh_id first (for LIC format IDs like LIC007986)
-        let { data: mainWarehouse } = await supabase
-          .from('warehouses')
-          .select('*')
-          .eq('wh_id', warehouseId)
-          .maybeSingle();
-        
-        // If not found, try by id (UUID format)
-        if (!mainWarehouse) {
-          const { data: byId } = await supabase
-            .from('warehouses')
-            .select('*')
-            .eq('id', warehouseId)
-            .maybeSingle();
-          mainWarehouse = byId;
-        }
-        
-        if (mainWarehouse) {
-          warehouseData = mainWarehouse;
-          console.log(`✅ Found warehouse in main table for block update`);
-        } else {
-          const { data: submissionWarehouse } = await supabase
-            .from('warehouse_submissions')
-            .select('*')
-            .eq('id', warehouseId)
-            .eq('status', 'approved')
-            .maybeSingle();
-          
-          if (submissionWarehouse) {
-            warehouseData = submissionWarehouse;
-            warehouseTable = 'warehouse_submissions';
-            console.log(`✅ Found warehouse in submissions for block update`);
-          }
-        }
-
-        // Update blocks to occupied status
-        if (warehouseData && warehouseData.blocks) {
-          const updatedBlocks = warehouseData.blocks.map((block: any) => {
-            if (blocksBooked.includes(block.id)) {
-              return {
-                ...block,
-                status: 'occupied',
-                booking_id: bookingId,
-                booked_by: existing.metadata?.customer_details?.email || 'Unknown',
-                booking_dates: {
-                  start: existing.metadata?.start_date,
-                  end: existing.metadata?.end_date
-                }
-              };
-            }
-            return block;
-          });
-
-          // Use wh_id for main warehouses table, id for submissions
-          const idColumn = warehouseTable === 'warehouses' ? 'wh_id' : 'id';
-          
-          const { error: blockUpdateError } = await supabase
-            .from(warehouseTable)
-            .update({ blocks: updatedBlocks })
-            .eq(idColumn, warehouseId);
-
-          if (blockUpdateError) {
-            console.error(`⚠️ Failed to update block status:`, blockUpdateError);
-          } else {
-            console.log(`✅ Updated ${blocksBooked.length} blocks to occupied status for ${warehouseId}`);
-          }
-        }
+      const blockIds = normalizeBookingBlockIds(existing.metadata.blocks_booked || []);
+      if (blockIds.length > 0) {
+        await applyBlockStateTransition(warehouseId, blockIds, status, existing.metadata, bookingId);
       }
+    }
+
+    // Notify warehouse owner for booking status updates
+    if (['approved', 'rejected', 'cancelled'].includes(status) && existing.metadata?.warehouse_id) {
+      const warehouseId = existing.metadata.warehouse_id;
       
       // Try to find the warehouse owner - first check if stored in booking metadata
       let ownerId = existing.metadata?.warehouse_owner_id || null;
@@ -258,8 +297,9 @@ const updateBookingStatus: RequestHandler = async (req, res) => {
       // If we found an owner, create a notification for them
       if (ownerId) {
         const bookingDetails = existing.metadata;
-        const notificationDescription = `New booking approved for ${bookingDetails.warehouse_name || 'your warehouse'}! 
-          ${bookingDetails.blocks_booked?.length || 0} blocks (${bookingDetails.area_sqft || 0} sq ft) 
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+        const notificationDescription = `Booking ${statusLabel} for ${bookingDetails.warehouse_name || 'your warehouse'}.
+          ${bookingDetails.blocks_booked?.length || 0} blocks (${bookingDetails.area_sqft || 0} sq ft)
           from ${new Date(bookingDetails.start_date).toLocaleDateString()} to ${new Date(bookingDetails.end_date).toLocaleDateString()}
           Amount: ₹${bookingDetails.total_amount?.toLocaleString() || 0}`;
 
@@ -268,7 +308,7 @@ const updateBookingStatus: RequestHandler = async (req, res) => {
           type: 'notification',
           description: notificationDescription,
           metadata: {
-            notification_type: 'booking_approved',
+            notification_type: `booking_${status}`,
             booking_id: bookingId,
             warehouse_id: warehouseId,
             warehouse_name: bookingDetails.warehouse_name,
@@ -309,8 +349,8 @@ export function createServer() {
 
   // Middleware
   app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: '20mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
   // API routes
   app.get("/api/ping", (_req, res) => {
@@ -331,6 +371,35 @@ export function createServer() {
   app.get("/api/admin/bookings", getAdminBookings);
   app.post("/api/admin/bookings/status", updateBookingStatus);
   app.get("/api/admin/bookings/stats", getBookingStats);
+
+  // Owner warehouse submission routes (uses service role key to bypass RLS)
+  app.post("/api/warehouse-submissions", async (req, res) => {
+    try {
+      const { createWarehouseSubmission } = await import("./routes/warehouse-submissions");
+      return createWarehouseSubmission(req, res, () => { });
+    } catch (error) {
+      console.error('Submission route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.get("/api/warehouse-submissions/owner/:ownerId", async (req, res) => {
+    try {
+      const { getOwnerSubmissions } = await import("./routes/warehouse-submissions");
+      return getOwnerSubmissions(req, res, () => { });
+    } catch (error) {
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.post("/api/warehouse-submissions/upload", async (req, res) => {
+    try {
+      const { uploadFile } = await import("./routes/warehouse-submissions");
+      return uploadFile(req, res, () => { });
+    } catch (error) {
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
 
   // Admin warehouse submission routes
   app.get("/api/admin/warehouse-submissions", async (req, res) => {
@@ -386,6 +455,89 @@ export function createServer() {
       const { generateInvoice } = await import("./routes/bookings");
       return generateInvoice(req, res, () => { });
     } catch (error) {
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  // Admin dashboard stats API
+  app.get("/api/admin/dashboard-stats", async (req, res) => {
+    try {
+      const { getDashboardStats } = await import("./routes/analytics");
+      return getDashboardStats(req, res, () => { });
+    } catch (error) {
+      console.error('Dashboard stats route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  // Analytics routes
+  app.get("/api/analytics/admin", async (req, res) => {
+    try {
+      const { getAdminAnalytics } = await import("./routes/analytics");
+      return getAdminAnalytics(req, res, () => { });
+    } catch (error) {
+      console.error('Analytics route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.get("/api/analytics/filters", async (req, res) => {
+    try {
+      const { getAnalyticsFilters } = await import("./routes/analytics");
+      return getAnalyticsFilters(req, res, () => { });
+    } catch (error) {
+      console.error('Filters route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.get("/api/analytics/warehouses", async (req, res) => {
+    try {
+      const { getWarehouseList } = await import("./routes/analytics");
+      return getWarehouseList(req, res, () => { });
+    } catch (error) {
+      console.error('Warehouse list route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.get("/api/analytics/warehouse/:id", async (req, res) => {
+    try {
+      const { getWarehouseDetail } = await import("./routes/analytics");
+      return getWarehouseDetail(req, res, () => { });
+    } catch (error) {
+      console.error('Warehouse detail route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.get("/api/analytics/owner/:ownerId", async (req, res) => {
+    try {
+      const { getOwnerAnalytics } = await import("./routes/analytics");
+      return getOwnerAnalytics(req, res, () => { });
+    } catch (error) {
+      console.error('Owner analytics route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  // Owner booking routes (view bookings for owned warehouses + approve/reject)
+  app.get("/api/owner/bookings", async (req, res) => {
+    try {
+      const { getOwnerBookings } = await import("./routes/owner-bookings");
+      return getOwnerBookings(req, res, () => { });
+    } catch (error) {
+      console.error('Owner bookings route error:', error);
+      return res.status(500).json({ success: false, error: 'Route loading error' });
+    }
+  });
+
+  app.post("/api/owner/bookings/respond", async (req, res) => {
+    try {
+      const { respondToBooking } = await import("./routes/owner-bookings");
+      return respondToBooking(req, res, () => { });
+    } catch (error) {
+      console.error('Owner booking respond route error:', error);
       return res.status(500).json({ success: false, error: 'Route loading error' });
     }
   });

@@ -6,6 +6,8 @@ import { Navbar } from '../components/Navbar';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Progress } from '../components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 import {
     User,
     Building2,
@@ -70,6 +72,7 @@ const AMENITIES = [
 
 export default function SeekerProfilePage() {
     const { user } = useAuth();
+    const { toast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -96,6 +99,21 @@ export default function SeekerProfilePage() {
         verification_status: 'pending',
         verification_score: 0
     });
+
+    const completionChecks = [
+        profile.full_name.trim().length > 0,
+        profile.phone.trim().length > 0,
+        profile.company_name.trim().length > 0 || profile.business_type.trim().length > 0,
+        profile.preferred_districts.length > 0,
+        profile.preferred_warehouse_types.length > 0,
+        profile.budget_min !== null,
+        profile.budget_max !== null,
+        profile.required_area_min !== null,
+        profile.required_area_max !== null,
+        profile.documents.length >= 1,
+    ];
+    const completedFields = completionChecks.filter(Boolean).length;
+    const profileCompletionPct = Math.round((completedFields / completionChecks.length) * 100);
 
     // Fetch existing profile
     useEffect(() => {
@@ -208,13 +226,51 @@ export default function SeekerProfilePage() {
                 setProfile(prev => ({ ...prev, ...data }));
             }
 
-            alert('Profile saved successfully!');
+            toast({
+                title: 'Profile saved',
+                description: 'Your seeker profile draft has been saved.'
+            });
         } catch (err) {
             console.error('Error saving profile:', err);
-            alert('Failed to save profile. Please try again.');
+            toast({
+                title: 'Save failed',
+                description: 'Failed to save profile. Please try again.',
+                variant: 'destructive'
+            });
         } finally {
             setSaving(false);
         }
+    };
+
+    const validateBeforeVerificationSubmit = () => {
+        if (!profile.full_name.trim() || !profile.phone.trim()) {
+            toast({
+                title: 'Missing required details',
+                description: 'Please fill full name and phone number before submitting.',
+                variant: 'destructive'
+            });
+            return false;
+        }
+
+        if (!profile.business_type && !profile.company_name.trim()) {
+            toast({
+                title: 'Business details needed',
+                description: 'Please provide company name or business type.',
+                variant: 'destructive'
+            });
+            return false;
+        }
+
+        if ((profile.documents || []).length < 1) {
+            toast({
+                title: 'Document required',
+                description: 'Upload at least 1 business/verification document.',
+                variant: 'destructive'
+            });
+            return false;
+        }
+
+        return true;
     };
 
     // Submit for verification
@@ -223,6 +279,10 @@ export default function SeekerProfilePage() {
 
         // First save the profile
         await saveProfile();
+
+        if (!validateBeforeVerificationSubmit()) {
+            return;
+        }
 
         setSubmitting(true);
         try {
@@ -251,16 +311,59 @@ export default function SeekerProfilePage() {
 
             if (result.success) {
                 setProfile(prev => ({ ...prev, verification_status: 'submitted' }));
-                alert('Profile submitted for verification! Admin will review your documents.');
+                toast({
+                    title: 'Submitted for verification',
+                    description: 'Admin will review your profile and documents.'
+                });
             } else {
                 throw new Error(result.error);
             }
         } catch (err: any) {
             console.error('Error submitting for verification:', err);
-            alert(err.message || 'Failed to submit for verification');
+            toast({
+                title: 'Submission failed',
+                description: err.message || 'Failed to submit for verification',
+                variant: 'destructive'
+            });
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const uploadDocumentToServer = async (file: File): Promise<string> => {
+        const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = String(reader.result || '');
+                const content = result.includes(',') ? result.split(',')[1] : '';
+                if (!content) {
+                    reject(new Error('Failed to process file for upload'));
+                    return;
+                }
+                resolve(content);
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(file);
+        });
+
+        const response = await fetch('/api/warehouse-submissions/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fileName: file.name,
+                fileBase64: base64,
+                contentType: file.type || 'application/octet-stream',
+                bucket: 'user-documents',
+                folder: `seeker-profiles/${user?.id || 'unknown'}`,
+            }),
+        });
+
+        const body = await response.json();
+        if (!response.ok || !body.success || !body.url) {
+            throw new Error(body.error || 'Document upload failed');
+        }
+
+        return body.url as string;
     };
 
     // Upload document
@@ -268,25 +371,28 @@ export default function SeekerProfilePage() {
         const file = e.target.files?.[0];
         if (!file || !user?.id) return;
 
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+            toast({
+                title: 'Unsupported file type',
+                description: 'Please upload PDF, JPG, or PNG files only.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast({
+                title: 'File too large',
+                description: 'Maximum allowed file size is 5MB.',
+                variant: 'destructive'
+            });
+            return;
+        }
+
         setUploadingDoc(true);
         try {
-            const timestamp = Date.now();
-            const fileName = `${user.id}/${timestamp}-${file.name}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('user-documents')
-                .upload(fileName, file);
-
-            let docUrl = '';
-            if (uploadError) {
-                console.warn('Storage upload failed, using local reference:', uploadError);
-                docUrl = URL.createObjectURL(file);
-            } else {
-                const { data: urlData } = supabase.storage
-                    .from('user-documents')
-                    .getPublicUrl(fileName);
-                docUrl = urlData.publicUrl;
-            }
+            const docUrl = await uploadDocumentToServer(file);
 
             const newDoc = {
                 name: file.name,
@@ -300,12 +406,20 @@ export default function SeekerProfilePage() {
                 documents: [...prev.documents, newDoc]
             }));
 
-            alert('Document uploaded successfully!');
+            toast({
+                title: 'Document uploaded',
+                description: `${file.name} uploaded successfully.`
+            });
         } catch (err) {
             console.error('Error uploading document:', err);
-            alert('Failed to upload document');
+            toast({
+                title: 'Upload failed',
+                description: 'Failed to upload document. Please try again.',
+                variant: 'destructive'
+            });
         } finally {
             setUploadingDoc(false);
+            e.target.value = '';
         }
     };
 
@@ -379,6 +493,17 @@ export default function SeekerProfilePage() {
                         <p className="text-slate-400 mt-1">Complete your profile to book warehouses</p>
                     </div>
                     {getVerificationBadge()}
+                </div>
+
+                <div className="glass-dark rounded-xl p-5 mb-6 border border-slate-700/60">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-slate-200">Profile Completeness</p>
+                        <p className="text-sm text-slate-300">{profileCompletionPct}%</p>
+                    </div>
+                    <Progress value={profileCompletionPct} className="h-2 bg-slate-800" />
+                    <p className="text-xs text-slate-400 mt-2">
+                        Add business preferences and at least one document to improve matching and verification speed.
+                    </p>
                 </div>
 
                 {/* Rejection Warning */}
@@ -502,6 +627,7 @@ export default function SeekerProfilePage() {
                         <div>
                             <Label className="text-slate-300">Business Type</Label>
                             <select
+                                title="Business type"
                                 value={profile.business_type}
                                 onChange={e => setProfile(prev => ({ ...prev, business_type: e.target.value }))}
                                 className="w-full h-10 px-3 rounded-md bg-slate-800 border border-slate-700 text-white"
@@ -657,6 +783,7 @@ export default function SeekerProfilePage() {
                                         </div>
                                     </div>
                                     <button
+                                        title="Remove document"
                                         onClick={() => removeDocument(index)}
                                         className="text-red-400 hover:text-red-300"
                                     >

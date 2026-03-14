@@ -52,7 +52,8 @@ interface Booking {
   total_amount: number;
   area_sqft: number;
   blocks_booked: number;
-  status: 'pending' | 'approved' | 'active' | 'completed' | 'cancelled';
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  admin_status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   payment_status: string;
   created_at: string;
   admin_note?: string;
@@ -88,6 +89,7 @@ interface DashboardStats {
   totalBookings: number;
   pendingBookings: number;
   approvedBookings: number;
+  rejectedBookings: number;
   completedBookings: number;
   cancelledBookings: number;
   totalSpent: number;
@@ -106,6 +108,7 @@ export default function SeekerHub() {
     totalBookings: 0,
     pendingBookings: 0,
     approvedBookings: 0,
+    rejectedBookings: 0,
     completedBookings: 0,
     cancelledBookings: 0,
     totalSpent: 0,
@@ -117,6 +120,7 @@ export default function SeekerHub() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [bookingFilter, setBookingFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
 
   // Get seeker ID
   const seekerId = user?.id || 'demo-seeker';
@@ -155,14 +159,13 @@ export default function SeekerHub() {
         setBookings(data.bookings);
         
         // Calculate stats from real data
-        const pending = data.bookings.filter((b: Booking) => b.status === 'pending').length;
-        const approved = data.bookings.filter((b: Booking) => 
-          b.status === 'approved' || b.status === 'active'
-        ).length;
+        const pending = data.bookings.filter((b: Booking) => b.admin_status === 'pending').length;
+        const approved = data.bookings.filter((b: Booking) => b.admin_status === 'approved').length;
+        const rejected = data.bookings.filter((b: Booking) => b.admin_status === 'rejected').length;
         const completed = data.bookings.filter((b: Booking) => b.status === 'completed').length;
         const cancelled = data.bookings.filter((b: Booking) => b.status === 'cancelled').length;
         const spent = data.bookings
-          .filter((b: Booking) => b.payment_status === 'paid')
+          .filter((b: Booking) => b.admin_status === 'approved' && b.payment_status !== 'refunded')
           .reduce((sum: number, b: Booking) => sum + (b.total_amount || 0), 0);
         
         setStats(prev => ({
@@ -170,6 +173,7 @@ export default function SeekerHub() {
           totalBookings: data.bookings.length,
           pendingBookings: pending,
           approvedBookings: approved,
+          rejectedBookings: rejected,
           completedBookings: completed,
           cancelledBookings: cancelled,
           totalSpent: spent
@@ -383,7 +387,12 @@ export default function SeekerHub() {
 
   // Filter bookings
   const filteredBookings = bookings.filter(booking => {
-    if (bookingFilter !== 'all' && booking.status !== bookingFilter) return false;
+    if (bookingFilter !== 'all') {
+      // Match against admin_status for pending/approved/rejected, status for completed/active/cancelled
+      const matchesAdmin = booking.admin_status === bookingFilter;
+      const matchesStatus = booking.status === bookingFilter;
+      if (!matchesAdmin && !matchesStatus) return false;
+    }
     if (searchTerm && !booking.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
@@ -398,20 +407,16 @@ export default function SeekerHub() {
   };
 
   // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500">Pending Approval</Badge>;
-      case 'approved':
-      case 'active':
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500">Approved</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500">Completed</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+  const getStatusBadge = (booking: Booking) => {
+    const a = booking.admin_status;
+    const s = booking.status;
+    if (a === 'pending') return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50"><Clock className="h-3 w-3 mr-1" />Awaiting Owner</Badge>;
+    if (a === 'rejected') return <Badge className="bg-red-500/20 text-red-400 border-red-500/50"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+    if (a === 'cancelled' || s === 'cancelled') return <Badge className="bg-red-500/20 text-red-400 border-red-500/50"><XCircle className="h-3 w-3 mr-1" />Cancelled</Badge>;
+    if (s === 'completed') return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50"><CheckCircle className="h-3 w-3 mr-1" />Completed</Badge>;
+    if (a === 'approved' && s === 'active') return <Badge className="bg-green-500/20 text-green-400 border-green-500/50"><CheckCircle className="h-3 w-3 mr-1" />Active</Badge>;
+    if (a === 'approved') return <Badge className="bg-green-500/20 text-green-400 border-green-500/50"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
+    return <Badge variant="outline">{a || s}</Badge>;
   };
 
   if (loading) {
@@ -433,25 +438,76 @@ export default function SeekerHub() {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
+          {/* Booking Status Notifications */}
+          {bookings
+            .filter(b => (b.admin_status === 'approved' || b.admin_status === 'rejected') &&
+              !dismissedNotifications.has(b.id))
+            .slice(0, 3)
+            .map(b => (
+              <div
+                key={b.id}
+                className={`mb-4 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm ${
+                  b.admin_status === 'approved'
+                    ? 'border-green-500/40 bg-green-500/10 text-green-300'
+                    : 'border-red-500/40 bg-red-500/10 text-red-300'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {b.admin_status === 'approved' ? (
+                    <CheckCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  ) : (
+                    <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  )}
+                  <div>
+                    <span className="font-medium">
+                      {b.admin_status === 'approved' ? 'Booking Approved! ' : 'Booking Rejected — '}
+                    </span>
+                    {b.admin_status === 'approved'
+                      ? <>Your request for <span className="font-semibold">{b.warehouse_name}</span> has been approved by the owner.</>
+                      : <>Your request for <span className="font-semibold">{b.warehouse_name}</span> was not accepted.{b.admin_note ? ` Reason: ${b.admin_note}` : ''}</>
+                    }
+                    {b.admin_status === 'approved' && (
+                      <button
+                        className="ml-3 underline text-green-400 hover:text-green-200"
+                        onClick={() => { setActiveTab('bookings'); setBookingFilter('approved'); }}
+                      >
+                        View Booking
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <button
+                  title="Dismiss notification"
+                  className="shrink-0 opacity-60 hover:opacity-100"
+                  onClick={() => setDismissedNotifications(prev => new Set([...prev, b.id]))}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome, {profile?.name || 'Seeker'}</h1>
-            <p className="text-gray-400">
-              Manage your bookings, saved warehouses, and activity from one place
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={loadAllData} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button onClick={() => navigate('/warehouses')}>
-              <Search className="h-4 w-4 mr-2" />
-              Find Warehouses
-            </Button>
-          </div>
-        </div>
+        <Card className="glass-card mb-8 border-slate-700/60 bg-slate-900/40 backdrop-blur-sm">
+          <CardContent className="p-6 md:p-7">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Welcome, {profile?.name || 'Seeker'}</h1>
+                <p className="text-gray-400">
+                  Manage your bookings, saved warehouses, and activity from one place
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={loadAllData} disabled={loading}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button onClick={() => navigate('/warehouses')}>
+                  <Search className="h-4 w-4 mr-2" />
+                  Find Warehouses
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
@@ -532,7 +588,7 @@ export default function SeekerHub() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-900/60 border border-slate-700/60">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -593,7 +649,7 @@ export default function SeekerHub() {
                             </p>
                           </div>
                           <div className="ml-3">
-                            {getStatusBadge(booking.status)}
+                            {getStatusBadge(booking)}
                           </div>
                         </div>
                       ))}
@@ -691,6 +747,7 @@ export default function SeekerHub() {
                       <SelectItem value="all">All Bookings</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -701,7 +758,7 @@ export default function SeekerHub() {
             </Card>
 
             {/* Booking Count Summary */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Card className={`cursor-pointer transition-all ${bookingFilter === 'all' ? 'ring-2 ring-blue-500' : ''}`}
                 onClick={() => setBookingFilter('all')}>
                 <CardContent className="p-4 text-center">
@@ -721,6 +778,13 @@ export default function SeekerHub() {
                 <CardContent className="p-4 text-center">
                   <p className="text-2xl font-bold text-green-400">{stats.approvedBookings}</p>
                   <p className="text-xs text-gray-400">Approved</p>
+                </CardContent>
+              </Card>
+              <Card className={`cursor-pointer transition-all ${bookingFilter === 'rejected' ? 'ring-2 ring-red-500' : ''}`}
+                onClick={() => setBookingFilter('rejected')}>
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold text-red-300">{stats.rejectedBookings}</p>
+                  <p className="text-xs text-gray-400">Rejected</p>
                 </CardContent>
               </Card>
               <Card className={`cursor-pointer transition-all ${bookingFilter === 'completed' ? 'ring-2 ring-blue-500' : ''}`}
@@ -765,7 +829,7 @@ export default function SeekerHub() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="font-semibold text-lg">{booking.warehouse_name}</h3>
-                            {getStatusBadge(booking.status)}
+                            {getStatusBadge(booking)}
                           </div>
                           <p className="text-gray-400 text-sm flex items-center mb-3">
                             <MapPin className="h-4 w-4 mr-1" />
@@ -805,13 +869,13 @@ export default function SeekerHub() {
                             <Eye className="h-4 w-4 mr-1" />
                             View
                           </Button>
-                          {booking.status === 'approved' && (
+                          {booking.admin_status === 'approved' && (
                             <Button variant="outline" size="sm" onClick={() => navigate(`/invoice/${booking.id}`)}>
                               <Download className="h-4 w-4 mr-1" />
                               Invoice
                             </Button>
                           )}
-                          {booking.status === 'pending' && (
+                          {booking.admin_status === 'pending' && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="destructive" size="sm">
@@ -875,6 +939,7 @@ export default function SeekerHub() {
                           className="w-full h-full object-cover"
                         />
                         <Button
+                          title="Remove saved warehouse"
                           variant="ghost"
                           size="icon"
                           className="absolute top-2 right-2 bg-black/50 hover:bg-black/70"

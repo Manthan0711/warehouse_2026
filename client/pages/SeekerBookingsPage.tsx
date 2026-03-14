@@ -97,27 +97,8 @@ export default function SeekerBookingsPage() {
     };
 
     const handleDownloadInvoice = async (bookingId: string) => {
-        try {
-            const response = await fetch(`/api/bookings/invoice/${bookingId}`);
-            const data = await response.json();
-
-            if (data.success) {
-                // Create and download invoice as JSON for now
-                const blob = new Blob([JSON.stringify(data.invoice, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `invoice-${data.invoice.invoice_id}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showSimpleNotification('success', 'Invoice Downloaded', 'Invoice has been downloaded');
-            } else {
-                showSimpleNotification('error', 'Error', data.error || 'Invoice not available');
-            }
-        } catch (error) {
-            console.error('Invoice error:', error);
-            showSimpleNotification('error', 'Error', 'Failed to download invoice');
-        }
+        // Navigate to the visual invoice page
+        navigate(`/invoice/${bookingId}`);
     };
 
     const getStatusBadge = (booking: Booking) => {

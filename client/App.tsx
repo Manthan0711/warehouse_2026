@@ -48,6 +48,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import OwnerProperties from "./pages/OwnerProperties";
 import SmartBooking from "./pages/SmartBooking";
 import AdminWarehouseSubmissionsPage from "./pages/AdminWarehouseSubmissionsPage";
+import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
+import OwnerAnalyticsPage from "./pages/OwnerAnalyticsPage";
 
 const queryClient = new QueryClient();
 
@@ -144,6 +146,11 @@ const App = () => (
                     <AdminUsersPage />
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/analytics" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminAnalyticsPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="/invoice/:bookingId" element={
                   <ProtectedRoute>
                     <InvoicePage />
@@ -204,6 +211,11 @@ const App = () => (
                 <Route path="/smart-booking" element={
                   <ProtectedRoute>
                     <SmartBooking />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/analytics" element={
+                  <ProtectedRoute allowedRoles={['owner']}>
+                    <OwnerAnalyticsPage />
                   </ProtectedRoute>
                 } />
                 <Route path="/list-property" element={

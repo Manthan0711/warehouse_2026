@@ -194,51 +194,52 @@ export default function WarehouseDetail() {
 
   // Generate 3D blocks when warehouse loads
   useEffect(() => {
-    const generateBlocks3D = () => {
+    const generateBlocks3D = async () => {
       if (!warehouse) return;
       
       setLoadingBlocks3D(true);
-      
-      // Calculate total blocks based on warehouse data
-      const totalBlocks = warehouse.total_blocks || Math.ceil(warehouse.total_area / 1000);
-      const availableBlocks = warehouse.available_blocks || Math.ceil(totalBlocks * (1 - (warehouse.occupancy || 0)));
-      const bookedBlocks = totalBlocks - availableBlocks;
-      
-      const gridSize = Math.ceil(Math.sqrt(totalBlocks));
-      const generatedBlocks: Block3D[] = [];
-      
-      for (let i = 1; i <= totalBlocks; i++) {
-        const x = ((i - 1) % gridSize) + 1;
-        const y = Math.floor((i - 1) / gridSize) + 1;
-        
-        // Mark first N blocks as booked based on occupancy
-        let status: 'available' | 'booked' | 'maintenance' = 'available';
-        if (i <= bookedBlocks) {
-          status = 'booked';
-        } else if (Math.random() < 0.05) { // 5% chance of maintenance
-          status = 'maintenance';
+
+      try {
+        const params = new URLSearchParams({ warehouse_id: warehouse.id });
+        if (bookingStartDate) params.append('start_date', bookingStartDate);
+        if (bookingEndDate) params.append('end_date', bookingEndDate);
+
+        const response = await fetch(`/api/bookings/blocks/available?${params.toString()}`);
+        const result = await response.json();
+
+        if (!result.success || !Array.isArray(result.blocks)) {
+          throw new Error(result.error || 'Failed to load blocks');
         }
-        
-        generatedBlocks.push({
-          id: `block_${i}`,
-          block_number: i,
-          position_x: x,
-          position_y: y,
-          status,
-          booked_by: status === 'booked' ? `Customer ${i}` : undefined,
-          booked_at: status === 'booked' ? new Date().toISOString() : undefined,
-          area_sqft: 100, // Each block is 100 sq ft
+
+        const generatedBlocks: Block3D[] = result.blocks.map((b: any, idx: number) => ({
+          id: String(b.id || `block_${b.block_number || idx + 1}`),
+          block_number: Number(b.block_number || idx + 1),
+          position_x: Number((b.col ?? b.position_x) || (idx % 10) + 1),
+          position_y: Number((b.row ?? b.position_y) || Math.floor(idx / 10) + 1),
+          status: b.available ? 'available' : 'booked',
+          booked_by: b.available ? undefined : 'Reserved',
+          booked_at: b.available ? undefined : new Date().toISOString(),
+          area_sqft: Number(b.area || 100),
+        }));
+
+        setBlocks3D(generatedBlocks);
+      } catch (e) {
+        console.error('Failed to load block availability:', e);
+        setBlocks3D([]);
+        toast({
+          title: 'Block Availability Error',
+          description: 'Could not fetch live block availability.',
+          variant: 'destructive',
         });
+      } finally {
+        setLoadingBlocks3D(false);
       }
-      
-      setBlocks3D(generatedBlocks);
-      setLoadingBlocks3D(false);
     };
 
     if (warehouse?.id) {
       generateBlocks3D();
     }
-  }, [warehouse?.id]);
+  }, [warehouse?.id, bookingStartDate, bookingEndDate, toast]);
 
   // 3D Block selection handler
   const handleBlock3DSelect = (blockNumber: number) => {

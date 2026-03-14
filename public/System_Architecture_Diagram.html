@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartSpace — Complete System Architecture &amp; AI Workflow Diagram</title>
+<style>
+:root {
+  --bg: #0a0a14;
+  --card: #12122a;
+  --border: #2a2a4a;
+  --seeker: #3b82f6;
+  --seeker-bg: #1e3a5f;
+  --owner: #22c55e;
+  --owner-bg: #1a3a2a;
+  --admin: #f59e0b;
+  --admin-bg: #3a2e1a;
+  --ml: #a855f7;
+  --ml-bg: #2a1a3a;
+  --llm: #ef4444;
+  --llm-bg: #3a1a1a;
+  --db: #06b6d4;
+  --db-bg: #0a2a3a;
+  --future: #ec4899;
+  --future-bg: #3a1a2a;
+  --agent: #f97316;
+  --agent-bg: #3a2a1a;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --line: #475569;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+.page { width: 1600px; margin: 0 auto; padding: 30px 20px; }
+
+/* Title */
+.title-block { text-align: center; margin-bottom: 30px; }
+.title-block h1 { font-size: 1.8rem; color: #fff; letter-spacing: -0.5px; }
+.title-block p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+
+/* Legend */
+.legend { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* Architecture layers */
+.layer { margin-bottom: 8px; position: relative; }
+.layer-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  transform: translateY(-50%) rotate(180deg);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Role row */
+.role-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding-left: 10px; }
+
+/* Universal card */
+.box {
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  position: relative;
+}
+.box-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.box-title .icon { font-size: 1.1rem; }
+
+/* Feature list */
+.feat-list { list-style: none; margin: 0; padding: 0; }
+.feat-list li {
+  font-size: 0.75rem;
+  padding: 5px 8px;
+  margin-bottom: 3px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.35;
+}
+.feat-list li .feat-icon { flex-shrink: 0; font-size: 0.7rem; margin-top: 1px; }
+.feat-list li strong { color: #fff; }
+.llm-badge {
+  display: inline-block;
+  background: var(--llm);
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.ml-badge {
+  display: inline-block;
+  background: var(--ml);
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.future-badge {
+  display: inline-block;
+  background: var(--future);
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* Colored boxes */
+.seeker-box { background: var(--seeker-bg); border-color: var(--seeker); }
+.seeker-box .box-title { color: var(--seeker); }
+.owner-box { background: var(--owner-bg); border-color: var(--owner); }
+.owner-box .box-title { color: var(--owner); }
+.admin-box { background: var(--admin-bg); border-color: var(--admin); }
+.admin-box .box-title { color: var(--admin); }
+.ml-box { background: var(--ml-bg); border-color: var(--ml); }
+.ml-box .box-title { color: var(--ml); }
+.llm-box { background: var(--llm-bg); border-color: var(--llm); }
+.llm-box .box-title { color: var(--llm); }
+.db-box { background: var(--db-bg); border-color: var(--db); }
+.db-box .box-title { color: var(--db); }
+.agent-box { background: var(--agent-bg); border-color: var(--agent); }
+.agent-box .box-title { color: var(--agent); }
+.future-box { background: var(--future-bg); border-color: var(--future); }
+.future-box .box-title { color: var(--future); }
+
+/* Center engine row */
+.engine-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-left: 10px; }
+.engine-full { display: grid; grid-template-columns: 1fr; gap: 12px; padding-left: 10px; }
+
+/* Arrow connectors */
+.arrows-down { display: flex; justify-content: center; padding: 4px 0; }
+.arrows-down svg { display: block; }
+
+.connector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  position: relative;
+}
+.connector-bar .bar-line {
+  width: 92%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--seeker), var(--owner), var(--admin));
+  border-radius: 2px;
+  position: relative;
+}
+.connector-bar .bar-label {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 0 10px;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.arrow-down-center {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0;
+}
+.arrow-down-center .arrow {
+  width: 2px;
+  height: 16px;
+  background: var(--line);
+  position: relative;
+}
+.arrow-down-center .arrow::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: -4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--line);
+}
+
+/* Three arrow group */
+.triple-arrows {
+  display: flex;
+  justify-content: space-around;
+  padding: 2px 30px;
+}
+.triple-arrows .arrow {
+  width: 2px;
+  height: 16px;
+  background: var(--line);
+  position: relative;
+}
+.triple-arrows .arrow::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: -4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--line);
+}
+
+/* Sub headers */
+.section-divider {
+  text-align: center;
+  padding: 12px 0 4px;
+  position: relative;
+}
+.section-divider span {
+  background: var(--bg);
+  padding: 0 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+.section-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Bottom db row */
+.db-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; padding-left: 10px; }
+.db-row .box { text-align: center; padding: 10px; }
+
+/* Data flow row */
+.data-flow-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding-left: 10px; }
+
+/* Print */
+@media print {
+  body { background: #fff; color: #111; }
+  .box { border: 1px solid #999; }
+  .page { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ═══════ TITLE ═══════ -->
+<div class="title-block">
+  <h1>SmartSpace — Complete System Architecture &amp; AI Workflow</h1>
+  <p>Intelligent Warehouse Management Platform | ML + LLM Hybrid Architecture | Meta Llama 3.3 70B</p>
+  <p style="font-size:0.78rem; color:#64748b; margin-top:2px;">Three-Role System: Seeker (Tenant) → Owner (Landlord) → Admin (Platform) | 12 ML Algorithms + LLM-Powered Features</p>
+</div>
+
+<!-- ═══════ LEGEND ═══════ -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--seeker)"></div> Seeker Module</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--owner)"></div> Owner Module</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--admin)"></div> Admin Module</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--ml)"></div> ML Engine (12 Algorithms)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--llm)"></div> LLM Engine (Llama 3.3 70B)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--db)"></div> Database Layer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--agent)"></div> Multi-Agent System</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--future)"></div> Future Integration</div>
+</div>
+
+<!-- ═══════ LAYER 1 — USER ROLES ═══════ -->
+<div class="section-divider"><span>▼ PRESENTATION LAYER — User Interfaces (React 18 + TypeScript)</span></div>
+
+<div class="layer">
+  <div class="role-row">
+
+    <!-- SEEKER -->
+    <div class="box seeker-box">
+      <div class="box-title"><span class="icon">🔍</span> SEEKER (Warehouse Tenant)</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">🏠</span><div><strong>Warehouse Search & Browse</strong> — Filter by district, price, area, type across 10,002 warehouses</div></li>
+        <li><span class="feat-icon">🗣️</span><div><strong>Natural Language Search</strong> <span class="llm-badge">LLM</span> — "Show large warehouses near Mumbai under ₹80" → parsed structured filters</div></li>
+        <li><span class="feat-icon">🤖</span><div><strong>AI Chatbot Assistant</strong> <span class="llm-badge">LLM</span> — Real-time Q&A about warehouses, pricing, availability via Llama 3.3 70B</div></li>
+        <li><span class="feat-icon">⭐</span><div><strong>AI Recommendations</strong> <span class="ml-badge">ML</span><span class="llm-badge">LLM</span> — 12-algorithm ensemble scores 10K warehouses + LLM explains reasoning</div></li>
+        <li><span class="feat-icon">📊</span><div><strong>Comparison Report Generation</strong> <span class="llm-badge">LLM</span> — AI generates pros/cons, best-for analysis across selected warehouses</div></li>
+        <li><span class="feat-icon">📅</span><div><strong>Smart Booking Assistant</strong> <span class="llm-badge">LLM</span> — Suggests optimal lease terms, area allocation, add-ons based on business type</div></li>
+        <li><span class="feat-icon">📝</span><div><strong>AI Contact Message Drafting</strong> <span class="llm-badge">LLM</span> — Auto-draft professional inquiry messages per warehouse type</div></li>
+        <li><span class="feat-icon">❓</span><div><strong>Smart Inquiry System</strong> <span class="llm-badge">LLM</span> — Auto-respond to inquiries with AI-generated contextual answers</div></li>
+        <li><span class="feat-icon">📈</span><div><strong>Activity Summary & Insights</strong> <span class="llm-badge">LLM</span> — "You viewed 15 warehouses this month, focused on Mumbai logistics hubs"</div></li>
+        <li><span class="feat-icon">📄</span><div><strong>AI Contract Understanding</strong> <span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — LLM reads lease agreements, summarizes clauses, highlights risks</div></li>
+        <li><span class="feat-icon">🤝</span><div><strong>AI Negotiation Agent</strong> <span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — Autonomous agent negotiates price respecting seeker constraints</div></li>
+        <li><span class="feat-icon">💳</span><div><strong>Booking & Payment</strong> — Blockchain-ready smart contract, security deposit, lease management</div></li>
+        <li><span class="feat-icon">💾</span><div><strong>Saved Warehouses</strong> — Bookmark and compare shortlisted properties</div></li>
+      </ul>
+    </div>
+
+    <!-- OWNER -->
+    <div class="box owner-box">
+      <div class="box-title"><span class="icon">🏢</span> OWNER (Warehouse Landlord)</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">📋</span><div><strong>List Property</strong> — Register warehouse with 33-attribute form, images, documents</div></li>
+        <li><span class="feat-icon">✍️</span><div><strong>AI Description Generation</strong> <span class="llm-badge">LLM</span> — Auto-generate SEO-friendly descriptions from structured data</div></li>
+        <li><span class="feat-icon">💰</span><div><strong>AI Pricing & Market Insight</strong> <span class="ml-badge">ML</span><span class="llm-badge">LLM</span> — ML calculates optimal price → LLM explains why with market context</div></li>
+        <li><span class="feat-icon">📉</span><div><strong>Predictive Demand Forecasting</strong> <span class="ml-badge">ML</span><span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — Time-series prediction + LLM explains seasonal trends</div></li>
+        <li><span class="feat-icon">📊</span><div><strong>Owner Dashboard Analytics</strong> — Bookings, inquiries, revenue, occupancy metrics in real-time</div></li>
+        <li><span class="feat-icon">🔔</span><div><strong>Smart Notifications</strong> <span class="llm-badge">LLM</span> — AI-generated insights on booking trends, inquiry patterns</div></li>
+        <li><span class="feat-icon">📧</span><div><strong>Automated Email/SMS Templates</strong> <span class="llm-badge">LLM</span> — Personalized booking confirmations, status updates, payment reminders</div></li>
+        <li><span class="feat-icon">🧾</span><div><strong>Invoice & Document Generation</strong> <span class="llm-badge">LLM</span> — Professional PDF invoices with all booking terms and calculations</div></li>
+        <li><span class="feat-icon">📑</span><div><strong>Contract & Terms Generation</strong> <span class="llm-badge">LLM</span> — Auto-generate custom lease agreements per booking details</div></li>
+        <li><span class="feat-icon">📅</span><div><strong>Availability Forecasting</strong> <span class="ml-badge">ML</span><span class="llm-badge">LLM</span> — Predict when space becomes available based on historical patterns</div></li>
+        <li><span class="feat-icon">💬</span><div><strong>Inquiry Management</strong> <span class="llm-badge">LLM</span> — AI auto-responds to seeker inquiries about features, pricing, security</div></li>
+        <li><span class="feat-icon">🤝</span><div><strong>AI Negotiation Agent</strong> <span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — Agent negotiates with seekers respecting owner's min price & terms</div></li>
+        <li><span class="feat-icon">🏗️</span><div><strong>Micro-Space Management</strong> — Block-level grid rental system for partial space leasing</div></li>
+      </ul>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="box admin-box">
+      <div class="box-title"><span class="icon">🛡️</span> ADMIN (Platform Manager)</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">✅</span><div><strong>ML Document Verification</strong> <span class="ml-badge">ML</span> — TensorFlow.js MobileNet + Tesseract OCR + Levenshtein matching (100-pt scoring)</div></li>
+        <li><span class="feat-icon">🔍</span><div><strong>AI Fraud & Anomaly Detection</strong> <span class="ml-badge">ML</span><span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — Detect fake listings, price anomalies, duplicate descriptions</div></li>
+        <li><span class="feat-icon">📊</span><div><strong>Market Insights & Trend Analysis</strong> <span class="llm-badge">LLM</span> — "Mumbai prices up 12% YoY, Pune emerging as affordable alternative"</div></li>
+        <li><span class="feat-icon">🧠</span><div><strong>Knowledge Graph Reasoning</strong> <span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — Graph-based reasoning: "Warehouses near ports have higher cold storage demand"</div></li>
+        <li><span class="feat-icon">👥</span><div><strong>User Management</strong> — Manage seekers, owners; role assignment; account verification</div></li>
+        <li><span class="feat-icon">📋</span><div><strong>Warehouse Approval Workflow</strong> <span class="ml-badge">ML</span> — ML score-based auto-approve (≥80), manual review (40–79), auto-reject (&lt;40)</div></li>
+        <li><span class="feat-icon">📈</span><div><strong>Platform Analytics Dashboard</strong> — Total warehouses, bookings, revenue, district-wise performance</div></li>
+        <li><span class="feat-icon">🚨</span><div><strong>Risk Scoring Engine</strong> <span class="ml-badge">ML</span><span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — ML detects risk signals → LLM generates human-readable risk assessment</div></li>
+        <li><span class="feat-icon">📧</span><div><strong>Notification Management</strong> <span class="llm-badge">LLM</span> — AI-generated system-wide notifications and announcements</div></li>
+        <li><span class="feat-icon">📜</span><div><strong>Dispute Resolution</strong> <span class="llm-badge">LLM</span><span class="future-badge">FUTURE</span> — LLM analyzes contracts and suggests fair resolution</div></li>
+        <li><span class="feat-icon">🔒</span><div><strong>Security & RLS</strong> — Row Level Security policies, role-based access control</div></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ CONNECTOR 1 ═══════ -->
+<div class="connector-bar"><div class="bar-line"><span class="bar-label">▼ API Requests via HTTPS (REST) ▼</span></div></div>
+<div class="triple-arrows">
+  <div class="arrow" style="border-color:var(--seeker)"></div>
+  <div class="arrow" style="border-color:var(--owner)"></div>
+  <div class="arrow" style="border-color:var(--admin)"></div>
+</div>
+
+<!-- ═══════ LAYER 2 — APPLICATION / SERVICE LAYER ═══════ -->
+<div class="section-divider"><span>▼ APPLICATION LAYER — Express.js Backend + AI Service Gateway</span></div>
+
+<div class="layer">
+  <div class="role-row">
+
+    <!-- API Routes -->
+    <div class="box" style="background:#111828; border-color:#4b5563;">
+      <div class="box-title" style="color:#9ca3af;"><span class="icon">🔌</span> API Routes (Express.js Server)</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">📡</span><div><strong>/api/recommend</strong> — ML ensemble + LLM recommendation endpoint</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/warehouses</strong> — CRUD operations, search, filter</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/bookings</strong> — Booking lifecycle management</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/approve-submission</strong> — Admin verification workflow</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/nlp-search</strong> <span class="llm-badge">LLM</span> — Natural language → structured filters</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/market-insights</strong> <span class="llm-badge">LLM</span> — AI market analysis</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/compare-analysis</strong> <span class="llm-badge">LLM</span> — Comparative reports</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/availability-forecast</strong> <span class="ml-badge">ML</span> — Predictive analytics</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/contract-generator</strong> <span class="llm-badge">LLM</span> — Legal doc generation</div></li>
+        <li><span class="feat-icon">📡</span><div><strong>/api/notifications</strong> <span class="llm-badge">LLM</span> — AI template generation</div></li>
+      </ul>
+    </div>
+
+    <!-- AI Service Gateway -->
+    <div class="box llm-box">
+      <div class="box-title"><span class="icon">🧠</span> LLM Service Gateway (aiService.ts)</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">1️⃣</span><div><strong>Groq API (PRIMARY)</strong> — Meta Llama 3.3 70B Versatile<br><em>Model: llama-3.3-70b-versatile | 500 tok/s | 128K context</em></div></li>
+        <li><span class="feat-icon">2️⃣</span><div><strong>OpenRouter (Backup)</strong> — Claude 3.5 Sonnet<br><em>Fallback only — never reached when Groq works</em></div></li>
+        <li><span class="feat-icon">3️⃣</span><div><strong>Cloudflare Workers AI (Backup)</strong> — Llama 3.1 8B<br><em>Fallback only — lightweight model</em></div></li>
+        <li><span class="feat-icon">4️⃣</span><div><strong>Google Gemini Pro (Last Resort)</strong><br><em>Final fallback — rarely used</em></div></li>
+        <li style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:5px;">
+          <span class="feat-icon">⚡</span>
+          <div><strong>Fallback Chain:</strong> Groq → OpenRouter → Cloudflare → Gemini<br>
+          <em>Groq is ALWAYS first. With active API key, only Llama 3.3 70B is used.</em></div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Server-Side LLM -->
+    <div class="box llm-box" style="border-color:#b91c1c;">
+      <div class="box-title" style="color:#fca5a5;"><span class="icon">🔗</span> Server-Side LLM (advanced-llm-service.ts)</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">🎯</span><div><strong>Recommendation LLM Pipeline</strong><br>Prompt: 50 warehouse profiles + user prefs → JSON output</div></li>
+        <li><span class="feat-icon">🔧</span><div><strong>Temperature: 0.3</strong> (precise for recommendations)</div></li>
+        <li><span class="feat-icon">📊</span><div><strong>Scoring Criteria in Prompt:</strong><br>Location 30% | Price 25% | Size 25% | Quality 20%</div></li>
+        <li><span class="feat-icon">📤</span><div><strong>Structured JSON Output:</strong><br>warehouseId, score, reasoning, matchFactors, insights</div></li>
+        <li><span class="feat-icon">🔄</span><div><strong>Same Fallback Chain:</strong><br>Groq (Llama 3.3 70B) → OpenRouter → Gemini</div></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ CONNECTOR 2 ═══════ -->
+<div class="connector-bar"><div class="bar-line"><span class="bar-label">▼ Algorithm Selection: ?algorithm=ensemble | hybrid | llm ▼</span></div></div>
+<div class="triple-arrows">
+  <div class="arrow"></div>
+  <div class="arrow"></div>
+  <div class="arrow"></div>
+</div>
+
+<!-- ═══════ LAYER 3 — AI/ML ENGINE ═══════ -->
+<div class="section-divider"><span>▼ AI/ML ENGINE LAYER — 12-Algorithm Ensemble + LLM Reasoning + Multi-Agent System</span></div>
+
+<div class="layer">
+  <div class="role-row">
+
+    <!-- ML Algorithms -->
+    <div class="box ml-box">
+      <div class="box-title"><span class="icon">⚙️</span> ML Engine — 12 Algorithms (2,142 LOC)</div>
+      <ul class="feat-list">
+        <li style="background:rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); border-radius:5px;"><span class="feat-icon">📦</span><div><strong>PRIMARY: 5-Algorithm Ensemble</strong> (ml-algorithms.ts — 1,563 LOC)<br>Default for all /api/recommend requests</div></li>
+        <li><span class="feat-icon">1️⃣</span><div><strong>KNN</strong> — K=8, 8-dim weighted Euclidean, location weight=6.0</div></li>
+        <li><span class="feat-icon">2️⃣</span><div><strong>Random Forest</strong> — 50 trees, 80% bootstrap, √n feature bagging</div></li>
+        <li><span class="feat-icon">3️⃣</span><div><strong>Gradient Boosting</strong> — 10 iterations, η=0.1, decision stumps</div></li>
+        <li><span class="feat-icon">4️⃣</span><div><strong>Neural Network</strong> — 10→10→4→1 MLP, Leaky ReLU</div></li>
+        <li><span class="feat-icon">5️⃣</span><div><strong>Hybrid Stacking</strong> — Meta-learner over KNN + RF</div></li>
+        <li style="background:rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); border-radius:5px; margin-top:6px;"><span class="feat-icon">📦</span><div><strong>SECONDARY: 5-Algorithm Advanced</strong> (advanced-ml-algorithms.ts — 579 LOC)</div></li>
+        <li><span class="feat-icon">6️⃣</span><div><strong>KNN Gaussian Kernel</strong> — K=15, σ=0.8, 6-dim vector</div></li>
+        <li><span class="feat-icon">7️⃣</span><div><strong>Content-Based Filtering</strong> — TF-IDF-like, location=0.35</div></li>
+        <li><span class="feat-icon">8️⃣</span><div><strong>Collaborative Filtering</strong> — Simulated user patterns</div></li>
+        <li><span class="feat-icon">9️⃣</span><div><strong>Sigmoid Neural Network</strong> — 6→3→2→1 MLP, sigmoid</div></li>
+        <li><span class="feat-icon">🔟</span><div><strong>Bayesian Scoring</strong> — Prior × Likelihood / Evidence</div></li>
+        <li style="margin-top:5px;"><span class="feat-icon">🎯</span><div><strong>+2 Support Algorithms:</strong> License Expiry Validator, Dynamic Weight Calculator</div></li>
+      </ul>
+    </div>
+
+    <!-- Document Verification ML -->
+    <div class="box ml-box" style="border-color:#7c3aed;">
+      <div class="box-title" style="color:#c084fc;"><span class="icon">📄</span> Document Verification Pipeline (552 LOC)</div>
+      <ul class="feat-list">
+        <li style="background:rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); border-radius:5px;"><span class="feat-icon">🧠</span><div><strong>TensorFlow.js + MobileNet v2</strong><br>Neural network document vs non-document classification</div></li>
+        <li><span class="feat-icon">🔤</span><div><strong>Tesseract.js OCR</strong> — Text extraction from PDF (up to 5 pages) and images</div></li>
+        <li><span class="feat-icon">📏</span><div><strong>Levenshtein Distance</strong> — Strict 80% threshold for credential matching</div></li>
+        <li><span class="feat-icon">🔍</span><div><strong>Regex Pattern Detection</strong> — GST: /[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]Z[0-9A-Z]/ | PAN: /[A-Z]{5}[0-9]{4}[A-Z]/</div></li>
+        <li style="background:rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); border-radius:5px;"><span class="feat-icon">📊</span><div><strong>100-Point Scoring System:</strong><br>GST(10+15) + PAN(10+15) + Name(15) + Company(15) + Phone(10) + DocType(10)</div></li>
+        <li><span class="feat-icon">✅</span><div><strong>Decision:</strong> ≥70 → APPROVE | ≥40 → REVIEW | &lt;40 → REJECT</div></li>
+      </ul>
+
+      <div style="margin-top: 12px;">
+        <div class="box-title" style="color:var(--agent);"><span class="icon">🤖</span> Multi-Agent AI System <span class="future-badge">FUTURE</span></div>
+        <ul class="feat-list">
+          <li><span class="feat-icon">💰</span><div><strong>Pricing Agent</strong> <span class="llm-badge">LLM</span> — Calculates optimal warehouse price</div></li>
+          <li><span class="feat-icon">📈</span><div><strong>Market Analyst Agent</strong> <span class="llm-badge">LLM</span> — Studies demand & supply trends</div></li>
+          <li><span class="feat-icon">🚨</span><div><strong>Risk Detection Agent</strong> <span class="llm-badge">LLM</span> — Detects fraud, fake listings, anomalies</div></li>
+          <li><span class="feat-icon">💬</span><div><strong>Explanation Agent</strong> <span class="llm-badge">LLM</span> — Translates ML scores to human language</div></li>
+          <li><span class="feat-icon">🤝</span><div><strong>Negotiation Agent</strong> <span class="llm-badge">LLM</span> — Multi-step AI-powered price negotiation</div></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- LLM Use Cases (all) -->
+    <div class="box llm-box">
+      <div class="box-title"><span class="icon">🗣️</span> LLM Use Cases — Llama 3.3 70B</div>
+      <ul class="feat-list">
+        <li style="background:rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius:5px;"><span class="feat-icon">🔴</span><div><strong>ACTIVE USE CASES (Currently Deployed)</strong></div></li>
+        <li><span class="feat-icon">💬</span><div><strong>AI Chatbot</strong> — Warehouse Q&A (temp=0.7, 800 tok)</div></li>
+        <li><span class="feat-icon">🎯</span><div><strong>Recommendation Reasoning</strong> — Explain ML scores (temp=0.3)</div></li>
+        <li><span class="feat-icon">💰</span><div><strong>Pricing Intelligence</strong> — Market-aware price suggestions</div></li>
+        <li><span class="feat-icon">📋</span><div><strong>Property Listing Optimization</strong> — Auto-enhance listings</div></li>
+        <li><span class="feat-icon">🔔</span><div><strong>Notification Insights</strong> — Generate owner alerts</div></li>
+        <li><span class="feat-icon">📅</span><div><strong>Smart Booking Analysis</strong> — Lease optimization</div></li>
+        <li style="background:rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.3); border-radius:5px; margin-top:6px;"><span class="feat-icon">🟣</span><div><strong>LLM INTEGRATION FEATURES</strong></div></li>
+        <li><span class="feat-icon">🗣️</span><div><strong>NL Search</strong> — Parse natural language to filters</div></li>
+        <li><span class="feat-icon">✍️</span><div><strong>Description Gen</strong> — Structured data → SEO text</div></li>
+        <li><span class="feat-icon">📊</span><div><strong>Comparison Reports</strong> — Multi-warehouse analysis</div></li>
+        <li><span class="feat-icon">📧</span><div><strong>Email/SMS Templates</strong> — Personalized notifications</div></li>
+        <li><span class="feat-icon">🧾</span><div><strong>Invoice Generation</strong> — Professional PDF documents</div></li>
+        <li><span class="feat-icon">📑</span><div><strong>Contract Generation</strong> — Custom lease agreements</div></li>
+        <li><span class="feat-icon">📈</span><div><strong>Market Insights</strong> — Trend analysis & reports</div></li>
+        <li><span class="feat-icon">📅</span><div><strong>Availability Forecast</strong> — Predict space availability</div></li>
+        <li><span class="feat-icon">❓</span><div><strong>Auto Inquiry Response</strong> — Context-aware answers</div></li>
+        <li><span class="feat-icon">📝</span><div><strong>Contact Drafting</strong> — Professional message templates</div></li>
+        <li><span class="feat-icon">📈</span><div><strong>Activity Summaries</strong> — Human-readable insights</div></li>
+        <li><span class="feat-icon">📜</span><div><strong>Contract Understanding</strong> — Risk analysis of lease docs</div></li>
+        <li><span class="feat-icon">🔍</span><div><strong>Fraud Detection</strong> — Anomaly reasoning reports</div></li>
+        <li><span class="feat-icon">🧠</span><div><strong>Knowledge Graph</strong> — Relationship-based reasoning</div></li>
+        <li><span class="feat-icon">📉</span><div><strong>Demand Forecasting</strong> — Seasonal trend explanations</div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CONNECTOR 3 ═══════ -->
+<div class="connector-bar"><div class="bar-line"><span class="bar-label">▼ SQL Queries (Supabase-JS Client) | PAGE_SIZE=2000 | MAX_CANDIDATES=10,000 ▼</span></div></div>
+<div class="triple-arrows">
+  <div class="arrow"></div>
+  <div class="arrow"></div>
+  <div class="arrow"></div>
+</div>
+
+<!-- ═══════ LAYER 4 — DATA LAYER ═══════ -->
+<div class="section-divider"><span>▼ DATA LAYER — Supabase PostgreSQL 15+ with Row Level Security</span></div>
+
+<div class="layer">
+  <div class="db-row">
+    <div class="box db-box">
+      <div class="box-title" style="font-size:0.85rem;"><span class="icon">🗄️</span> warehouses</div>
+      <div style="font-size:0.72rem; color:var(--muted);">10,002 records | 33 columns<br>price, area, district, rating,<br>occupancy, amenities[], type,<br>grid_blocks, coordinates</div>
+    </div>
+    <div class="box db-box">
+      <div class="box-title" style="font-size:0.85rem;"><span class="icon">👤</span> profiles</div>
+      <div style="font-size:0.72rem; color:var(--muted);">Users table (auth.users FK)<br>name, email, user_type,<br>gst_number, is_verified,<br>company_name, city</div>
+    </div>
+    <div class="box db-box">
+      <div class="box-title" style="font-size:0.85rem;"><span class="icon">📅</span> bookings</div>
+      <div style="font-size:0.72rem; color:var(--muted);">Lease management<br>warehouse_id, seeker_id,<br>area_sqft, monthly_rent,<br>booking_status, payment</div>
+    </div>
+    <div class="box db-box">
+      <div class="box-title" style="font-size:0.85rem;"><span class="icon">💬</span> inquiries</div>
+      <div style="font-size:0.72rem; color:var(--muted);">Seeker-Owner messages<br>warehouse_id, message,<br>inquiry_status, response,<br>budget_range</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CONNECTOR 4 ═══════ -->
+<div class="arrow-down-center"><div class="arrow"></div></div>
+
+<!-- ═══════ LAYER 5 — DATA SOURCE ═══════ -->
+<div class="section-divider"><span>▼ DATA SOURCE — WDRA Government Portal (Maharashtra)</span></div>
+
+<div class="layer">
+  <div class="data-flow-row">
+    <div class="box" style="background:#0a1a0a; border-color:#166534;">
+      <div class="box-title" style="color:#4ade80;"><span class="icon">🏛️</span> WDRA Government Data</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">📄</span><div><strong>Source:</strong> wdra.gov.in — Registered Warehouses</div></li>
+        <li><span class="feat-icon">📊</span><div><strong>Raw Data:</strong> 424 warehouses, 12 columns, 33 districts</div></li>
+        <li><span class="feat-icon">📅</span><div><strong>Period:</strong> Dec 2020 – Oct 2025</div></li>
+        <li><span class="feat-icon">📏</span><div><strong>Capacity:</strong> 1 – 97,406 MT</div></li>
+      </ul>
+    </div>
+    <div class="box" style="background:#1a1a0a; border-color:#854d0e;">
+      <div class="box-title" style="color:#fbbf24;"><span class="icon">🔧</span> Preprocessing Pipeline</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">1️⃣</span><div>CSV Parse → Validate → Clean (csv-to-json.js)</div></li>
+        <li><span class="feat-icon">2️⃣</span><div>Pincode extraction + city-specific imputation</div></li>
+        <li><span class="feat-icon">3️⃣</span><div>Lat/Lng centroid + Gaussian offset (±0.05°)</div></li>
+        <li><span class="feat-icon">4️⃣</span><div>Feature engineering: 12 → 33 attributes</div></li>
+        <li><span class="feat-icon">5️⃣</span><div>Synthetic augmentation: 424 → 10,002 records</div></li>
+      </ul>
+    </div>
+    <div class="box" style="background:#0a0a1a; border-color:#1e40af;">
+      <div class="box-title" style="color:#60a5fa;"><span class="icon">☁️</span> External APIs</div>
+      <ul class="feat-list">
+        <li><span class="feat-icon">🚀</span><div><strong>Groq Cloud</strong> — Llama 3.3 70B inference (LPU hardware)</div></li>
+        <li><span class="feat-icon">🔐</span><div><strong>Supabase Auth</strong> — JWT tokens, RLS policies</div></li>
+        <li><span class="feat-icon">📦</span><div><strong>Supabase Storage</strong> — Document & image uploads</div></li>
+        <li><span class="feat-icon">🌐</span><div><strong>Netlify</strong> — CDN + serverless deployment</div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<br>
+<p style="text-align:center; color:#475569; font-size:0.75rem;">
+  SmartSpace Complete System Architecture — Research Paper Diagram<br>
+  Primary LLM: Meta Llama 3.3 70B Versatile via Groq | ML: 12-Algorithm Ensemble | Data: WDRA Maharashtra (424 → 10,002 records)<br>
+  Tech Stack: React 18 + TypeScript + Express.js + Supabase PostgreSQL + TensorFlow.js + Tesseract.js<br>
+  © 2025 SmartSpace Intelligent Warehouse Management Platform
+</p>
+
+</div>
+</body>
+</html>

@@ -244,17 +244,13 @@ export function ensembleRecommend(
 }
 
 /**
- * Generate Gemini LLM explanation for recommendations
+ * Generate LLM explanation for recommendations (uses Groq/OpenRouter via unified AI service)
  */
 export async function generateGeminiExplanation(
     profile: SeekerProfile,
     topRecommendations: RecommendationResult[],
     geminiApiKey: string
 ): Promise<string> {
-    if (!geminiApiKey) {
-        return 'ML analysis complete. Enable Gemini API for detailed insights.';
-    }
-
     const prompt = `
 You are an AI assistant helping a warehouse seeker find the perfect space.
 
@@ -279,25 +275,16 @@ Provide a brief 2-3 sentence explanation of why these warehouses are the best ma
 `;
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 200
-                    }
-                })
-            }
-        );
-
-        const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || 'ML analysis complete.';
+        const { getAIResponse } = await import('@/services/aiService');
+        const response = await getAIResponse({
+            prompt,
+            systemPrompt: 'You are a warehouse recommendation expert. Provide concise, helpful explanations.',
+            temperature: 0.7,
+            maxTokens: 200
+        });
+        return response.text || 'ML analysis complete. Personalized recommendations based on your profile.';
     } catch (err) {
-        console.error('Gemini API error:', err);
+        console.error('LLM explanation error:', err);
         return 'ML analysis complete. Personalized recommendations based on your profile.';
     }
 }

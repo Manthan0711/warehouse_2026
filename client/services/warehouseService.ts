@@ -844,9 +844,9 @@ class WarehouseService {
 
   /**
    * Get warehouses owned by a specific user
-   * Combines both warehouses from the main table and user submissions
+   * Combines both warehouses from the main table and user submissions (pending/approved/rejected)
    */
-  async getWarehousesByOwner(ownerId: string): Promise<{ data: SupabaseWarehouse[]; count: number; error?: string }> {
+  async getWarehousesByOwner(ownerId: string): Promise<{ data: SupabaseWarehouse[]; count: number; submissions?: any[]; error?: string }> {
     try {
       console.log('🔍 Fetching warehouses for owner:', ownerId);
 
@@ -858,35 +858,81 @@ class WarehouseService {
 
       if (warehousesError) {
         console.error('❌ Error fetching owned warehouses:', warehousesError);
-        return { data: [], count: 0, error: warehousesError.message };
       }
 
+      // Fetch owner's submissions via server API (bypasses RLS)
+      let submissions: any[] = [];
+      try {
+        const response = await fetch(`/api/warehouse-submissions/owner/${ownerId}`);
+        const data = await response.json();
+        if (data.success && data.submissions) {
+          submissions = data.submissions;
+          console.log(`✅ Loaded ${submissions.length} submissions for owner`);
+        }
+      } catch (subErr) {
+        console.warn('⚠️ Could not load owner submissions:', subErr);
+      }
+
+      // Convert submissions to SupabaseWarehouse format for display
+      const submissionWarehouses: SupabaseWarehouse[] = submissions
+        .filter((s: any) => s.status !== 'approved') // Don't duplicate approved ones already in warehouses table
+        .map((s: any) => ({
+          id: s.id,
+          wh_id: `SUB-${String(s.id).substring(0, 8).toUpperCase()}`,
+          name: s.name || 'Untitled Warehouse',
+          description: s.description || '',
+          address: s.address || '',
+          city: s.city || '',
+          state: s.state || '',
+          pincode: s.pincode || '',
+          total_area: s.total_area || 0,
+          price_per_sqft: s.price_per_sqft || 0,
+          images: s.image_urls || [],
+          amenities: s.amenities || [],
+          features: s.features || [],
+          warehouse_type: s.warehouse_type || 'General Storage',
+          allowed_goods_types: s.allowed_goods_types || [],
+          status: s.status === 'pending' ? 'pending_approval' : s.status,
+          occupancy: 0,
+          rating: 0,
+          reviews_count: 0,
+          total_blocks: 0,
+          available_blocks: 0,
+          grid_rows: 0,
+          grid_cols: 0,
+          created_at: s.submitted_at || s.created_at,
+          updated_at: s.updated_at,
+        } as any));
+
       // Fetch owner profile separately
-      if (ownerId && ownedWarehouses && ownedWarehouses.length > 0) {
+      const allWarehouses = [...(ownedWarehouses || []), ...submissionWarehouses];
+      if (ownerId && allWarehouses.length > 0) {
         try {
           const { data: ownerProfile, error: ownerError } = await supabase
             .from('profiles')
             .select('id, name, email, phone, profile_image_url, created_at')
             .eq('id', ownerId)
-            .single();
+            .maybeSingle();
           
           if (!ownerError && ownerProfile) {
-            // Attach owner profile to all warehouses
-            ownedWarehouses.forEach(warehouse => {
+            allWarehouses.forEach(warehouse => {
               (warehouse as any).owner = ownerProfile;
             });
             console.log('✅ Loaded owner profile for warehouses:', ownerProfile.name);
+          } else if (ownerError) {
+            console.warn('⚠️ Profile query error (non-blocking):', ownerError.message);
           }
         } catch (ownerErr) {
           console.warn('⚠️ Could not load owner profile:', ownerErr);
         }
       }
 
-      console.log(`✅ Returning ${ownedWarehouses?.length || 0} warehouses for owner`);
+      console.log(`✅ Returning ${allWarehouses.length} warehouses for owner (${ownedWarehouses?.length || 0} approved + ${submissionWarehouses.length} submissions)`);
 
       return {
-        data: ownedWarehouses || [],
-        count: ownedWarehouses?.length || 0
+        data: allWarehouses,
+        count: allWarehouses.length,
+        submissions
       };
     } catch (error) {
       console.error('❌ Error in getWarehousesByOwner:', error);
