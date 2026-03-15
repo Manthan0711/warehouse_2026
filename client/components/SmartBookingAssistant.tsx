@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,7 +27,7 @@ import {
   Star,
   Package
 } from 'lucide-react';
-import { smartBookingService, BookingRequirement, BookingAnalysis, SmartBookingOption } from '@/services/smartBookingService';
+import { smartBookingService, BookingRequirement, BookingAnalysis, SmartBookingOption, WarehouseResult } from '@/services/smartBookingService';
 import { DEFAULT_GOODS_TYPES, GOODS_TYPES_BY_WAREHOUSE, WAREHOUSE_TYPES } from '@/data/warehouseTaxonomy';
 import { cn } from '@/lib/utils';
 
@@ -40,7 +41,7 @@ export function SmartBookingAssistant({ onBookingSelect, className }: SmartBooki
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<BookingAnalysis | null>(null);
   const [chatInput, setChatInput] = useState('');
-  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string; warehouses?: WarehouseResult[] }>>([]);
   
   // Form state
   const [formData, setFormData] = useState<BookingRequirement>({
@@ -94,7 +95,7 @@ export function SmartBookingAssistant({ onBookingSelect, className }: SmartBooki
     setIsAnalyzing(true);
     try {
       const result = await smartBookingService.processNaturalLanguageBooking(userMessage);
-      setChatHistory(prev => [...prev, { role: 'assistant', content: result.response }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: result.response, warehouses: result.warehouses }]);
       if (result.analysis) {
         setAnalysis(result.analysis);
       }
@@ -437,6 +438,46 @@ export function SmartBookingAssistant({ onBookingSelect, className }: SmartBooki
                           {msg.role === 'user' ? 'You' : '🤖 Smart Assistant'}
                         </p>
                         <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                        {msg.role === 'assistant' && msg.warehouses && msg.warehouses.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {msg.warehouses.map((w, idx) => {
+                              const rankEmoji = ['🥇','🥈','🥉','4️⃣','5️⃣'][idx] ?? `${idx+1}.`;
+                              return (
+                                <div key={w.id} className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold flex items-center gap-1">
+                                        <span>{rankEmoji}</span>
+                                        <span className="truncate">{w.name}</span>
+                                        {w.matchScore ? (
+                                          <span className="ml-1 text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full">
+                                            {w.matchScore}%
+                                          </span>
+                                        ) : null}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        📍 {w.city}
+                                        {w.total_area ? ` · ${w.total_area.toLocaleString()} sq ft` : ''}
+                                        {` · ₹${w.price_per_sqft}/sqft`}
+                                        {w.warehouse_type ? ` · ${w.warehouse_type}` : ''}
+                                        {w.rating ? ` · ⭐ ${w.rating}` : ''}
+                                      </p>
+                                      {w.reason && (
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 italic">💬 {w.reason}</p>
+                                      )}
+                                    </div>
+                                    <Link
+                                      to={`/warehouses/${w.id}`}
+                                      className="flex-shrink-0 flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors whitespace-nowrap"
+                                    >
+                                      View &amp; Book <ArrowRight className="w-3 h-3" />
+                                    </Link>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     ))}
                     {isAnalyzing && (

@@ -739,125 +739,155 @@ export async function analyzeBookingRequirements(
 /**
  * Process natural language booking request
  */
-export async function processNaturalLanguageBooking(
-  userMessage: string
-): Promise<{ requirement: BookingRequirement | null; analysis: BookingAnalysis | null; response: string }> {
-  console.log('🗣️ Processing natural language booking:', userMessage);
-  
-  const extractionPrompt = `Extract booking requirements from this user message. If the message is not about booking warehouse space, return null.
-
-User Message: "${userMessage}"
-
-Extract and return JSON:
-{
-  "isBookingRequest": true/false,
-  "requirement": {
-    "requiredSpace": number (in sq ft, estimate if vague like "small" = 500, "medium" = 2000, "large" = 10000),
-    "location": "city name",
-    "maxBudget": number or null (per sq ft per month),
-    "preferredType": "warehouse type or null",
-    "goodsType": "goods being stored or null",
-    "duration": number (months, default 1),
-    "urgency": "low" | "medium" | "high",
-    "flexibleLocation": true/false,
-    "flexibleSpace": true/false (can split across warehouses)
-  },
-  "clarificationNeeded": ["list of missing info that would help"]
+export interface WarehouseResult {
+  id: string;
+  name: string;
+  city: string;
+  address?: string;
+  total_area: number;
+  price_per_sqft: number;
+  warehouse_type?: string;
+  rating?: number;
+  _score?: number;
+  _reason?: string;
+  rank?: number;
+  matchScore?: number;
+  reason?: string;
 }
 
-Examples:
-- "I need 400 sq ft in Thane with low budget" → requiredSpace: 400, location: "Thane", maxBudget: 40, flexibleSpace: true
-- "Looking for cold storage in Mumbai, around 5000 sq ft" → requiredSpace: 5000, location: "Mumbai", preferredType: "Cold Storage"
-- "Small warehouse space in Pune" → requiredSpace: 500, location: "Pune"
-- "Need space for vaccines in Hyderabad" → location: "Hyderabad", goodsType: "vaccines"`;
-
+export async function processNaturalLanguageBooking(
+  userMessage: string
+): Promise<{ requirement: BookingRequirement | null; analysis: BookingAnalysis | null; response: string; warehouses?: WarehouseResult[] }> {
+  console.log('🗣️ Processing natural language booking via server API:', userMessage);
+  
   try {
-    const extractResponse = await getAIResponse({
-      prompt: extractionPrompt,
-      systemPrompt: 'You are a booking request parser. Extract structured data from natural language. Always respond with valid JSON.',
-      temperature: 0.1,
-      maxTokens: 500
+    // Use server API endpoint (Groq-powered)
+    const response = await fetch('/api/smart-booking/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: userMessage })
     });
 
-    const jsonMatch = extractResponse.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('❌ Server API error:', error);
       return {
         requirement: null,
         analysis: null,
-        response: "I couldn't understand your booking request. Could you please specify:\n- How much space you need (in sq ft)\n- Which city/location\n- Your budget (if any)"
+        response: `Search failed: ${error.error}. Please try with a clearer query like "I need 400 sq ft in Thane" or "cold storage in Mumbai".`
       };
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    
-    if (!parsed.isBookingRequest) {
+    const result = await response.json();
+    console.log('✅ Server API response:', result);
+
+    if (!result.success) {
       return {
         requirement: null,
         analysis: null,
-        response: "This doesn't seem to be a booking request. I can help you book warehouse space! Just tell me:\n- Required space (sq ft)\n- Location/city\n- Budget preference"
+        response: result.message || 'Failed to process your request'
       };
     }
 
+    // Extract requirement from server response
+    const requirements = result.requirements;
     const requirement: BookingRequirement = {
-      requiredSpace: parsed.requirement.requiredSpace || 1000,
-      location: parsed.requirement.location || 'Maharashtra',
-      maxBudget: parsed.requirement.maxBudget,
-      preferredType: parsed.requirement.preferredType,
-      goodsType: parsed.requirement.goodsType,
-      duration: parsed.requirement.duration || 1,
-      urgency: parsed.requirement.urgency || 'medium',
-      flexibleLocation: parsed.requirement.flexibleLocation ?? false,
-      flexibleSpace: parsed.requirement.flexibleSpace ?? true
+      requiredSpace: requirements.requiredSpace || 1000,
+      location: requirements.location || 'India',
+      maxBudget: requirements.maxBudget,
+      preferredType: requirements.warehouseType,
+      goodsType: requirements.goodsType,
+      duration: requirements.duration || 1,
+      urgency: requirements.urgency || 'medium',
+      flexibleLocation: true,
+      flexibleSpace: true
     };
 
-    // Analyze and find options
-    const analysis = await analyzeBookingRequirements(requirement);
-    
-    // Generate response
-    let response = `🎯 **Smart Booking Analysis Complete!**\n\n`;
-    response += `📋 **Your Requirements:**\n`;
-    response += `- Space: ${requirement.requiredSpace} sq ft\n`;
-    response += `- Location: ${requirement.location}\n`;
-    if (requirement.maxBudget) response += `- Budget: ₹${requirement.maxBudget}/sq ft/month\n`;
-    if (requirement.preferredType) response += `- Type: ${requirement.preferredType}\n`;
-    if (requirement.goodsType) response += `- Goods: ${requirement.goodsType}\n`;
-    response += `\n`;
-    
-    if (analysis.options.length > 0) {
-      response += `✅ **Found ${analysis.options.length} Booking Options:**\n\n`;
-      
-      const best = analysis.bestOption!;
-      response += `🏆 **Best Option (${best.matchScore}% match):**\n`;
-      response += `- Type: ${best.type === 'merged' ? '🔗 Multi-Warehouse Combo' : '🏢 Single Warehouse'}\n`;
-      response += `- Warehouses: ${best.warehouses.map(w => w.name).join(' + ')}\n`;
-      response += `- Total Space: ${best.totalArea.toLocaleString()} sq ft\n`;
-      response += `- Monthly Cost: ₹${best.totalMonthlyCost.toLocaleString()}\n`;
-      response += `- Price: ₹${best.averagePricePerSqft}/sq ft\n`;
-      if (best.savings) response += `- 💰 You Save: ₹${best.savings.toLocaleString()}/month!\n`;
-      response += `\n`;
-      
-      response += `💡 **AI Insight:** ${analysis.llmSummary}\n\n`;
-      response += `📊 **Market Insight:** ${analysis.marketInsights}\n`;
-      
-      if (parsed.clarificationNeeded?.length > 0) {
-        response += `\n❓ **For better results, please also specify:** ${parsed.clarificationNeeded.join(', ')}`;
+    console.log('📋 Extracted requirement:', requirement);
+
+    // Build response from search results
+    let response_text = `🎯 **Smart Warehouse Search Results**\n\n`;
+
+    if (result.warehouses && result.warehouses.length > 0) {
+      // Build Groq rank/score/reason map keyed by warehouse ID
+      const groqMap: Record<string, { rank: number; score: number; reason: string }> = {};
+      if (result.ranking?.bestMatches && Array.isArray(result.ranking.bestMatches)) {
+        result.ranking.bestMatches.forEach((match: any) => {
+          groqMap[String(match.id)] = {
+            rank: match.rank || 99,
+            score: match.score || 0,
+            reason: match.reason || ''
+          };
+        });
       }
-    } else {
-      response += `⚠️ No exact matches found. ${analysis.llmSummary}\n\n`;
-      response += `**Suggestions:**\n`;
-      analysis.alternativeSuggestions.forEach((s, i) => {
-        response += `${i + 1}. ${s}\n`;
+
+      // Merge Groq ranking into warehouses and sort by Groq rank if available
+      const merged: WarehouseResult[] = result.warehouses.slice(0, 10).map((w: any) => {
+        const g = groqMap[String(w.id)];
+        return {
+          ...w,
+          rank: g?.rank ?? 99,
+          matchScore: g?.score ?? w._score ?? 0,
+          reason: g?.reason || w._reason || 'Good match for your requirements'
+        };
       });
+
+      // Sort by Groq rank (lowest rank number = best)
+      const hasGroqRanks = merged.some(w => (w.rank ?? 99) < 99);
+      if (hasGroqRanks) {
+        merged.sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
+      }
+
+      const top5 = merged.slice(0, 5);
+      const rankLabels = ['🥇 Rank #1 — Best Match', '🥈 Rank #2', '🥉 Rank #3', '4️⃣ Rank #4', '5️⃣ Rank #5'];
+
+      response_text += `✅ Found **${result.warehouses.length}** warehouses. Here are the top picks ranked for you:\n\n`;
+
+      top5.forEach((w, i) => {
+        response_text += `${rankLabels[i]}\n`;
+        response_text += `**${w.name}** · ${w.city}\n`;
+        response_text += `📐 ${w.total_area?.toLocaleString()} sq ft · 💰 ₹${w.price_per_sqft}/sqft · 🏭 ${w.warehouse_type || 'General'}`;
+        if (w.rating) response_text += ` · ⭐ ${w.rating}/5`;
+        response_text += `\n💬 ${w.reason}\n\n`;
+      });
+
+      if (result.ranking?.summary) {
+        response_text += `💡 **AI Summary:** ${result.ranking.summary}`;
+      }
+
+      return {
+        requirement,
+        analysis: null,
+        response: response_text,
+        warehouses: top5
+      };
+    } else {
+      response_text += `⚠️ **No warehouses found** matching your criteria.\n\n`;
+      response_text += `**Your Requirements:**\n`;
+      response_text += `- Space: ${requirement.requiredSpace} sq ft\n`;
+      response_text += `- Location: ${requirement.location}\n`;
+      if (requirement.maxBudget) response_text += `- Budget: ₹${requirement.maxBudget}/sq ft/month\n`;
+      
+      response_text += `\n**Try:**\n`;
+      response_text += `- Searching in nearby cities\n`;
+      response_text += `- Increasing your budget\n`;
+      response_text += `- Being less specific about warehouse type\n`;
+
+      return {
+        requirement,
+        analysis: null,
+        response: response_text
+      };
     }
-    
-    return { requirement, analysis, response };
-    
+
   } catch (error) {
-    console.error('Natural language booking error:', error);
+    console.error('❌ Processing error:', error);
     return {
       requirement: null,
       analysis: null,
-      response: "I encountered an error processing your request. Please try again with details like: space needed, location, and budget."
+      response: `Error processing your request: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again with a simpler query.`
     };
   }
 }

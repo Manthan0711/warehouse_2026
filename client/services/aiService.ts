@@ -64,12 +64,14 @@ async function callOpenRouter(request: AIRequest): Promise<AIResponse> {
 }
 
 /**
- * Call Groq API (Fastest option - Llama 3.1, Mixtral, etc.)
+ * Call Groq API (Fastest option - Llama 3.3, Mixtral, etc.)
  */
 async function callGroq(request: AIRequest): Promise<AIResponse> {
   if (!GROQ_API_KEY) {
     throw new Error('Groq API key not configured');
   }
+
+  console.log('🔐 Groq API Key Status:', GROQ_API_KEY ? `✅ Configured (${GROQ_API_KEY.substring(0, 10)}...)` : '❌ Missing');
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -89,10 +91,13 @@ async function callGroq(request: AIRequest): Promise<AIResponse> {
   });
 
   if (!response.ok) {
-    throw new Error(`Groq API error: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    console.error('❌ Groq API Error Response:', errorData);
+    throw new Error(`Groq API error: ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`);
   }
 
   const data = await response.json();
+  console.log('✅ Groq API Success - Response received');
   return {
     text: data.choices[0].message.content,
     provider: 'groq',

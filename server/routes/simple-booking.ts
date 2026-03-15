@@ -178,12 +178,14 @@ export const getAvailableBlocks: RequestHandler = async (req, res) => {
             console.error('Error fetching bookings:', error);
         }
 
-        // Extract booked blocks
+        // Extract booked blocks — blocks_booked is [{id:'block_1', block_number:1, area:100}...]
         const bookedBlocks = new Set<string>();
+        const bookedBlockNumbers = new Set<number>();
         bookings?.forEach(booking => {
             const blocks = booking.metadata?.blocks_booked || [];
             blocks.forEach((block: any) => {
                 if (block.id) bookedBlocks.add(block.id);
+                if (block.block_number) bookedBlockNumbers.add(Number(block.block_number));
             });
         });
 
@@ -203,12 +205,18 @@ export const getAvailableBlocks: RequestHandler = async (req, res) => {
         for (let row = 0; row < gridConfig.rows; row++) {
             for (let col = 0; col < gridConfig.cols; col++) {
                 const blockId = `${row}-${col}`;
+                // Sequential block number (1-based) — matches client-side block_number
+                const blockNumber = row * gridConfig.cols + col + 1;
+                const isBooked = bookedBlocks.has(blockId) ||
+                    bookedBlockNumbers.has(blockNumber) ||
+                    bookedBlocks.has(`block_${blockNumber}`);
                 blocks.push({
                     id: blockId,
+                    block_number: blockNumber,
                     row,
                     col,
                     area: blockArea,
-                    available: !bookedBlocks.has(blockId),
+                    available: !isBooked,
                     label: `Block ${String.fromCharCode(65 + row)}${col + 1}`
                 });
             }
@@ -221,7 +229,8 @@ export const getAvailableBlocks: RequestHandler = async (req, res) => {
             blocks,
             grid_config: gridConfig,
             total_blocks: blocks.length,
-            available_blocks: blocks.filter(b => b.available).length
+            available_blocks: blocks.filter(b => b.available).length,
+            booked_block_numbers: Array.from(bookedBlockNumbers)
         });
 
     } catch (error) {

@@ -35,6 +35,7 @@ export function Navbar() {
     { name: "List Your Property", path: "/list-property", showFor: ['owner'] },
     { name: "Profile Verification", path: "/admin-verification", showFor: ['admin'] },
     { name: "Warehouse Submissions", path: "/admin/warehouse-submissions", showFor: ['admin'] },
+    { name: "Warehouse Analytics", path: "/admin/warehouses", showFor: ['admin'] },
     { name: "User Management", path: "/admin/users", showFor: ['admin'] },
     { name: "About", path: "/about", showFor: ['all'] },
     { name: "Contact", path: "/contact", showFor: ['all'] },

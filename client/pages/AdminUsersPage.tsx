@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Navbar } from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import {
   Users,
   Search,
@@ -20,99 +18,145 @@ import {
   RefreshCw,
   CheckCircle,
   XCircle,
-  User
+  User,
+  Warehouse,
+  IndianRupee,
+  Hash,
+  MapPin,
+  Loader2,
+  TrendingUp,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
-interface UserProfile {
+interface UserBooking {
+  booking_id: string;
+  warehouse_name: string;
+  warehouse_city: string;
+  warehouse_state: string;
+  area_sqft: number;
+  total_amount: number;
+  payment_method: string;
+  status: string;
+  goods_type: string;
+  blocks_booked: Array<{ id: string; block_number: string | number; area: number | null; label: string }>;
+  created_at: string;
+  start_date: string;
+  end_date: string;
+}
+
+interface OwnerWarehouse {
   id: string;
-  user_id: string;
+  wh_id: string;
   name: string;
-  email: string;
-  phone?: string;
-  company_name?: string;
-  user_type: 'seeker' | 'owner';
-  verification_status: string;
+  city: string;
+  state: string;
+  status: string;
+  warehouse_type: string;
+  total_area: number;
+  price_per_sqft: number;
   created_at: string;
 }
 
-interface ActivityLog {
+interface Seeker {
   id: string;
-  type: string;
-  description: string;
+  name: string;
+  email: string;
+  phone: string;
+  company_name: string;
+  user_type: 'seeker';
+  verification_status: string;
+  total_bookings: number;
+  total_spent: number;
+  bookings: UserBooking[];
   created_at: string;
-  metadata?: any;
 }
+
+interface Owner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company_name: string;
+  city: string;
+  state: string;
+  user_type: 'owner';
+  verification_status: string;
+  total_warehouses: number;
+  warehouses: OwnerWarehouse[];
+  created_at: string;
+}
+
+interface Summary {
+  total_seekers: number;
+  total_owners: number;
+  total_users: number;
+  total_bookings: number;
+  total_warehouses: number;
+}
+
+const safeNumber = (value: unknown) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+const safeArray = <T,>(value: T[] | null | undefined) => Array.isArray(value) ? value : [];
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [seekers, setSeekers] = useState<Seeker[]>([]);
+  const [owners, setOwners] = useState<Owner[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'seeker' | 'owner'>('all');
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  const [loadingActivity, setLoadingActivity] = useState(false);
-  const [showActivity, setShowActivity] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'seekers' | 'owners'>('all');
+  const [expandedSeekerId, setExpandedSeekerId] = useState<string | null>(null);
+  const [expandedOwnerId, setExpandedOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (profile?.user_type !== 'admin') {
-      navigate('/');
-      return;
+    if (profile?.user_type === 'admin') {
+      fetchUsers();
     }
-    fetchUsers();
   }, [profile]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Fetch seekers
-      const { data: seekers } = await supabase
-        .from('seeker_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await fetch('/api/admin/users');
+      const data = await response.json();
+      if (data.success) {
+        const normalizedSeekers = safeArray(data.seekers).map((seeker: any) => ({
+          ...seeker,
+          phone: seeker?.phone || '',
+          company_name: seeker?.company_name || '',
+          total_bookings: safeNumber(seeker?.total_bookings),
+          total_spent: safeNumber(seeker?.total_spent),
+          bookings: safeArray(seeker?.bookings).map((booking: any) => ({
+            ...booking,
+            area_sqft: safeNumber(booking?.area_sqft),
+            total_amount: safeNumber(booking?.total_amount),
+            blocks_booked: safeArray(booking?.blocks_booked),
+          })),
+        }));
 
-      // Fetch owners
-      const { data: owners } = await supabase
-        .from('owner_profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        const normalizedOwners = safeArray(data.owners).map((owner: any) => ({
+          ...owner,
+          phone: owner?.phone || '',
+          company_name: owner?.company_name || '',
+          total_warehouses: safeNumber(owner?.total_warehouses),
+          warehouses: safeArray(owner?.warehouses).map((warehouse: any) => ({
+            ...warehouse,
+            total_area: safeNumber(warehouse?.total_area),
+            price_per_sqft: safeNumber(warehouse?.price_per_sqft),
+          })),
+        }));
 
-      const allUsers: UserProfile[] = [];
-
-      // Map seekers
-      (seekers || []).forEach((s: any) => {
-        allUsers.push({
-          id: s.id,
-          user_id: s.user_id,
-          name: s.name || s.full_name || 'Unknown',
-          email: s.email || '',
-          phone: s.phone || s.contact_number || '',
-          company_name: s.company_name || '',
-          user_type: 'seeker',
-          verification_status: s.verification_status || 'pending',
-          created_at: s.created_at
-        });
-      });
-
-      // Map owners
-      (owners || []).forEach((o: any) => {
-        allUsers.push({
-          id: o.id,
-          user_id: o.user_id,
-          name: o.name || o.full_name || 'Unknown',
-          email: o.email || '',
-          phone: o.phone || o.contact_number || '',
-          company_name: o.company_name || '',
-          user_type: 'owner',
-          verification_status: o.verification_status || 'pending',
-          created_at: o.created_at
-        });
-      });
-
-      // Sort by created_at
-      allUsers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setUsers(allUsers);
+        setSeekers(normalizedSeekers);
+        setOwners(normalizedOwners);
+        setSummary(data.summary || null);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -120,302 +164,452 @@ export default function AdminUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.company_name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = filterType === 'all' || user.user_type === filterType;
-    
-    return matchesSearch && matchesType;
-  });
+  const fmt = (amount: number) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
 
-  const seekerCount = users.filter(u => u.user_type === 'seeker').length;
-  const ownerCount = users.filter(u => u.user_type === 'owner').length;
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  const fmtDate = (d: string) => {
+    if (!d) return 'N/A';
+    return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  const fetchActivity = async (user: UserProfile) => {
-    setSelectedUser(user);
-    setShowActivity(true);
-    setLoadingActivity(true);
-    try {
-      const response = await fetch(`/api/admin/user-activity?user_id=${user.user_id}&user_type=${user.user_type}`);
-      const data = await response.json();
-      if (data.success) {
-        setActivityLogs(data.activities || []);
-      }
-    } catch (error) {
-      console.error('Error loading activity:', error);
-    } finally {
-      setLoadingActivity(false);
+  const getBookingStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <Badge className="bg-green-900/40 text-green-400 border border-green-700 text-xs">Approved</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-900/40 text-yellow-400 border border-yellow-700 text-xs">Pending</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-900/40 text-red-400 border border-red-700 text-xs">Rejected</Badge>;
+      default:
+        return <Badge className="bg-slate-700 text-slate-300 border border-slate-600 text-xs">{status}</Badge>;
     }
   };
 
-  const deactivateUser = async (user: UserProfile) => {
-    try {
-      const table = user.user_type === 'seeker' ? 'seeker_profiles' : 'owner_profiles';
-      const { error } = await supabase
-        .from(table)
-        .update({ is_active: false, verification_status: 'disabled' })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, verification_status: 'disabled' } : u));
-    } catch (error) {
-      console.error('Error deactivating user:', error);
+  const getWarehouseStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-900/40 text-green-400 border border-green-700 text-xs">Active</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-900/40 text-yellow-400 border border-yellow-700 text-xs">Pending</Badge>;
+      default:
+        return <Badge className="bg-slate-700 text-slate-300 border border-slate-600 text-xs">{status || 'Unknown'}</Badge>;
     }
   };
+
+  const q = searchTerm.toLowerCase();
+
+  const filteredSeekers = seekers.filter(s =>
+    s.name?.toLowerCase().includes(q) ||
+    s.email?.toLowerCase().includes(q) ||
+    s.phone?.toLowerCase().includes(q)
+  );
+
+  const filteredOwners = owners.filter(o =>
+    o.name?.toLowerCase().includes(q) ||
+    o.email?.toLowerCase().includes(q) ||
+    o.city?.toLowerCase().includes(q) ||
+    o.state?.toLowerCase().includes(q) ||
+    o.company_name?.toLowerCase().includes(q)
+  );
+
+  if (profile?.user_type !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <Navbar />
+        <div className="flex items-center justify-center h-[80vh]">
+          <div className="text-center">
+            <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
+            <p className="text-slate-400">Only administrators can access this page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/admin')}
-              className="text-gray-400 hover:text-white"
-            >
-              <ArrowLeft className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="text-slate-400 hover:text-white hover:bg-slate-700">
+              <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <Users className="h-8 w-8 text-blue-400" />
+                <Users className="w-8 h-8 text-blue-400" />
                 User Management
               </h1>
-              <p className="text-gray-400 mt-1">
-                Manage all platform users - seekers and owners
-              </p>
+              <p className="text-slate-400 mt-1">All registered seekers and warehouse owners</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            onClick={fetchUsers}
-            className="border-gray-600 text-gray-300 hover:bg-gray-800"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button onClick={fetchUsers} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800">
+            <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Total Users</p>
-                <p className="text-2xl font-bold text-white">{users.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-400" />
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Seekers</p>
-                <p className="text-2xl font-bold text-green-400">{seekerCount}</p>
-              </div>
-              <Package className="h-8 w-8 text-green-400" />
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-sm">Owners</p>
-                <p className="text-2xl font-bold text-purple-400">{ownerCount}</p>
-              </div>
-              <Building2 className="h-8 w-8 text-purple-400" />
-            </CardContent>
-          </Card>
-        </div>
+        {/* Summary Cards */}
+        {summary && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Card className="bg-gradient-to-br from-blue-900/40 to-blue-950/40 border-blue-800/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-300 text-sm font-medium">Total Users</p>
+                    <p className="text-3xl font-bold text-white mt-1">{summary.total_users}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <Users className="w-6 h-6 text-blue-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Filters */}
+            <Card className="bg-gradient-to-br from-green-900/40 to-green-950/40 border-green-800/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-300 text-sm font-medium">Space Seekers</p>
+                    <p className="text-3xl font-bold text-white mt-1">{summary.total_seekers}</p>
+                    <p className="text-xs text-green-400 mt-1">{summary.total_bookings} bookings made</p>
+                  </div>
+                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                    <Package className="w-6 h-6 text-green-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-purple-900/40 to-purple-950/40 border-purple-800/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-300 text-sm font-medium">Warehouse Owners</p>
+                    <p className="text-3xl font-bold text-white mt-1">{summary.total_owners}</p>
+                    <p className="text-xs text-purple-400 mt-1">{summary.total_warehouses} warehouses listed</p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-purple-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-yellow-900/40 to-yellow-950/40 border-yellow-800/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-yellow-300 text-sm font-medium">Total Bookings</p>
+                    <p className="text-3xl font-bold text-white mt-1">{summary.total_bookings}</p>
+                    <p className="text-xs text-yellow-400 mt-1">across all seekers</p>
+                  </div>
+                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6 text-yellow-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Search + Tabs */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search by name, email, or company..."
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name, email, city..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex gap-2">
             <Button
-              variant={filterType === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilterType('all')}
-              className={filterType === 'all' ? 'bg-blue-600' : 'border-gray-600 text-gray-300'}
+              variant={activeTab === 'all' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('all')}
+              className={activeTab === 'all' ? 'bg-blue-600 hover:bg-blue-700' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
             >
-              All
+              All ({(summary?.total_users) || 0})
             </Button>
             <Button
-              variant={filterType === 'seeker' ? 'default' : 'outline'}
-              onClick={() => setFilterType('seeker')}
-              className={filterType === 'seeker' ? 'bg-green-600' : 'border-gray-600 text-gray-300'}
+              variant={activeTab === 'seekers' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('seekers')}
+              className={activeTab === 'seekers' ? 'bg-green-600 hover:bg-green-700' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
             >
-              Seekers
+              Seekers ({filteredSeekers.length})
             </Button>
             <Button
-              variant={filterType === 'owner' ? 'default' : 'outline'}
-              onClick={() => setFilterType('owner')}
-              className={filterType === 'owner' ? 'bg-purple-600' : 'border-gray-600 text-gray-300'}
+              variant={activeTab === 'owners' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('owners')}
+              className={activeTab === 'owners' ? 'bg-purple-600 hover:bg-purple-700' : 'border-gray-600 text-gray-300 hover:bg-gray-800'}
             >
-              Owners
+              Owners ({filteredOwners.length})
             </Button>
           </div>
         </div>
 
-        {/* User List */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+          <div className="flex flex-col items-center justify-center h-64 gap-3">
+            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+            <p className="text-slate-400">Loading users...</p>
           </div>
-        ) : filteredUsers.length === 0 ? (
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="py-12 text-center">
-              <Users className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Users Found</h3>
-              <p className="text-gray-500">
-                {searchTerm ? 'Try a different search term' : 'No users registered yet'}
-              </p>
-            </CardContent>
-          </Card>
         ) : (
-          <div className="space-y-3">
-            {filteredUsers.map((user) => (
-              <Card key={user.id} className="bg-gray-800/50 border-gray-700 hover:border-gray-600 transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-full ${
-                        user.user_type === 'seeker' ? 'bg-green-500/20' : 'bg-purple-500/20'
-                      }`}>
-                        {user.user_type === 'seeker' 
-                          ? <Package className="h-6 w-6 text-green-400" />
-                          : <Building2 className="h-6 w-6 text-purple-400" />
-                        }
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-white">{user.name}</h3>
-                          <Badge className={
-                            user.user_type === 'seeker' 
-                              ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                              : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-                          }>
-                            {user.user_type}
-                          </Badge>
-                          {user.verification_status === 'verified' && (
-                            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                              <Shield className="h-3 w-3 mr-1" />
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                        {user.company_name && (
-                          <p className="text-gray-400 text-sm">{user.company_name}</p>
-                        )}
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {user.email || 'No email'}
-                          </span>
-                          {user.phone && (
-                            <span className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {user.phone}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Joined {formatDate(user.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {user.verification_status === 'verified' ? (
-                        <CheckCircle className="h-5 w-5 text-green-400" />
-                      ) : user.verification_status === 'rejected' ? (
-                        <XCircle className="h-5 w-5 text-red-400" />
-                      ) : (
-                        <div className="h-5 w-5 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                          <div className="h-2 w-2 rounded-full bg-yellow-400" />
-                        </div>
-                      )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-gray-600 text-gray-300"
-                          onClick={() => fetchActivity(user)}
-                        >
-                          View Activity
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deactivateUser(user)}
-                        >
-                          Deactivate
-                        </Button>
-                    </div>
+          <div className="space-y-8">
+
+            {/* Seekers Section */}
+            {(activeTab === 'all' || activeTab === 'seekers') && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Package className="w-4 h-4 text-green-400" />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <h2 className="text-xl font-bold text-white">Space Seekers</h2>
+                  <Badge className="bg-green-900/40 text-green-400 border border-green-700">{filteredSeekers.length}</Badge>
+                </div>
+
+                {filteredSeekers.length === 0 ? (
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardContent className="p-10 text-center">
+                      <Package className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400">No seekers found</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredSeekers.map((seeker, i) => (
+                      <Card key={seeker.id || i} className="bg-gray-800/70 border-gray-700 hover:border-gray-500 transition-all overflow-hidden">
+                        <CardContent className="p-5">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+                            {/* Left: Identity */}
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center shrink-0">
+                                <User className="w-6 h-6 text-green-400" />
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-bold text-white text-base">{seeker.name || 'Unknown'}</h3>
+                                  <Badge className="bg-green-900/40 text-green-400 border border-green-700 text-xs">Seeker</Badge>
+                                  {seeker.verification_status === 'verified' && (
+                                    <Badge className="bg-blue-900/40 text-blue-400 border border-blue-700 text-xs">
+                                      <Shield className="w-3 h-3 mr-1" />Verified
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                                  {seeker.email && (
+                                    <span className="flex items-center gap-1.5">
+                                      <Mail className="w-3.5 h-3.5" />{seeker.email}
+                                    </span>
+                                  )}
+                                  {seeker.phone && (
+                                    <span className="flex items-center gap-1.5">
+                                      <Phone className="w-3.5 h-3.5" />{seeker.phone}
+                                    </span>
+                                  )}
+                                  {seeker.company_name && (
+                                    <span className="flex items-center gap-1.5">
+                                      <Building2 className="w-3.5 h-3.5" />{seeker.company_name}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5" />Joined {fmtDate(seeker.created_at)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right: Stats */}
+                            <div className="flex items-center gap-6 shrink-0">
+                              <div className="text-center">
+                                <p className="text-2xl font-bold text-white">{seeker.total_bookings || 0}</p>
+                                <p className="text-xs text-gray-400">Bookings</p>
+                              </div>
+                              {(seeker.total_spent || 0) > 0 && (
+                                <div className="text-center">
+                                  <p className="text-xl font-bold text-green-400">{fmt(seeker.total_spent)}</p>
+                                  <p className="text-xs text-gray-400">Total Spent</p>
+                                </div>
+                              )}
+                              {seeker.bookings?.length > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setExpandedSeekerId(expandedSeekerId === seeker.id ? null : seeker.id)}
+                                  className="border-green-700/60 text-green-400 hover:bg-green-900/20"
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  {expandedSeekerId === seeker.id ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                                  Bookings
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                        {expandedSeekerId === seeker.id && seeker.bookings?.length > 0 && (
+                          <div className="border-t border-gray-700 bg-slate-900/50 px-5 py-4 space-y-3">
+                            {seeker.bookings.map((booking) => (
+                              <div key={booking.booking_id} className="rounded-xl border border-gray-700 bg-gray-800/70 p-4">
+                                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-white font-semibold">{booking.warehouse_name}</p>
+                                      {getBookingStatusBadge(booking.status)}
+                                      {booking.goods_type && <Badge className="bg-slate-700/60 text-slate-300 border border-slate-600 text-xs">{booking.goods_type}</Badge>}
+                                    </div>
+                                    <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{[booking.warehouse_city, booking.warehouse_state].filter(Boolean).join(', ') || 'Location N/A'}</span>
+                                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{fmtDate(booking.start_date)} - {fmtDate(booking.end_date)}</span>
+                                      <span className="flex items-center gap-1"><Hash className="w-3.5 h-3.5" />{booking.blocks_booked?.length || 0} block{(booking.blocks_booked?.length || 0) !== 1 ? 's' : ''}</span>
+                                      <span>{booking.area_sqft?.toLocaleString()} sqft</span>
+                                      {booking.payment_method && <span className="capitalize">{booking.payment_method}</span>}
+                                    </div>
+                                    {booking.blocks_booked?.length > 0 && (
+                                      <p className="text-xs text-slate-500 font-mono">{booking.blocks_booked.map(block => block.label).join(', ')}</p>
+                                    )}
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <p className="text-lg font-bold text-green-400">{fmt(booking.total_amount)}</p>
+                                    <p className="text-xs text-slate-500">Booked {fmtDate(booking.created_at)}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Owners Section */}
+            {(activeTab === 'all' || activeTab === 'owners') && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white">Warehouse Owners</h2>
+                  <Badge className="bg-purple-900/40 text-purple-400 border border-purple-700">{filteredOwners.length}</Badge>
+                </div>
+
+                {filteredOwners.length === 0 ? (
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardContent className="p-10 text-center">
+                      <Building2 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400">No owners found</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredOwners.map((owner, i) => (
+                      <Card key={owner.id || i} className="bg-gray-800/70 border-gray-700 hover:border-gray-500 transition-all overflow-hidden">
+                        <CardContent className="p-5">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+                            {/* Left: Identity */}
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center shrink-0">
+                                <Building2 className="w-6 h-6 text-purple-400" />
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-bold text-white text-base">{owner.name || 'Unknown'}</h3>
+                                  <Badge className="bg-purple-900/40 text-purple-400 border border-purple-700 text-xs">Owner</Badge>
+                                  {owner.verification_status === 'verified' && (
+                                    <Badge className="bg-blue-900/40 text-blue-400 border border-blue-700 text-xs">
+                                      <Shield className="w-3 h-3 mr-1" />Verified
+                                    </Badge>
+                                  )}
+                                  {owner.company_name && (
+                                    <Badge className="bg-slate-700/60 text-slate-300 border border-slate-600 text-xs">{owner.company_name}</Badge>
+                                  )}
+                                </div>
+                                <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                                  {owner.email && (
+                                    <span className="flex items-center gap-1.5">
+                                      <Mail className="w-3.5 h-3.5" />{owner.email}
+                                    </span>
+                                  )}
+                                  {owner.phone && (
+                                    <span className="flex items-center gap-1.5">
+                                      <Phone className="w-3.5 h-3.5" />{owner.phone}
+                                    </span>
+                                  )}
+                                  {(owner.city || owner.state) && (
+                                    <span className="flex items-center gap-1.5">
+                                      <MapPin className="w-3.5 h-3.5" />{[owner.city, owner.state].filter(Boolean).join(', ')}
+                                    </span>
+                                  )}
+                                  <span className="flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5" />Since {fmtDate(owner.created_at)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right: Warehouse count */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="text-center">
+                                <p className="text-2xl font-bold text-purple-400">{owner.total_warehouses || 0}</p>
+                                <p className="text-xs text-gray-400">Warehouse{(owner.total_warehouses || 0) !== 1 ? 's' : ''}</p>
+                              </div>
+                              {owner.warehouses?.length > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setExpandedOwnerId(expandedOwnerId === owner.id ? null : owner.id)}
+                                  className="border-purple-700/60 text-purple-400 hover:bg-purple-900/20"
+                                >
+                                  <Eye className="w-4 h-4 mr-1" />
+                                  {expandedOwnerId === owner.id ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                                  Warehouses
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                        {expandedOwnerId === owner.id && owner.warehouses?.length > 0 && (
+                          <div className="border-t border-gray-700 bg-slate-900/50 px-5 py-4 space-y-3">
+                            {owner.warehouses.map((warehouse) => (
+                              <div key={warehouse.id} className="rounded-xl border border-gray-700 bg-gray-800/70 p-4">
+                                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-white font-semibold">{warehouse.name}</p>
+                                      {getWarehouseStatusBadge(warehouse.status)}
+                                      {warehouse.warehouse_type && <Badge className="bg-slate-700/60 text-slate-300 border border-slate-600 text-xs">{warehouse.warehouse_type}</Badge>}
+                                      {warehouse.wh_id && <span className="text-xs text-slate-500 font-mono">{warehouse.wh_id}</span>}
+                                    </div>
+                                    <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{[warehouse.city, warehouse.state].filter(Boolean).join(', ') || 'Location N/A'}</span>
+                                      <span className="flex items-center gap-1"><Warehouse className="w-3.5 h-3.5" />{warehouse.total_area?.toLocaleString()} sqft</span>
+                                      <span className="flex items-center gap-1"><IndianRupee className="w-3.5 h-3.5" />{warehouse.price_per_sqft || 0}/sqft</span>
+                                      <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />Listed {fmtDate(warehouse.created_at)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
         )}
       </div>
-
-        {showActivity && selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="w-full max-w-3xl bg-gray-900 border border-gray-700 rounded-xl shadow-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-white">Activity for {selectedUser.name}</h3>
-                  <p className="text-sm text-gray-400">{selectedUser.user_type} • {selectedUser.email}</p>
-                </div>
-                <Button variant="outline" onClick={() => setShowActivity(false)} className="border-gray-600 text-gray-300">
-                  Close
-                </Button>
-              </div>
-
-              {loadingActivity ? (
-                <div className="text-gray-400">Loading activity...</div>
-              ) : activityLogs.length === 0 ? (
-                <div className="text-gray-400">No activity logs found.</div>
-              ) : (
-                <div className="max-h-[60vh] overflow-y-auto space-y-3">
-                  {activityLogs.map((log) => (
-                    <Card key={log.id} className="bg-gray-800/60 border-gray-700">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-white font-medium capitalize">{log.type}</p>
-                            <p className="text-gray-400 text-sm">{log.description}</p>
-                          </div>
-                          <span className="text-xs text-gray-500">{formatDate(log.created_at)}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
     </div>
   );
 }

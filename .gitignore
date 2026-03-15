@@ -41,6 +41,7 @@ Thumbs.db
 .AppleDouble
 .LSOverride
 
-# NOTE: .env files ARE included in this repo for bolt.new compatibility
-# Make sure sensitive keys are for development/demo only
-# !.env files are intentionally tracked
+# Local environment files (never commit secrets)
+.env
+.env.*
+!.env.example

@@ -13,7 +13,7 @@ import { Building2, MapPin, DollarSign, Upload, CheckCircle, AlertCircle, X, Shi
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import Tesseract from 'tesseract.js';
-import usePresignedUpload from '@/hooks/usePresignedUpload';
+import useServerUpload from '@/hooks/useServerUpload';
 import { PricingRecommendationModal } from "@/components/PricingRecommendationModal";
 import { DEFAULT_GOODS_TYPES, GOODS_TYPES_BY_WAREHOUSE, WAREHOUSE_TYPES } from "@/data/warehouseTaxonomy";
 import { getAIResponse } from "@/services/aiService";
@@ -61,7 +61,7 @@ export default function ListProperty() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const { presignAndUpload } = usePresignedUpload();
+  const { uploadFile } = useServerUpload();
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -481,65 +481,82 @@ Tone: Business-friendly, confident, and clear. Avoid exaggerated claims.`;
       if (formData.images.length > 0) {
         for (const img of formData.images) {
           try {
-            const url = await presignAndUpload(img, 'image');
+            const url = await uploadFile(img, 'image');
             if (url) imageUrls.push(url);
           } catch (err) {
-            console.warn('Image upload failed', err);
+            console.warn('⚠️ Image upload failed:', err);
+            // Continue without image - images are optional
           }
         }
       }
 
       if (formData.documents.gstCertificate) {
-        try { documentUrls.gst_certificate = await presignAndUpload(formData.documents.gstCertificate, 'document'); } catch (e) { console.warn(e); }
+        try { 
+          documentUrls.gst_certificate = await uploadFile(formData.documents.gstCertificate, 'document'); 
+        } catch (e) { 
+          console.warn('⚠️ GST certificate upload failed:', e); 
+        }
       }
       if (formData.documents.propertyPapers) {
-        try { documentUrls.property_papers = await presignAndUpload(formData.documents.propertyPapers, 'document'); } catch (e) { console.warn(e); }
+        try { 
+          documentUrls.property_papers = await uploadFile(formData.documents.propertyPapers, 'document'); 
+        } catch (e) { 
+          console.warn('⚠️ Property papers upload failed:', e); 
+        }
       }
       if (formData.documents.fireCertificate) {
-        try { documentUrls.fire_safety = await presignAndUpload(formData.documents.fireCertificate, 'document'); } catch (e) { console.warn(e); }
+        try { 
+          documentUrls.fire_safety = await uploadFile(formData.documents.fireCertificate, 'document'); 
+        } catch (e) { 
+          console.warn('⚠️ Fire certificate upload failed:', e); 
+        }
       }
 
-      // Create warehouse submission in Supabase
-      console.log('📋 Creating warehouse submission in Supabase...');
-      const { data: submission, error: submissionError } = await supabase
-        .from('warehouse_submissions')
-        .insert({
-          owner_id: user.id,
-          name: formData.name,
-          description: formData.description,
-          warehouse_type: formData.warehouseType,
-          allowed_goods_types: formData.allowedGoodsTypes,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-          total_area: parseFloat(formData.totalArea),
-          price_per_sqft: parseFloat(formData.pricePerSqft),
-          amenities: formData.amenities,
-          features: formData.features,
-          image_urls: imageUrls,
-          document_urls: documentUrls,
-          status: 'pending'
-        })
-        .select()
-        .single();
+      // Create warehouse submission via API (uses service role to bypass RLS)
+      console.log('📋 Creating warehouse submission via API...');
+      console.log('Owner ID:', user.id);
+      
+      const submissionData = {
+        owner_id: user.id,
+        name: formData.name,
+        description: formData.description,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        total_area: parseInt(formData.totalArea || '0'),
+        price_per_sqft: parseInt(formData.pricePerSqft || '0'),
+        amenities: formData.amenities || [],
+        features: formData.features || [],
+        images: imageUrls.length > 0 ? imageUrls : [],
+        documents: Object.keys(documentUrls).length > 0 ? documentUrls : {}
+      };
+      
+      console.log('Submission data:', submissionData);
+      
+      const response = await fetch('/api/warehouse-submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData)
+      });
 
-      if (submissionError) {
-        throw submissionError;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `Submission failed with status ${response.status}`);
       }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Submission failed');
+      }
+
+      const submission = result.submission;
 
       console.log('✅ Warehouse submission created:', submission.id);
 
-      // Create notification for admin
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: user.id,
-          title: 'Warehouse Submission Received',
-          message: `Your warehouse "${formData.name}" has been submitted for admin review.`,
-          notification_type: 'verification'
-        });
-
+      // Notification is created server-side automatically
+      
       toast({
         title: "🎉 Property Submitted Successfully!",
         description: `Your warehouse "${formData.name}" has been submitted for admin review. You'll be notified once it's approved.`,

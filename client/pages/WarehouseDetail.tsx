@@ -194,26 +194,47 @@ export default function WarehouseDetail() {
 
   // Generate 3D blocks when warehouse loads
   useEffect(() => {
-    const generateBlocks3D = () => {
+    const generateBlocks3D = async () => {
       if (!warehouse) return;
       
       setLoadingBlocks3D(true);
       
       // Calculate total blocks based on warehouse data
       const totalBlocks = warehouse.total_blocks || Math.ceil(warehouse.total_area / 1000);
-      const availableBlocks = warehouse.available_blocks || Math.ceil(totalBlocks * (1 - (warehouse.occupancy || 0)));
-      const bookedBlocks = totalBlocks - availableBlocks;
-      
       const gridSize = Math.ceil(Math.sqrt(totalBlocks));
+
+      // Fetch actual booked block numbers from approved bookings
+      let realBookedBlockNumbers = new Set<number>();
+      try {
+        const res = await fetch(`/api/bookings/blocks/available?warehouse_id=${warehouse.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.booked_block_numbers)) {
+            realBookedBlockNumbers = new Set<number>(data.booked_block_numbers);
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not fetch real booked blocks, falling back to occupancy estimate', err);
+      }
+
+      // Fallback: if no real data, compute from occupancy field (stored as decimal 0–1)
+      const useFallback = realBookedBlockNumbers.size === 0;
+      const occupancyDecimal = (warehouse.occupancy || 0) > 1 ? (warehouse.occupancy || 0) / 100 : (warehouse.occupancy || 0);
+      const availableBlocks = warehouse.available_blocks ?? Math.ceil(totalBlocks * (1 - occupancyDecimal));
+      const fallbackBookedCount = totalBlocks - availableBlocks;
+      
       const generatedBlocks: Block3D[] = [];
       
       for (let i = 1; i <= totalBlocks; i++) {
         const x = ((i - 1) % gridSize) + 1;
         const y = Math.floor((i - 1) / gridSize) + 1;
         
-        // Mark first N blocks as booked based on occupancy
         let status: 'available' | 'booked' | 'maintenance' = 'available';
-        if (i <= bookedBlocks) {
+        if (realBookedBlockNumbers.has(i)) {
+          // Real data: exact block is booked
+          status = 'booked';
+        } else if (useFallback && i <= fallbackBookedCount) {
+          // Fallback: first N blocks shown as booked based on occupancy
           status = 'booked';
         } else if (Math.random() < 0.05) { // 5% chance of maintenance
           status = 'maintenance';
@@ -225,7 +246,7 @@ export default function WarehouseDetail() {
           position_x: x,
           position_y: y,
           status,
-          booked_by: status === 'booked' ? `Customer ${i}` : undefined,
+          booked_by: status === 'booked' ? (realBookedBlockNumbers.has(i) ? 'Booked' : `Customer ${i}`) : undefined,
           booked_at: status === 'booked' ? new Date().toISOString() : undefined,
           area_sqft: 100, // Each block is 100 sq ft
         });

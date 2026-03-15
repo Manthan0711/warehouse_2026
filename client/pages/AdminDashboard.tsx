@@ -4,6 +4,7 @@ import { supabase } from '../services/supabaseClient';
 import { getPendingVerifications, getAdminNotifications } from '../services/verificationService';
 import { Navbar } from '../components/Navbar';
 import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import { Link } from 'react-router-dom';
 import { isDemoSession } from '../services/demoAuth';
@@ -72,59 +73,45 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
+  const safeNumber = (value: unknown) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+  };
+
+  const fetchAdminJson = async <T,>(path: string, fallback: T): Promise<T> => {
+    const urls = [
+      path,
+      `http://localhost:8080${path}`,
+      `http://localhost:3000${path}`,
+    ];
+
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) continue;
+        const data = await response.json();
+        if (data) return data as T;
+      } catch {
+      }
+    }
+
+    return fallback;
+  };
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      if (isDemoSession()) {
-        const trend: Array<{ label: string; count: number }> = [];
-        for (let i = 5; i >= 0; i--) {
-          const start = new Date();
-          start.setDate(1);
-          start.setMonth(start.getMonth() - i);
-          start.setHours(0, 0, 0, 0);
-          trend.push({
-            label: start.toLocaleDateString('en-IN', { month: 'short' }),
-            count: 0
-          });
-        }
-
-        setBookingTrend(trend);
-        setStats({
-          totalUsers: 0,
-          totalWarehouses: 0,
-          pendingVerifications: 0,
-          pendingWarehouseSubmissions: 0,
-          totalBookings: 0,
-          totalRevenue: 0,
-          seekerCount: 0,
-          ownerCount: 0,
-          pendingBookings: 0,
-          approvedBookings: 0,
-          totalStorageSqft: 0,
-          occupiedStorageSqft: 0,
-          availableStorageSqft: 0
-        });
-        setNotifications([]);
-        setRecentActivities([]);
-        setLoading(false);
-        return;
-      }
-
       // Fetch all data in parallel
       const [
-        seekersData,
-        ownersData,
-        warehousesData,
-        warehouseCapacityData,
+        adminUsersData,
+        adminWarehousesData,
         submissionsData,
         pendingVerifs,
         bookingsData,
         notifsData
       ] = await Promise.all([
-        supabase.from('seeker_profiles').select('*', { count: 'exact' }),
-        supabase.from('owner_profiles').select('*', { count: 'exact' }),
-        supabase.from('warehouses').select('id', { count: 'exact' }),
-        supabase.from('warehouses').select('total_area, occupancy'),
+        fetchAdminJson('/api/admin/users', { success: false, seekers: [], owners: [], summary: {} }),
+        fetchAdminJson('/api/admin/warehouses', { success: false, warehouses: [], summary: {} }),
         supabase.from('warehouse_submissions').select('id', { count: 'exact' }).eq('status', 'pending'),
         getPendingVerifications(),
         // Fetch bookings from activity_logs where type='booking'
@@ -133,24 +120,28 @@ export default function AdminDashboard() {
       ]);
 
       // Calculate stats
-      const seekerCount = seekersData.count || 0;
-      const ownerCount = ownersData.count || 0;
-      const totalUsers = seekerCount + ownerCount;
+      const seekerCount = safeNumber(adminUsersData?.summary?.total_seekers ?? adminUsersData?.seekers?.length);
+      const ownerCount = safeNumber(adminUsersData?.summary?.total_owners ?? adminUsersData?.owners?.length);
+      const totalUsers = safeNumber(adminUsersData?.summary?.total_users ?? (seekerCount + ownerCount));
 
-      const warehouses = warehousesData.count || 0;
+      const warehousesList = Array.isArray(adminWarehousesData?.warehouses) ? adminWarehousesData.warehouses : [];
+      const warehouses = safeNumber(adminWarehousesData?.summary?.total_warehouses ?? warehousesList.length);
 
       const bookings = bookingsData.data || [];
-      const totalBookings = bookings.length;
-      const pendingBookings = bookings.filter((b: any) => b.metadata?.booking_status === 'pending').length;
-      const approvedBookings = bookings.filter((b: any) => b.metadata?.booking_status === 'approved').length;
+      const totalBookings = safeNumber(adminWarehousesData?.summary?.total_bookings ?? bookings.length);
+      const pendingBookings = safeNumber(adminWarehousesData?.summary?.pending_bookings ?? bookings.filter((b: any) => b.metadata?.booking_status === 'pending').length);
+      const approvedBookings = safeNumber(adminWarehousesData?.summary?.approved_bookings ?? bookings.filter((b: any) => b.metadata?.booking_status === 'approved').length);
 
       // Calculate revenue from approved bookings
-      const totalRevenue = bookings.reduce((sum: number, b: any) => {
-        if (b.metadata?.booking_status === 'approved') {
-          return sum + (parseFloat(b.metadata?.total_amount) || 0);
-        }
-        return sum;
-      }, 0);
+      const totalRevenue = safeNumber(
+        adminWarehousesData?.summary?.total_revenue ??
+        bookings.reduce((sum: number, b: any) => {
+          if (b.metadata?.booking_status === 'approved') {
+            return sum + (parseFloat(b.metadata?.total_amount) || 0);
+          }
+          return sum;
+        }, 0)
+      );
 
       // Build booking trend (last 6 months)
       const trend: Array<{ label: string; count: number }> = [];
@@ -173,13 +164,11 @@ export default function AdminDashboard() {
 
       setBookingTrend(trend);
 
-      const capacityRows = warehouseCapacityData.data || [];
-      const totalStorageSqft = capacityRows.reduce((sum: number, w: any) => sum + (Number(w.total_area) || 0), 0);
-      const occupiedStorageSqft = capacityRows.reduce((sum: number, w: any) => {
-        const total = Number(w.total_area) || 0;
-        const occupancy = Number(w.occupancy) || 0;
-        return sum + Math.round(total * occupancy);
-      }, 0);
+      const totalStorageSqft = warehousesList.reduce((sum: number, w: any) => sum + safeNumber(w.total_area), 0);
+      const occupiedStorageSqft = safeNumber(
+        adminWarehousesData?.summary?.occupied_area_sqft ??
+        warehousesList.reduce((sum: number, w: any) => sum + safeNumber(w.occupied_area), 0)
+      );
       const availableStorageSqft = Math.max(0, totalStorageSqft - occupiedStorageSqft);
 
       setStats({
@@ -331,7 +320,7 @@ export default function AdminDashboard() {
 
         {demoMode && (
           <div className="mb-6 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-4 text-sm text-yellow-100">
-            Demo mode is active. Admin analytics are shown as 0 until you create real data (users, submissions, bookings).
+            Demo session is active. Live admin analytics below are loaded from current database data.
           </div>
         )}
 
@@ -398,64 +387,86 @@ export default function AdminDashboard() {
 
         {/* Secondary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="glass-dark rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Total Bookings</p>
-                <p className="text-2xl font-bold text-white">{stats.totalBookings}</p>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Total Bookings</p>
+                  <p className="text-2xl font-bold text-white mt-1">{stats.totalBookings}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-blue-500/15 border border-blue-500/25">
+                  <FileText className="w-6 h-6 text-blue-400" />
+                </div>
               </div>
-              <FileText className="w-8 h-8 text-blue-400" />
-            </div>
-          </div>
-          <div className="glass-dark rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Pending Bookings</p>
-                <p className="text-2xl font-bold text-yellow-400">{stats.pendingBookings}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Pending Bookings</p>
+                  <p className="text-2xl font-bold text-yellow-400 mt-1">{stats.pendingBookings}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-yellow-500/15 border border-yellow-500/25">
+                  <Clock className="w-6 h-6 text-yellow-400" />
+                </div>
               </div>
-              <Clock className="w-8 h-8 text-yellow-400" />
-            </div>
-          </div>
-          <div className="glass-dark rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Approved Bookings</p>
-                <p className="text-2xl font-bold text-green-400">{stats.approvedBookings}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Approved Bookings</p>
+                  <p className="text-2xl font-bold text-green-400 mt-1">{stats.approvedBookings}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-green-500/15 border border-green-500/25">
+                  <CheckCircle className="w-6 h-6 text-green-400" />
+                </div>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-400" />
-            </div>
-          </div>
-          <div className="glass-dark rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Warehouse Submissions</p>
-                <p className="text-2xl font-bold text-blue-400">{stats.pendingWarehouseSubmissions}</p>
-                <Link to="/admin/warehouse-submissions" className="text-xs text-blue-400 hover:text-blue-300">
-                  Review submissions →
-                </Link>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Warehouse Submissions</p>
+                  <p className="text-2xl font-bold text-blue-400 mt-1">{stats.pendingWarehouseSubmissions}</p>
+                  <Link to="/admin/warehouse-submissions" className="text-xs text-blue-400 hover:text-blue-300">
+                    Review submissions →
+                  </Link>
+                </div>
+                <div className="p-2.5 rounded-xl bg-blue-500/15 border border-blue-500/25">
+                  <Warehouse className="w-6 h-6 text-blue-400" />
+                </div>
               </div>
-              <Warehouse className="w-8 h-8 text-blue-400" />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Storage Utilization */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="glass-dark rounded-xl p-6">
-            <h3 className="text-slate-400 text-sm mb-1">Total Storage Capacity</h3>
-            <p className="text-2xl font-bold text-white">{stats.totalStorageSqft.toLocaleString()} sq ft</p>
-          </div>
-          <div className="glass-dark rounded-xl p-6">
-            <h3 className="text-slate-400 text-sm mb-1">Occupied Storage</h3>
-            <p className="text-2xl font-bold text-orange-400">{stats.occupiedStorageSqft.toLocaleString()} sq ft</p>
-            <div className="mt-2">
-              <Progress value={stats.totalStorageSqft ? (stats.occupiedStorageSqft / stats.totalStorageSqft) * 100 : 0} className="h-2" />
-            </div>
-          </div>
-          <div className="glass-dark rounded-xl p-6">
-            <h3 className="text-slate-400 text-sm mb-1">Available Storage</h3>
-            <p className="text-2xl font-bold text-green-400">{stats.availableStorageSqft.toLocaleString()} sq ft</p>
-          </div>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-6">
+              <h3 className="text-slate-400 text-sm mb-1">Total Storage Capacity</h3>
+              <p className="text-2xl font-bold text-white">{stats.totalStorageSqft.toLocaleString()} sq ft</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-6">
+              <h3 className="text-slate-400 text-sm mb-1">Occupied Storage</h3>
+              <p className="text-2xl font-bold text-orange-400">{stats.occupiedStorageSqft.toLocaleString()} sq ft</p>
+              <div className="mt-3">
+                <Progress value={stats.totalStorageSqft ? (stats.occupiedStorageSqft / stats.totalStorageSqft) * 100 : 0} className="h-2.5 bg-slate-800" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-900/55 border border-slate-700/60 backdrop-blur-sm shadow-lg shadow-slate-950/40">
+            <CardContent className="p-6">
+              <h3 className="text-slate-400 text-sm mb-1">Available Storage</h3>
+              <p className="text-2xl font-bold text-green-400">{stats.availableStorageSqft.toLocaleString()} sq ft</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Booking Trend Chart */}

@@ -2,9 +2,10 @@ import { RequestHandler } from "express";
 import { createClient } from '@supabase/supabase-js';
 
 // Create Supabase client inline to avoid module resolution issues in Vite
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('📦 admin-bookings: key role:', supabaseKey.includes('service_role') ? 'service_role ✅' : 'anon ⚠️');
 
 console.log('📦 Admin Bookings module loaded - Supabase URL:', supabaseUrl.substring(0, 30) + '...');
 

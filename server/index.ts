@@ -9,6 +9,7 @@ import debugRouter from "./routes/debug";
 import recommendPriceRouter from "./routes/recommend-price";
 import productPricingRouter from "./routes/product-pricing";
 import citiesRouter from "./routes/cities";
+import { getAdminWarehouses, getAdminUsers } from "./routes/admin-warehouses";
 
 // Create Supabase client directly to avoid module resolution issues
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
@@ -331,6 +332,10 @@ export function createServer() {
   app.get("/api/admin/bookings", getAdminBookings);
   app.post("/api/admin/bookings/status", updateBookingStatus);
   app.get("/api/admin/bookings/stats", getBookingStats);
+
+  // Admin warehouse routes
+  app.get("/api/admin/warehouses", getAdminWarehouses);
+  app.get("/api/admin/users", getAdminUsers);
 
   // Admin warehouse submission routes
   app.get("/api/admin/warehouse-submissions", async (req, res) => {
