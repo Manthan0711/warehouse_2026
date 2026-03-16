@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  Download,
-  Printer,
-  Building,
-  MapPin,
-  Calendar,
-  User,
-  Mail,
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  ArrowLeft, 
+  Download, 
+  Printer, 
+  Building, 
+  MapPin, 
+  Calendar, 
+  User, 
+  Mail, 
   Phone,
   FileText,
   CheckCircle,
   Clock,
-  CreditCard,
-} from "lucide-react";
+  CreditCard
+} from 'lucide-react';
 
 interface InvoiceData {
   invoice_id: string;
@@ -75,15 +75,15 @@ export default function InvoicePage() {
       setLoading(true);
       const response = await fetch(`/api/bookings/invoice/${bookingId}`);
       const data = await response.json();
-
+      
       if (data.success && data.invoice) {
         setInvoice(data.invoice);
       } else {
-        setError("Invoice not found");
+        setError('Invoice not found');
       }
     } catch (err) {
-      setError("Failed to load invoice");
-      console.error("Error fetching invoice:", err);
+      setError('Failed to load invoice');
+      console.error('Error fetching invoice:', err);
     } finally {
       setLoading(false);
     }
@@ -103,12 +103,12 @@ export default function InvoicePage() {
       navigate(-1);
       return;
     }
-    navigate("/admin/bookings");
+    navigate('/admin/bookings');
   };
 
   const handleDownload = () => {
     if (!invoice) return;
-
+    
     const content = `
 INVOICE
 =====================================
@@ -135,13 +135,13 @@ End Date: ${formatDate(invoice.booking.end_date)}
 Duration: ${invoice.booking.duration_days} days
 Area: ${invoice.booking.area_sqft} sq ft
 Type: ${invoice.booking.booking_type}
-Goods: ${invoice.booking.goods_type || "General Goods"}
+Goods: ${invoice.booking.goods_type || 'General Goods'}
 
 PRICING
 -------------------------------------
 Base Amount: ₹${invoice.pricing.base_amount.toLocaleString()}
 Tax (${invoice.pricing.tax_rate}): ₹${invoice.pricing.tax.toLocaleString()}
-Insurance (${invoice.pricing.insurance_rate || "2% Insurance"}): ₹${(invoice.pricing.insurance || 0).toLocaleString()}
+Insurance (${invoice.pricing.insurance_rate || '2% Insurance'}): ₹${(invoice.pricing.insurance || 0).toLocaleString()}
 -------------------------------------
 TOTAL: ₹${invoice.pricing.total_amount.toLocaleString()}
 -------------------------------------
@@ -150,10 +150,10 @@ Payment Method: ${invoice.pricing.payment_method}
 =====================================
 Thank you for choosing SmartSpace!
     `;
-
-    const blob = new Blob([content], { type: "text/plain" });
+    
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `Invoice-${invoice.invoice_id}.txt`;
     a.click();
@@ -161,10 +161,10 @@ Thank you for choosing SmartSpace!
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     });
   };
 
@@ -182,17 +182,9 @@ Thank you for choosing SmartSpace!
         <Card className="bg-gray-800 border-gray-700 max-w-md">
           <CardContent className="p-8 text-center">
             <FileText className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">
-              Invoice Not Found
-            </h2>
-            <p className="text-gray-400 mb-4">
-              {error || "The requested invoice could not be found."}
-            </p>
-            <Button
-              onClick={handleBack}
-              variant="outline"
-              className="border-gray-600"
-            >
+            <h2 className="text-xl font-semibold text-white mb-2">Invoice Not Found</h2>
+            <p className="text-gray-400 mb-4">{error || 'The requested invoice could not be found.'}</p>
+            <Button onClick={handleBack} variant="outline" className="border-gray-600">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Go Back
             </Button>
@@ -235,33 +227,24 @@ Thank you for choosing SmartSpace!
         </div>
 
         {/* Invoice Card */}
-        <Card
-          ref={printRef}
-          className="bg-white text-gray-900 border-0 shadow-2xl print:shadow-none printable"
-        >
+        <Card ref={printRef} className="bg-white text-gray-900 border-0 shadow-2xl print:shadow-none printable">
           {/* Header */}
           <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 print:bg-blue-600">
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold">INVOICE</h1>
-                <p className="text-blue-100 mt-1">
-                  SmartSpace Warehouse Platform
-                </p>
+                <p className="text-blue-100 mt-1">SmartSpace Warehouse Platform</p>
               </div>
               <div className="text-right">
-                <Badge
-                  className={`text-lg px-4 py-1 ${
-                    invoice.status === "paid" ? "bg-green-500" : "bg-yellow-500"
-                  }`}
-                >
-                  {invoice.status === "paid" ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-1" /> PAID
-                    </>
+                <Badge className={`text-lg px-4 py-1 ${
+                  invoice.status === 'paid' 
+                    ? 'bg-green-500' 
+                    : 'bg-yellow-500'
+                }`}>
+                  {invoice.status === 'paid' ? (
+                    <><CheckCircle className="h-4 w-4 mr-1" /> PAID</>
                   ) : (
-                    <>
-                      <Clock className="h-4 w-4 mr-1" /> PENDING
-                    </>
+                    <><Clock className="h-4 w-4 mr-1" /> PENDING</>
                   )}
                 </Badge>
               </div>
@@ -273,15 +256,11 @@ Thank you for choosing SmartSpace!
             <div className="flex justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Invoice Number</p>
-                <p className="font-mono font-bold text-lg">
-                  {invoice.invoice_id}
-                </p>
+                <p className="font-mono font-bold text-lg">{invoice.invoice_id}</p>
               </div>
               <div className="text-right">
                 <p className="text-gray-500 text-sm">Invoice Date</p>
-                <p className="font-semibold">
-                  {formatDate(invoice.invoice_date)}
-                </p>
+                <p className="font-semibold">{formatDate(invoice.invoice_date)}</p>
               </div>
             </div>
 
@@ -314,9 +293,7 @@ Thank you for choosing SmartSpace!
                   <MapPin className="h-3 w-3" />
                   {invoice.warehouse.location}
                 </p>
-                <p className="text-gray-600 text-sm">
-                  {invoice.warehouse.address}
-                </p>
+                <p className="text-gray-600 text-sm">{invoice.warehouse.address}</p>
               </div>
             </div>
 
@@ -332,33 +309,23 @@ Thank you for choosing SmartSpace!
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div>
                     <p className="text-gray-500 text-xs">Start Date</p>
-                    <p className="font-semibold">
-                      {formatDate(invoice.booking.start_date)}
-                    </p>
+                    <p className="font-semibold">{formatDate(invoice.booking.start_date)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">End Date</p>
-                    <p className="font-semibold">
-                      {formatDate(invoice.booking.end_date)}
-                    </p>
+                    <p className="font-semibold">{formatDate(invoice.booking.end_date)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Duration</p>
-                    <p className="font-semibold">
-                      {invoice.booking.duration_days} days
-                    </p>
+                    <p className="font-semibold">{invoice.booking.duration_days} days</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Area</p>
-                    <p className="font-semibold">
-                      {invoice.booking.area_sqft.toLocaleString()} sq ft
-                    </p>
+                    <p className="font-semibold">{invoice.booking.area_sqft.toLocaleString()} sq ft</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Goods Type</p>
-                    <p className="font-semibold">
-                      {invoice.booking.goods_type || "General Goods"}
-                    </p>
+                    <p className="font-semibold">{invoice.booking.goods_type || 'General Goods'}</p>
                   </div>
                 </div>
               </div>
@@ -375,40 +342,25 @@ Thank you for choosing SmartSpace!
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Base Amount</span>
-                  <span className="font-medium">
-                    ₹{invoice.pricing.base_amount.toLocaleString()}
-                  </span>
+                  <span className="font-medium">₹{invoice.pricing.base_amount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Tax ({invoice.pricing.tax_rate})
-                  </span>
-                  <span className="font-medium">
-                    ₹{invoice.pricing.tax.toLocaleString()}
-                  </span>
+                  <span className="text-gray-600">Tax ({invoice.pricing.tax_rate})</span>
+                  <span className="font-medium">₹{invoice.pricing.tax.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Insurance (
-                    {invoice.pricing.insurance_rate || "2% Insurance"})
-                  </span>
-                  <span className="font-medium">
-                    ₹{(invoice.pricing.insurance || 0).toLocaleString()}
-                  </span>
+                  <span className="text-gray-600">Insurance ({invoice.pricing.insurance_rate || '2% Insurance'})</span>
+                  <span className="font-medium">₹{(invoice.pricing.insurance || 0).toLocaleString()}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg">
                   <span className="font-bold">Total Amount</span>
-                  <span className="font-bold text-blue-600">
-                    ₹{invoice.pricing.total_amount.toLocaleString()}
-                  </span>
+                  <span className="font-bold text-blue-600">₹{invoice.pricing.total_amount.toLocaleString()}</span>
                 </div>
               </div>
               <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Payment Method:</span>{" "}
-                  {invoice.pricing.payment_method.charAt(0).toUpperCase() +
-                    invoice.pricing.payment_method.slice(1)}
+                  <span className="font-medium">Payment Method:</span> {invoice.pricing.payment_method.charAt(0).toUpperCase() + invoice.pricing.payment_method.slice(1)}
                 </p>
               </div>
             </div>
@@ -416,9 +368,7 @@ Thank you for choosing SmartSpace!
             {/* Footer */}
             <div className="pt-6 border-t text-center text-gray-500 text-sm">
               <p>Thank you for choosing SmartSpace!</p>
-              <p className="mt-1">
-                For any queries, contact support@smartspace.com
-              </p>
+              <p className="mt-1">For any queries, contact support@smartspace.com</p>
             </div>
           </CardContent>
         </Card>

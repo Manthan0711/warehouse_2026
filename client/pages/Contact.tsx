@@ -2,20 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Phone, Send, User } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
@@ -27,7 +15,7 @@ export default function Contact() {
     company: "",
     subject: "",
     message: "",
-    inquiryType: "",
+    inquiryType: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,7 +26,7 @@ export default function Contact() {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const contactInfo = [
@@ -46,20 +34,20 @@ export default function Contact() {
       title: "Contact Name",
       content: "Dipesh Sharma",
       subContent: "Primary point of contact",
-      icon: User,
+      icon: User
     },
     {
       title: "Email",
       content: "dipeshsharma34@apsit.edu.in",
       subContent: "We’ll respond within 24 hours",
-      icon: Mail,
+      icon: Mail
     },
     {
       title: "Phone",
       content: "+91 83695 98050",
       subContent: "Mon–Sat, 9:00 AM – 7:00 PM IST",
-      icon: Phone,
-    },
+      icon: Phone
+    }
   ];
 
   return (
@@ -75,8 +63,7 @@ export default function Contact() {
               <span className="block text-blue-400">Touch</span>
             </h1>
             <p className="text-xl text-slate-200 leading-relaxed">
-              Need help finding the perfect warehouse space? Reach out and we’ll
-              get back to you as soon as possible.
+              Need help finding the perfect warehouse space? Reach out and we’ll get back to you as soon as possible.
             </p>
           </div>
         </div>
@@ -87,14 +74,9 @@ export default function Contact() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-6">
             {contactInfo.map((info, index) => (
-              <Card
-                key={index}
-                className="text-center p-6 border border-slate-800 bg-slate-900/70"
-              >
+              <Card key={index} className="text-center p-6 border border-slate-800 bg-slate-900/70">
                 <info.icon className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-                <CardTitle className="text-lg mb-2 text-white">
-                  {info.title}
-                </CardTitle>
+                <CardTitle className="text-lg mb-2 text-white">{info.title}</CardTitle>
                 <CardDescription className="text-base font-medium text-white mb-1">
                   {info.content}
                 </CardDescription>
@@ -129,9 +111,7 @@ export default function Contact() {
                     <Input
                       type="text"
                       value={formData.name}
-                      onChange={(e) =>
-                        handleInputChange("name", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("name", e.target.value)}
                       placeholder="Your full name"
                       required
                     />
@@ -143,9 +123,7 @@ export default function Contact() {
                     <Input
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("email", e.target.value)}
                       placeholder="your.email@company.com"
                       required
                     />
@@ -160,9 +138,7 @@ export default function Contact() {
                     <Input
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
                       placeholder="+91 98765 43210"
                     />
                   </div>
@@ -173,9 +149,7 @@ export default function Contact() {
                     <Input
                       type="text"
                       value={formData.company}
-                      onChange={(e) =>
-                        handleInputChange("company", e.target.value)
-                      }
+                      onChange={(e) => handleInputChange("company", e.target.value)}
                       placeholder="Your company name"
                     />
                   </div>
@@ -185,25 +159,14 @@ export default function Contact() {
                   <label className="block text-sm font-medium text-slate-200 mb-2">
                     Inquiry Type *
                   </label>
-                  <Select
-                    value={formData.inquiryType}
-                    onValueChange={(value) =>
-                      handleInputChange("inquiryType", value)
-                    }
-                  >
+                  <Select value={formData.inquiryType} onValueChange={(value) => handleInputChange("inquiryType", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select inquiry type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="find-warehouse">
-                        Looking for Warehouse Space
-                      </SelectItem>
-                      <SelectItem value="list-property">
-                        Want to List My Property
-                      </SelectItem>
-                      <SelectItem value="partnership">
-                        Partnership Opportunities
-                      </SelectItem>
+                      <SelectItem value="find-warehouse">Looking for Warehouse Space</SelectItem>
+                      <SelectItem value="list-property">Want to List My Property</SelectItem>
+                      <SelectItem value="partnership">Partnership Opportunities</SelectItem>
                       <SelectItem value="support">Technical Support</SelectItem>
                       <SelectItem value="media">Media & Press</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
@@ -218,9 +181,7 @@ export default function Contact() {
                   <Input
                     type="text"
                     value={formData.subject}
-                    onChange={(e) =>
-                      handleInputChange("subject", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("subject", e.target.value)}
                     placeholder="Brief subject of your inquiry"
                     required
                   />
@@ -232,9 +193,7 @@ export default function Contact() {
                   </label>
                   <Textarea
                     value={formData.message}
-                    onChange={(e) =>
-                      handleInputChange("message", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("message", e.target.value)}
                     placeholder="Tell us more about your requirements or inquiry..."
                     rows={6}
                     required
@@ -250,9 +209,7 @@ export default function Contact() {
             <div className="space-y-6">
               <Card className="p-6 border border-slate-800 bg-slate-900/70">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-xl text-blue-400">
-                    Primary Contact
-                  </CardTitle>
+                  <CardTitle className="text-xl text-blue-400">Primary Contact</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-slate-200">
                   <div className="flex items-center space-x-3">
@@ -271,9 +228,7 @@ export default function Contact() {
               </Card>
               <Card className="p-6 border border-slate-800 bg-slate-900/70">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-xl text-blue-400">
-                    Response Time
-                  </CardTitle>
+                  <CardTitle className="text-xl text-blue-400">Response Time</CardTitle>
                 </CardHeader>
                 <CardContent className="text-slate-200">
                   We typically respond within 24 hours for all inquiries.

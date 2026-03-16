@@ -23,6 +23,16 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./client"),
       "@shared": path.resolve(__dirname, "./shared"),
     },
+    // Force single copy of React to fix "Invalid hook call" error
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', ' react-router-dom'],
+    exclude: ['react-three-fiber', '@react-three/fiber', '@react-three/drei'],
+    // Force Vite to optimize these together
+    esbuildOptions: {
+      target: 'esnext',
+    },
   },
 }));
 

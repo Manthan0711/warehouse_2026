@@ -1,5 +1,5 @@
 // Re-export the single Supabase client instance to avoid duplicate GoTrue clients
-export { supabase } from "../services/supabaseClient";
+export { supabase } from '../services/supabaseClient';
 
 // Database types
 export interface Database {
@@ -12,7 +12,7 @@ export interface Database {
           name: string;
           phone: string;
           company: string;
-          user_type: "owner" | "seeker" | "admin";
+          user_type: 'owner' | 'seeker' | 'admin';
           created_at: string;
           updated_at: string;
         };
@@ -22,7 +22,7 @@ export interface Database {
           name: string;
           phone: string;
           company: string;
-          user_type: "owner" | "seeker" | "admin";
+          user_type: 'owner' | 'seeker' | 'admin';
           created_at?: string;
           updated_at?: string;
         };
@@ -32,7 +32,7 @@ export interface Database {
           name?: string;
           phone?: string;
           company?: string;
-          user_type?: "owner" | "seeker" | "admin";
+          user_type?: 'owner' | 'seeker' | 'admin';
           updated_at?: string;
         };
       };
@@ -123,12 +123,7 @@ export interface Database {
           end_date: string;
           area_booked_sqft: number;
           total_cost: number;
-          status:
-            | "pending"
-            | "confirmed"
-            | "active"
-            | "completed"
-            | "cancelled";
+          status: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
           created_at: string;
           updated_at: string;
         };
@@ -140,12 +135,7 @@ export interface Database {
           end_date: string;
           area_booked_sqft: number;
           total_cost: number;
-          status?:
-            | "pending"
-            | "confirmed"
-            | "active"
-            | "completed"
-            | "cancelled";
+          status?: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
           created_at?: string;
           updated_at?: string;
         };
@@ -156,12 +146,7 @@ export interface Database {
           end_date?: string;
           area_booked_sqft?: number;
           total_cost?: number;
-          status?:
-            | "pending"
-            | "confirmed"
-            | "active"
-            | "completed"
-            | "cancelled";
+          status?: 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
           updated_at?: string;
         };
       };
@@ -172,7 +157,7 @@ export interface Database {
           seeker_id: string;
           message: string;
           area_required: number;
-          status: "new" | "responded" | "closed";
+          status: 'new' | 'responded' | 'closed';
           created_at: string;
           updated_at: string;
         };
@@ -182,7 +167,7 @@ export interface Database {
           seeker_id: string;
           message: string;
           area_required: number;
-          status?: "new" | "responded" | "closed";
+          status?: 'new' | 'responded' | 'closed';
           created_at?: string;
           updated_at?: string;
         };
@@ -191,7 +176,7 @@ export interface Database {
           seeker_id?: string;
           message?: string;
           area_required?: number;
-          status?: "new" | "responded" | "closed";
+          status?: 'new' | 'responded' | 'closed';
           updated_at?: string;
         };
       };
@@ -199,9 +184,6 @@ export interface Database {
   };
 }
 
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
-export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Insert"];
-export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Update"];
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type TablesInsert<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
+export type TablesUpdate<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];

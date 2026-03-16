@@ -13,19 +13,17 @@ import {
   InquiryRequest,
   InquiryResponse,
   SeekerInquiriesResponse,
-  ActivityStatsResponse,
-} from "@shared/api";
+  ActivityStatsResponse
+} from '@shared/api';
 
-const API_BASE = "";
+const API_BASE = '';
 
 export class SavedWarehouseService {
-  async toggleSaved(
-    request: SavedWarehouseRequest,
-  ): Promise<SavedWarehouseResponse> {
+  async toggleSaved(request: SavedWarehouseRequest): Promise<SavedWarehouseResponse> {
     const response = await fetch(`${API_BASE}/api/saved/toggle`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
     });
@@ -38,7 +36,7 @@ export class SavedWarehouseService {
   }
 
   async getSavedWarehouses(
-    seekerId: string,
+    seekerId: string, 
     filters?: {
       city?: string;
       price_range?: string;
@@ -46,7 +44,7 @@ export class SavedWarehouseService {
       sort_order?: string;
       limit?: number;
       offset?: number;
-    },
+    }
   ): Promise<SavedWarehousesResponse> {
     const params = new URLSearchParams();
     if (filters) {
@@ -57,7 +55,7 @@ export class SavedWarehouseService {
       });
     }
 
-    const url = `${API_BASE}/api/saved/${seekerId}${params.toString() ? "?" + params.toString() : ""}`;
+    const url = `${API_BASE}/api/saved/${seekerId}${params.toString() ? '?' + params.toString() : ''}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -67,13 +65,8 @@ export class SavedWarehouseService {
     return response.json();
   }
 
-  async checkSavedStatus(
-    seekerId: string,
-    warehouseId: string,
-  ): Promise<SavedStatusResponse> {
-    const response = await fetch(
-      `${API_BASE}/api/saved/${seekerId}/status/${warehouseId}`,
-    );
+  async checkSavedStatus(seekerId: string, warehouseId: string): Promise<SavedStatusResponse> {
+    const response = await fetch(`${API_BASE}/api/saved/${seekerId}/status/${warehouseId}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -86,9 +79,9 @@ export class SavedWarehouseService {
 export class ActivityService {
   async logActivity(request: ActivityLogRequest): Promise<void> {
     const response = await fetch(`${API_BASE}/api/activity/log`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
     });
@@ -104,7 +97,7 @@ export class ActivityService {
       type?: string;
       limit?: number;
       offset?: number;
-    },
+    }
   ): Promise<ActivityTimelineResponse> {
     const params = new URLSearchParams();
     if (filters) {
@@ -115,7 +108,7 @@ export class ActivityService {
       });
     }
 
-    const url = `${API_BASE}/api/activity/${seekerId}${params.toString() ? "?" + params.toString() : ""}`;
+    const url = `${API_BASE}/api/activity/${seekerId}${params.toString() ? '?' + params.toString() : ''}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -137,9 +130,9 @@ export class ActivityService {
 
   async sendInquiry(request: InquiryRequest): Promise<InquiryResponse> {
     const response = await fetch(`${API_BASE}/api/inquiries/send`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
     });
@@ -157,7 +150,7 @@ export class ActivityService {
       status?: string;
       limit?: number;
       offset?: number;
-    },
+    }
   ): Promise<SeekerInquiriesResponse> {
     const params = new URLSearchParams();
     if (filters) {
@@ -168,7 +161,7 @@ export class ActivityService {
       });
     }
 
-    const url = `${API_BASE}/api/inquiries/${seekerId}${params.toString() ? "?" + params.toString() : ""}`;
+    const url = `${API_BASE}/api/inquiries/${seekerId}${params.toString() ? '?' + params.toString() : ''}`;
     const response = await fetch(url);
 
     if (!response.ok) {

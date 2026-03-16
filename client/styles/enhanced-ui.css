@@ -272,11 +272,7 @@
 
 /* Main Glass Container */
 .glass-dark {
-  background: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.8) 0%,
-    rgba(30, 41, 59, 0.7) 100%
-  );
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.7) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(148, 163, 184, 0.1);
@@ -293,11 +289,7 @@
 
 /* ML Stats Cards - Premium Dark Style */
 .ml-stats-card {
-  background: linear-gradient(
-    145deg,
-    rgba(30, 41, 59, 0.9),
-    rgba(15, 23, 42, 0.95)
-  );
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
   border: 1px solid rgba(99, 102, 241, 0.15);
   border-radius: 16px;
   box-shadow:
@@ -309,19 +301,17 @@
 }
 
 .ml-stats-card::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(99, 102, 241, 0.5),
-    rgba(139, 92, 246, 0.5),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(99, 102, 241, 0.5),
+      rgba(139, 92, 246, 0.5),
+      transparent);
 }
 
 .ml-stats-card:hover {
@@ -363,6 +353,7 @@
 }
 
 @keyframes gradient-shift {
+
   0%,
   100% {
     filter: hue-rotate(0deg);
@@ -375,11 +366,7 @@
 
 /* Premium Badges */
 .badge-premium {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.2),
-    rgba(139, 92, 246, 0.15)
-  );
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
   border: 1px solid rgba(99, 102, 241, 0.3);
   color: #c7d2fe;
   padding: 6px 12px;
@@ -391,62 +378,38 @@
 }
 
 .badge-premium:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.3),
-    rgba(139, 92, 246, 0.25)
-  );
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.25));
   border-color: rgba(99, 102, 241, 0.5);
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
 }
 
 .badge-location {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.25),
-    rgba(37, 99, 235, 0.2)
-  );
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.2));
   border: 1px solid rgba(59, 130, 246, 0.4);
   color: #93c5fd;
 }
 
 .badge-price {
-  background: linear-gradient(
-    135deg,
-    rgba(34, 197, 94, 0.25),
-    rgba(22, 163, 74, 0.2)
-  );
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(22, 163, 74, 0.2));
   border: 1px solid rgba(34, 197, 94, 0.4);
   color: #86efac;
 }
 
 .badge-area {
-  background: linear-gradient(
-    135deg,
-    rgba(249, 115, 22, 0.25),
-    rgba(234, 88, 12, 0.2)
-  );
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(234, 88, 12, 0.2));
   border: 1px solid rgba(249, 115, 22, 0.4);
   color: #fdba74;
 }
 
 .badge-type {
-  background: linear-gradient(
-    135deg,
-    rgba(168, 85, 247, 0.25),
-    rgba(147, 51, 234, 0.2)
-  );
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(147, 51, 234, 0.2));
   border: 1px solid rgba(168, 85, 247, 0.4);
   color: #d8b4fe;
 }
 
 /* Premium Tabs */
 .tabs-glass {
-  background: linear-gradient(
-    135deg,
-    rgba(30, 41, 59, 0.9),
-    rgba(15, 23, 42, 0.95)
-  );
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
   border: 1px solid rgba(71, 85, 105, 0.3);
   border-radius: 12px;
   padding: 6px;
@@ -466,22 +429,14 @@
 }
 
 .tab-item-glass[data-state="active"] {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.2),
-    rgba(139, 92, 246, 0.15)
-  );
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
   color: #ffffff;
   box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
 }
 
 /* Premium Buttons */
 .btn-glass {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.15),
-    rgba(139, 92, 246, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
   border: 1px solid rgba(99, 102, 241, 0.35);
   color: #e2e8f0;
   border-radius: 10px;
@@ -492,11 +447,7 @@
 }
 
 .btn-glass:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.25),
-    rgba(139, 92, 246, 0.2)
-  );
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
   border-color: rgba(99, 102, 241, 0.5);
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
   transform: translateY(-1px);
@@ -516,17 +467,14 @@
 
 /* Animated Glow Effects */
 @keyframes glow-pulse {
+
   0%,
   100% {
-    box-shadow:
-      0 0 5px rgba(99, 102, 241, 0.3),
-      0 0 10px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.3), 0 0 10px rgba(99, 102, 241, 0.2);
   }
 
   50% {
-    box-shadow:
-      0 0 15px rgba(99, 102, 241, 0.5),
-      0 0 30px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.3);
   }
 }
 
@@ -549,11 +497,7 @@
 
 /* Active Preferences Card Redesign */
 .preferences-card-dark {
-  background: linear-gradient(
-    145deg,
-    rgba(30, 41, 59, 0.95),
-    rgba(15, 23, 42, 0.98)
-  );
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
   border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 14px;
   box-shadow:
@@ -585,18 +529,10 @@
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    180deg,
-    rgba(99, 102, 241, 0.4),
-    rgba(139, 92, 246, 0.3)
-  );
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.3));
   border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(99, 102, 241, 0.6),
-    rgba(139, 92, 246, 0.5)
-  );
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.5));
 }

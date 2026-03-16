@@ -1,7 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
-import { join } from "path";
-import * as dotenv from "dotenv";
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -9,12 +9,9 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("❌ Missing Supabase credentials");
-  console.error("   VITE_SUPABASE_URL:", supabaseUrl ? "✓" : "✗");
-  console.error(
-    "   SUPABASE_SERVICE_ROLE_KEY:",
-    supabaseServiceKey ? "✓" : "✗",
-  );
+  console.error('❌ Missing Supabase credentials');
+  console.error('   VITE_SUPABASE_URL:', supabaseUrl ? '✓' : '✗');
+  console.error('   SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? '✓' : '✗');
   process.exit(1);
 }
 
@@ -22,8 +19,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false,
-  },
+    persistSession: false
+  }
 });
 
 interface WarehouseRow {
@@ -62,14 +59,14 @@ interface WarehouseRow {
 }
 
 function parseSQLValue(value: string): any {
-  if (value === "NULL") return null;
+  if (value === 'NULL') return null;
   if (value.startsWith("'") && value.endsWith("'")) {
     return value.slice(1, -1).replace(/''/g, "'");
   }
-  if (value.startsWith("ARRAY[")) {
+  if (value.startsWith('ARRAY[')) {
     const content = value.slice(6, -1);
     if (!content) return [];
-    return content.split(",").map((v) => {
+    return content.split(',').map(v => {
       const trimmed = v.trim();
       if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
         return trimmed.slice(1, -1).replace(/''/g, "'");
@@ -84,7 +81,7 @@ function parseWarehouseRow(rowText: string): WarehouseRow | null {
   try {
     // Remove leading/trailing parentheses and split by commas (respecting nested arrays)
     const cleaned = rowText.trim();
-    if (!cleaned.startsWith("(") || !cleaned.endsWith(")")) {
+    if (!cleaned.startsWith('(') || !cleaned.endsWith(')')) {
       return null;
     }
 
@@ -92,7 +89,7 @@ function parseWarehouseRow(rowText: string): WarehouseRow | null {
 
     // Simple regex-based parser for SQL INSERT values
     const values: string[] = [];
-    let current = "";
+    let current = '';
     let inQuote = false;
     let inArray = 0;
 
@@ -100,7 +97,7 @@ function parseWarehouseRow(rowText: string): WarehouseRow | null {
       const char = content[i];
       const nextChar = content[i + 1];
 
-      if (char === "'" && content[i - 1] !== "\\") {
+      if (char === "'" && content[i - 1] !== '\\') {
         if (inQuote && nextChar === "'") {
           current += "''";
           i++;
@@ -108,15 +105,15 @@ function parseWarehouseRow(rowText: string): WarehouseRow | null {
           inQuote = !inQuote;
           current += char;
         }
-      } else if (char === "[" && !inQuote) {
+      } else if (char === '[' && !inQuote) {
         inArray++;
         current += char;
-      } else if (char === "]" && !inQuote) {
+      } else if (char === ']' && !inQuote) {
         inArray--;
         current += char;
-      } else if (char === "," && !inQuote && inArray === 0) {
+      } else if (char === ',' && !inQuote && inArray === 0) {
         values.push(current.trim());
-        current = "";
+        current = '';
       } else {
         current += char;
       }
@@ -127,7 +124,7 @@ function parseWarehouseRow(rowText: string): WarehouseRow | null {
     }
 
     if (values.length < 33) {
-      console.error("⚠️  Row has insufficient fields:", values.length);
+      console.error('⚠️  Row has insufficient fields:', values.length);
       return null;
     }
 
@@ -166,35 +163,36 @@ function parseWarehouseRow(rowText: string): WarehouseRow | null {
       grid_cols: parseInt(parseSQLValue(values[31])),
     };
   } catch (error) {
-    console.error("❌ Error parsing row:", error);
+    console.error('❌ Error parsing row:', error);
     return null;
   }
 }
 
 async function ensureTableExists() {
-  console.log("🔍 Checking if warehouses table exists...");
+  console.log('🔍 Checking if warehouses table exists...');
 
-  const { error } = await supabase.from("warehouses").select("id").limit(1);
+  const { error } = await supabase
+    .from('warehouses')
+    .select('id')
+    .limit(1);
 
   if (error) {
-    if (error.message.includes("does not exist")) {
+    if (error.message.includes('does not exist')) {
       console.error('\n❌ Table "warehouses" does not exist!');
-      console.error("📝 Please run the migration first:");
-      console.error(
-        "   File: supabase/migrations/20251002100000_create_warehouses_full.sql\n",
-      );
+      console.error('📝 Please run the migration first:');
+      console.error('   File: supabase/migrations/20251002100000_create_warehouses_full.sql\n');
       return false;
     }
   }
 
-  console.log("✅ Table exists");
+  console.log('✅ Table exists');
   return true;
 }
 
 async function importWarehouses() {
-  console.log("╔════════════════════════════════════════════════════╗");
-  console.log("║   WAREHOUSE IMPORT - 10,000 WAREHOUSES            ║");
-  console.log("╚════════════════════════════════════════════════════╝\n");
+  console.log('╔════════════════════════════════════════════════════╗');
+  console.log('║   WAREHOUSE IMPORT - 10,000 WAREHOUSES            ║');
+  console.log('╚════════════════════════════════════════════════════╝\n');
 
   // Check table exists
   const tableExists = await ensureTableExists();
@@ -203,18 +201,18 @@ async function importWarehouses() {
   }
 
   // Read SQL file
-  const sqlPath = join(process.cwd(), "scripts", "direct-import.sql");
-  console.log("📂 Reading SQL file:", sqlPath);
+  const sqlPath = join(process.cwd(), 'scripts', 'direct-import.sql');
+  console.log('📂 Reading SQL file:', sqlPath);
 
-  const sqlContent = readFileSync(sqlPath, "utf-8");
+  const sqlContent = readFileSync(sqlPath, 'utf-8');
 
   // Extract all value rows
-  console.log("🔍 Parsing SQL file...");
+  console.log('🔍 Parsing SQL file...');
   const valuePattern = /\('LIC\d+',[\s\S]*?\)(?=,\n|;\n|\nON)/g;
   const matches = sqlContent.match(valuePattern);
 
   if (!matches) {
-    console.error("❌ No warehouse data found in SQL file");
+    console.error('❌ No warehouse data found in SQL file');
     process.exit(1);
   }
 
@@ -248,15 +246,15 @@ async function importWarehouses() {
     const batchNum = Math.floor(i / batchSize) + 1;
     const totalBatches = Math.ceil(warehouses.length / batchSize);
 
-    process.stdout.write(
-      `📤 Batch ${batchNum}/${totalBatches} (${batch.length} warehouses)... `,
-    );
+    process.stdout.write(`📤 Batch ${batchNum}/${totalBatches} (${batch.length} warehouses)... `);
 
     try {
-      const { error } = await supabase.from("warehouses").upsert(batch, {
-        onConflict: "wh_id",
-        ignoreDuplicates: false,
-      });
+      const { error } = await supabase
+        .from('warehouses')
+        .upsert(batch, {
+          onConflict: 'wh_id',
+          ignoreDuplicates: false
+        });
 
       if (error) {
         console.log(`❌ FAILED`);
@@ -273,38 +271,34 @@ async function importWarehouses() {
     }
 
     // Progress
-    const progress = (((i + batch.length) / warehouses.length) * 100).toFixed(
-      1,
-    );
-    console.log(
-      `   Progress: ${progress}% | ✅ ${imported} imported | ❌ ${failed} failed\n`,
-    );
+    const progress = ((i + batch.length) / warehouses.length * 100).toFixed(1);
+    console.log(`   Progress: ${progress}% | ✅ ${imported} imported | ❌ ${failed} failed\n`);
   }
 
-  console.log("╔════════════════════════════════════════════════════╗");
-  console.log("║   IMPORT COMPLETE                                  ║");
-  console.log("╚════════════════════════════════════════════════════╝\n");
+  console.log('╔════════════════════════════════════════════════════╗');
+  console.log('║   IMPORT COMPLETE                                  ║');
+  console.log('╚════════════════════════════════════════════════════╝\n');
   console.log(`✅ Successfully imported: ${imported} warehouses`);
   console.log(`❌ Failed: ${failed} warehouses\n`);
 
   // Verify
-  console.log("🔍 Verifying database...");
+  console.log('🔍 Verifying database...');
   const { count, error } = await supabase
-    .from("warehouses")
-    .select("*", { count: "exact", head: true });
+    .from('warehouses')
+    .select('*', { count: 'exact', head: true });
 
   if (error) {
-    console.error("❌ Error verifying:", error.message);
+    console.error('❌ Error verifying:', error.message);
   } else {
     console.log(`📊 Total warehouses in database: ${count}\n`);
   }
 
-  console.log("✨ All done! Refresh your app to see the data.\n");
+  console.log('✨ All done! Refresh your app to see the data.\n');
 }
 
 importWarehouses()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("\n💥 Fatal error:", error);
+    console.error('\n💥 Fatal error:', error);
     process.exit(1);
   });

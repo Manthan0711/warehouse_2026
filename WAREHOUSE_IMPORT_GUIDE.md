@@ -3,7 +3,6 @@
 ## 📊 WHAT YOU HAVE
 
 Your project contains **10,000 warehouses** ready to import:
-
 - File: `scripts/direct-import.sql`
 - Size: 6.7 MB
 - Warehouses: 10,000 (LIC000001 to LIC010000)
@@ -14,7 +13,6 @@ Your project contains **10,000 warehouses** ready to import:
 ## ⚠️ IMPORTANT: SUPABASE LIMITS
 
 Supabase SQL Editor has limits:
-
 - **Query timeout:** ~60 seconds
 - **Max query size:** ~2 MB per query
 - **Total file size:** 6.7 MB is TOO LARGE for one query
@@ -128,7 +126,6 @@ I'll create split files for you:
 Let me create a Node.js script that will import all 10,000 warehouses using the Supabase JavaScript client in batches of 100.
 
 **Advantages:**
-
 - ✅ Handles large datasets
 - ✅ Automatic retry on errors
 - ✅ Progress tracking
@@ -170,7 +167,6 @@ Given the size (10,000 warehouses), here's what I recommend:
 ### **OPTION B: Import All 10,000 via Script**
 
 I'll create a Node.js script that:
-
 1. Parses the SQL file
 2. Extracts warehouse data
 3. Imports via Supabase API in batches of 100
@@ -192,17 +188,14 @@ This will be small enough (~670 KB) to paste in Supabase SQL Editor.
 ## 🤔 WHICH METHOD SHOULD YOU USE?
 
 ### **If you want ALL 10,000 warehouses:**
-
 - ✅ Use METHOD 3 (API script) - I'll create this for you
 - Takes 5-10 minutes, fully automated
 
 ### **If you want to test first:**
-
 - ✅ Import 100 or 1,000 first using SQL Editor
 - Then decide if you want all 10,000
 
 ### **If you're okay with manual work:**
-
 - ✅ Split the file into 20 parts
 - Run each part manually (20 times)
 - Takes ~30-60 minutes
@@ -214,7 +207,6 @@ This will be small enough (~670 KB) to paste in Supabase SQL Editor.
 **Let me create an automated import script for you!**
 
 It will:
-
 1. Read `scripts/direct-import.sql`
 2. Parse all 10,000 warehouses
 3. Import to Supabase in batches of 100
@@ -223,7 +215,6 @@ It will:
 6. Handle errors automatically
 
 **Would you like me to:**
-
 - A) Create the automated import script ⭐ RECOMMENDED
 - B) Create a file with first 1,000 warehouses for quick SQL import
 - C) Split the file into 10 smaller SQL files you can run manually

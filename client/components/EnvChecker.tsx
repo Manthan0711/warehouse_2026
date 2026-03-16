@@ -1,17 +1,10 @@
-import { useState } from "react";
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Loader2,
-  Check,
-  X,
-  Info,
-  AlertTriangle,
-  Database,
-  Network,
-  Bot,
+  Loader2, Check, X, Info, AlertTriangle, Database, Network, Bot
 } from "lucide-react";
-import { supabase } from "../services/supabaseClient";
+import { supabase } from '../services/supabaseClient';
 
 export default function EnvChecker() {
   const [checking, setChecking] = useState(false);
@@ -24,7 +17,7 @@ export default function EnvChecker() {
     envVars?: Record<string, string>;
   }>({
     supabase: false,
-    api: false,
+    api: false
   });
 
   const runDiagnostics = async () => {
@@ -32,39 +25,35 @@ export default function EnvChecker() {
     const diagnosticResults = {
       supabase: false,
       api: false,
-      supabaseError: "",
-      apiError: "",
-      supabaseUrl: "",
-      envVars: {},
+      supabaseError: '',
+      apiError: '',
+      supabaseUrl: '',
+      envVars: {}
     };
 
     // Check environment variables
     try {
       // Get all VITE_ env vars (these are safe to expose)
       const envVars: Record<string, string> = {};
-      Object.keys(import.meta.env).forEach((key) => {
-        if (key.startsWith("VITE_")) {
+      Object.keys(import.meta.env).forEach(key => {
+        if (key.startsWith('VITE_')) {
           envVars[key] = import.meta.env[key];
         }
       });
       diagnosticResults.envVars = envVars;
     } catch (error) {
-      console.error("Error checking env vars:", error);
+      console.error('Error checking env vars:', error);
     }
 
     // Check Supabase connection
     try {
       // Just use the URL from env or hardcoded value
       try {
-        diagnosticResults.supabaseUrl =
-          import.meta.env?.VITE_SUPABASE_URL || "Using fallback URL";
+        diagnosticResults.supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || 'Using fallback URL';
       } catch {
-        diagnosticResults.supabaseUrl = "Using fallback URL";
+        diagnosticResults.supabaseUrl = 'Using fallback URL';
       }
-      const { data, error } = await supabase
-        .from("warehouses")
-        .select("id")
-        .limit(1);
+      const { data, error } = await supabase.from('warehouses').select('id').limit(1);
 
       if (error) {
         throw error;
@@ -72,21 +61,20 @@ export default function EnvChecker() {
 
       diagnosticResults.supabase = true;
     } catch (error: any) {
-      diagnosticResults.supabaseError =
-        error.message || "Unknown error connecting to Supabase";
-      console.error("Supabase connection error:", error);
+      diagnosticResults.supabaseError = error.message || 'Unknown error connecting to Supabase';
+      console.error('Supabase connection error:', error);
     }
 
     // Check API endpoint
     try {
-      const response = await fetch("/api/recommend", {
-        method: "POST",
+      const response = await fetch('/api/recommend', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           preferences: { preferVerified: true },
-          limit: 1,
+          limit: 1
         }),
       });
 
@@ -97,9 +85,8 @@ export default function EnvChecker() {
       const data = await response.json();
       diagnosticResults.api = Array.isArray(data?.items);
     } catch (error: any) {
-      diagnosticResults.apiError =
-        error.message || "Unknown error connecting to API";
-      console.error("API connection error:", error);
+      diagnosticResults.apiError = error.message || 'Unknown error connecting to API';
+      console.error('API connection error:', error);
     }
 
     setResults(diagnosticResults);
@@ -136,9 +123,7 @@ export default function EnvChecker() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <Database className="h-4 w-4 mr-2 text-blue-400" />
-                      <span className="font-medium text-slate-200">
-                        Supabase Connection
-                      </span>
+                      <span className="font-medium text-slate-200">Supabase Connection</span>
                     </div>
                     {results.supabase ? (
                       <Check className="h-5 w-5 text-green-400" />
@@ -162,9 +147,7 @@ export default function EnvChecker() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
                       <Bot className="h-4 w-4 mr-2 text-purple-400" />
-                      <span className="font-medium text-slate-200">
-                        API Connection
-                      </span>
+                      <span className="font-medium text-slate-200">API Connection</span>
                     </div>
                     {results.api ? (
                       <Check className="h-5 w-5 text-green-400" />
@@ -185,22 +168,18 @@ export default function EnvChecker() {
                 <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/50">
                   <div className="flex items-center mb-2">
                     <Info className="h-4 w-4 mr-2 text-blue-400" />
-                    <span className="font-medium text-slate-200">
-                      Environment Variables
-                    </span>
+                    <span className="font-medium text-slate-200">Environment Variables</span>
                   </div>
                   <div className="space-y-1 text-xs font-mono bg-slate-900/50 p-2 rounded border border-slate-700/30">
                     {Object.entries(results.envVars).map(([key, value]) => (
                       <div key={key} className="flex justify-between">
                         <span className="text-slate-400">{key}:</span>
-                        <span className="text-slate-200">
-                          {
-                            // Mask sensitive values
-                            key.includes("KEY") || key.includes("SECRET")
-                              ? value.substring(0, 8) + "..."
-                              : value
-                          }
-                        </span>
+                        <span className="text-slate-200">{
+                          // Mask sensitive values
+                          key.includes('KEY') || key.includes('SECRET')
+                            ? value.substring(0, 8) + '...'
+                            : value
+                        }</span>
                       </div>
                     ))}
                   </div>
@@ -220,9 +199,7 @@ export default function EnvChecker() {
                 {(!results.supabase || !results.api) && (
                   <div className="flex items-center text-amber-400 text-sm">
                     <AlertTriangle className="h-4 w-4 mr-1" />
-                    <span>
-                      Issues detected. Check console for more details.
-                    </span>
+                    <span>Issues detected. Check console for more details.</span>
                   </div>
                 )}
               </div>

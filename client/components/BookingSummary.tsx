@@ -1,25 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-import {
-  CalendarIcon,
-  ClockIcon,
-  CreditCardIcon,
-  PackageIcon,
-  MapPinIcon,
-  CheckCircle,
-  Loader2,
-} from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { CalendarIcon, ClockIcon, CreditCardIcon, PackageIcon, MapPinIcon, CheckCircle, Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface BookingSummaryProps {
   warehouseId: string;
@@ -35,7 +21,7 @@ interface BookingData {
   selectedBlocks: number[];
   startDate: string;
   endDate: string;
-  paymentMethod: "razorpay" | "stripe";
+  paymentMethod: 'razorpay' | 'stripe';
   totalAmount: number;
   customerDetails: {
     name: string;
@@ -52,18 +38,16 @@ export default function BookingSummary({
   blockPrice,
   onBookingConfirm,
   onClearSelection,
-  isLoading = false,
+  isLoading = false
 }: BookingSummaryProps) {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "stripe">(
-    "razorpay",
-  );
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'stripe'>('razorpay');
   const [customerDetails, setCustomerDetails] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
+    name: '',
+    email: '',
+    phone: '',
+    company: ''
   });
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -89,7 +73,7 @@ export default function BookingSummary({
 
   // Set minimum date to today
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split('T')[0];
     if (!startDate) setStartDate(today);
   }, []);
 
@@ -98,39 +82,38 @@ export default function BookingSummary({
     if (startDate && !endDate) {
       const nextDay = new Date(startDate);
       nextDay.setDate(nextDay.getDate() + 1);
-      setEndDate(nextDay.toISOString().split("T")[0]);
+      setEndDate(nextDay.toISOString().split('T')[0]);
     }
   }, [startDate]);
 
   const handleConfirmBooking = async () => {
     try {
       setIsConfirming(true);
-
+      
       const bookingData: BookingData = {
         selectedBlocks,
         startDate,
         endDate,
         paymentMethod,
         totalAmount: finalAmount,
-        customerDetails,
+        customerDetails
       };
 
       await onBookingConfirm(bookingData);
       setShowConfirmDialog(false);
-
+      
       // Reset form
-      setCustomerDetails({ name: "", email: "", phone: "", company: "" });
-
+      setCustomerDetails({ name: '', email: '', phone: '', company: '' });
+      
       toast({
         title: "🎉 Booking Confirmed!",
         description: `Successfully booked ${selectedBlocksCount} blocks for ${duration} days.`,
       });
     } catch (error) {
-      console.error("Booking failed:", error);
+      console.error('Booking failed:', error);
       toast({
         title: "Booking Failed",
-        description:
-          "There was an error processing your booking. Please try again.",
+        description: "There was an error processing your booking. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -159,8 +142,7 @@ export default function BookingSummary({
             Select Warehouse Blocks
           </h3>
           <p className="text-gray-400">
-            Click on available blocks in the grid to start building your
-            booking.
+            Click on available blocks in the grid to start building your booking.
           </p>
         </CardContent>
       </Card>
@@ -184,24 +166,15 @@ export default function BookingSummary({
 
         {/* Selected Blocks */}
         <div>
-          <h4 className="text-sm font-medium text-gray-400 mb-2">
-            Selected Blocks
-          </h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-2">Selected Blocks</h4>
           <div className="flex flex-wrap gap-1">
-            {selectedBlocks.slice(0, 10).map((blockNumber) => (
-              <Badge
-                key={blockNumber}
-                variant="outline"
-                className="bg-blue-500/20 text-blue-300 border-blue-500"
-              >
+            {selectedBlocks.slice(0, 10).map(blockNumber => (
+              <Badge key={blockNumber} variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500">
                 Block {blockNumber}
               </Badge>
             ))}
             {selectedBlocks.length > 10 && (
-              <Badge
-                variant="outline"
-                className="bg-gray-500/20 text-gray-300 border-gray-500"
-              >
+              <Badge variant="outline" className="bg-gray-500/20 text-gray-300 border-gray-500">
                 +{selectedBlocks.length - 10} more
               </Badge>
             )}
@@ -211,31 +184,27 @@ export default function BookingSummary({
         {/* Booking Dates */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              Start Date
-            </label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Start Date</label>
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full pl-10 pr-3 py-2 bg-gray-800/50 border border-gray-700 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              End Date
-            </label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">End Date</label>
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                min={startDate || new Date().toISOString().split("T")[0]}
+                min={startDate || new Date().toISOString().split('T')[0]}
                 className="w-full pl-10 pr-3 py-2 bg-gray-800/50 border border-gray-700 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -246,9 +215,7 @@ export default function BookingSummary({
         {duration > 0 && (
           <div className="flex items-center space-x-2 text-gray-300">
             <ClockIcon className="w-4 h-4" />
-            <span>
-              {duration} day{duration !== 1 ? "s" : ""}
-            </span>
+            <span>{duration} day{duration !== 1 ? 's' : ''}</span>
           </div>
         )}
 
@@ -257,9 +224,7 @@ export default function BookingSummary({
         {/* Pricing Breakdown */}
         <div className="space-y-2">
           <div className="flex justify-between text-gray-300">
-            <span>
-              {selectedBlocksCount} blocks × ₹{blockPrice.toLocaleString()}
-            </span>
+            <span>{selectedBlocksCount} blocks × ₹{blockPrice.toLocaleString()}</span>
             <span>₹{basePrice.toLocaleString()}</span>
           </div>
           {duration > 1 && (
@@ -275,9 +240,7 @@ export default function BookingSummary({
           <Separator className="bg-gray-700" />
           <div className="flex justify-between text-lg font-semibold">
             <span>Total Amount</span>
-            <span className="text-green-400">
-              ₹{finalAmount.toLocaleString()}
-            </span>
+            <span className="text-green-400">₹{finalAmount.toLocaleString()}</span>
           </div>
         </div>
 
@@ -291,23 +254,18 @@ export default function BookingSummary({
           >
             Clear Selection
           </Button>
-
+          
           <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
             <DialogTrigger asChild>
               <Button
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                disabled={
-                  selectedBlocksCount === 0 ||
-                  !startDate ||
-                  !endDate ||
-                  isLoading
-                }
+                disabled={selectedBlocksCount === 0 || !startDate || !endDate || isLoading}
               >
                 <CreditCardIcon className="w-4 h-4 mr-2" />
                 Book Now
               </Button>
             </DialogTrigger>
-
+            
             <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center">
@@ -315,85 +273,59 @@ export default function BookingSummary({
                   Confirm Booking
                 </DialogTitle>
               </DialogHeader>
-
+              
               <div className="space-y-4">
                 {/* Customer Details Form */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-gray-300">
-                    Customer Details
-                  </h4>
-
+                  <h4 className="font-medium text-gray-300">Customer Details</h4>
+                  
                   <input
                     type="text"
                     placeholder="Full Name *"
                     value={customerDetails.name}
-                    onChange={(e) =>
-                      setCustomerDetails((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setCustomerDetails(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
-
+                  
                   <input
                     type="email"
                     placeholder="Email Address *"
                     value={customerDetails.email}
-                    onChange={(e) =>
-                      setCustomerDetails((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setCustomerDetails(prev => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
-
+                  
                   <input
                     type="tel"
                     placeholder="Phone Number *"
                     value={customerDetails.phone}
-                    onChange={(e) =>
-                      setCustomerDetails((prev) => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setCustomerDetails(prev => ({ ...prev, phone: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
-
+                  
                   <input
                     type="text"
                     placeholder="Company Name (Optional)"
                     value={customerDetails.company}
-                    onChange={(e) =>
-                      setCustomerDetails((prev) => ({
-                        ...prev,
-                        company: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setCustomerDetails(prev => ({ ...prev, company: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 {/* Payment Method */}
                 <div>
-                  <h4 className="font-medium text-gray-300 mb-2">
-                    Payment Method
-                  </h4>
+                  <h4 className="font-medium text-gray-300 mb-2">Payment Method</h4>
                   <div className="space-y-2">
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="radio"
                         name="payment"
                         value="razorpay"
-                        checked={paymentMethod === "razorpay"}
-                        onChange={(e) =>
-                          setPaymentMethod(e.target.value as "razorpay")
-                        }
+                        checked={paymentMethod === 'razorpay'}
+                        onChange={(e) => setPaymentMethod(e.target.value as 'razorpay')}
                         className="text-blue-500 focus:ring-blue-500"
                       />
                       <span>Razorpay (UPI, Cards, Net Banking)</span>
@@ -403,10 +335,8 @@ export default function BookingSummary({
                         type="radio"
                         name="payment"
                         value="stripe"
-                        checked={paymentMethod === "stripe"}
-                        onChange={(e) =>
-                          setPaymentMethod(e.target.value as "stripe")
-                        }
+                        checked={paymentMethod === 'stripe'}
+                        onChange={(e) => setPaymentMethod(e.target.value as 'stripe')}
                         className="text-blue-500 focus:ring-blue-500"
                       />
                       <span>Stripe (International Cards)</span>
@@ -422,9 +352,7 @@ export default function BookingSummary({
                   </div>
                   <div className="flex justify-between font-semibold mt-2">
                     <span>Total Amount:</span>
-                    <span className="text-green-400">
-                      ₹{finalAmount.toLocaleString()}
-                    </span>
+                    <span className="text-green-400">₹{finalAmount.toLocaleString()}</span>
                   </div>
                 </div>
 

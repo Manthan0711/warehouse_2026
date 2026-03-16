@@ -1,6 +1,6 @@
 // client/services/mockWarehouseData.ts
-import warehouseDataJson from "../data/warehouse-data-small.json";
-import { WarehouseData } from "../data/warehouses";
+import warehouseDataJson from '../data/warehouse-data-small.json';
+import { WarehouseData } from '../data/warehouses';
 
 // Interface matching the structure of our JSON file
 interface WarehouseDataFile {
@@ -15,11 +15,11 @@ export const loadWarehouseData = (): WarehouseDataFile => {
     // Using direct import which is now possible with resolveJsonModule: true
     return warehouseDataJson as WarehouseDataFile;
   } catch (error) {
-    console.error("Error loading warehouse data:", error);
+    console.error('Error loading warehouse data:', error);
     return {
       warehouses: [],
       filterOptions: {},
-      platformStats: {},
+      platformStats: {}
     };
   }
 };

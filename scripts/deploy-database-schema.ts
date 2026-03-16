@@ -1,38 +1,33 @@
-import { supabase } from "../client/lib/supabase";
-import fs from "fs";
-import path from "path";
+import { supabase } from '../client/lib/supabase';
+import fs from 'fs';
+import path from 'path';
 
 async function deployDatabaseSchema() {
   try {
-    console.log("🚀 Deploying warehouse_submissions schema to Supabase...");
-
+    console.log('🚀 Deploying warehouse_submissions schema to Supabase...');
+    
     // Read the SQL file
-    const sqlFilePath = path.join(
-      __dirname,
-      "../database/warehouse_submissions.sql",
-    );
-    const sqlContent = fs.readFileSync(sqlFilePath, "utf8");
-
+    const sqlFilePath = path.join(__dirname, '../database/warehouse_submissions.sql');
+    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
+    
     // Split SQL into individual statements (handle multi-line statements)
     const statements = sqlContent
-      .split(";")
-      .map((stmt) => stmt.trim())
-      .filter((stmt) => stmt.length > 0 && !stmt.startsWith("--"));
-
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+    
     console.log(`📝 Found ${statements.length} SQL statements to execute`);
-
+    
     // Execute each statement
     for (let i = 0; i < statements.length; i++) {
       const statement = statements[i];
       if (statement) {
         console.log(`\n▶️  Executing statement ${i + 1}/${statements.length}:`);
-        console.log(statement.substring(0, 100) + "...");
-
+        console.log(statement.substring(0, 100) + '...');
+        
         try {
-          const { error } = await supabase.rpc("execute_sql", {
-            sql_query: statement,
-          });
-
+          const { error } = await supabase.rpc('execute_sql', { sql_query: statement });
+          
           if (error) {
             console.error(`❌ Error in statement ${i + 1}:`, error);
             // Continue with other statements
@@ -44,40 +39,35 @@ async function deployDatabaseSchema() {
         }
       }
     }
-
-    console.log("\n🎉 Database schema deployment completed!");
-
+    
+    console.log('\n🎉 Database schema deployment completed!');
+    
     // Verify the tables were created
-    console.log("\n🔍 Verifying table creation...");
-
+    console.log('\n🔍 Verifying table creation...');
+    
     const { data: submissions } = await supabase
-      .from("warehouse_submissions")
-      .select("*")
+      .from('warehouse_submissions')
+      .select('*')
       .limit(1);
-
+    
     const { data: notifications } = await supabase
-      .from("notifications")
-      .select("*")
+      .from('notifications')
+      .select('*')
       .limit(1);
-
-    console.log(
-      "✅ warehouse_submissions table:",
-      submissions !== null ? "EXISTS" : "NOT FOUND",
-    );
-    console.log(
-      "✅ notifications table:",
-      notifications !== null ? "EXISTS" : "NOT FOUND",
-    );
+    
+    console.log('✅ warehouse_submissions table:', submissions !== null ? 'EXISTS' : 'NOT FOUND');
+    console.log('✅ notifications table:', notifications !== null ? 'EXISTS' : 'NOT FOUND');
+    
   } catch (error) {
-    console.error("💥 Database deployment failed:", error);
+    console.error('💥 Database deployment failed:', error);
   }
 }
 
 // Alternative approach: Direct SQL execution
 async function deployWithDirectSQL() {
   try {
-    console.log("🚀 Attempting direct SQL execution...");
-
+    console.log('🚀 Attempting direct SQL execution...');
+    
     // Try creating tables one by one
     const createSubmissionsTable = `
       CREATE TABLE IF NOT EXISTS warehouse_submissions (
@@ -105,26 +95,25 @@ async function deployWithDirectSQL() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )`;
-
-    const { error: tableError } = await supabase.rpc("execute_sql", {
-      sql_query: createSubmissionsTable,
+    
+    const { error: tableError } = await supabase.rpc('execute_sql', { 
+      sql_query: createSubmissionsTable 
     });
-
+    
     if (tableError) {
-      console.log(
-        "⚠️  RPC method not available, tables may need to be created manually in Supabase dashboard",
-      );
-      console.log("📋 Use this SQL in Supabase SQL Editor:");
-      console.log("\n" + createSubmissionsTable);
+      console.log('⚠️  RPC method not available, tables may need to be created manually in Supabase dashboard');
+      console.log('📋 Use this SQL in Supabase SQL Editor:');
+      console.log('\n' + createSubmissionsTable);
     } else {
-      console.log("✅ warehouse_submissions table created successfully");
+      console.log('✅ warehouse_submissions table created successfully');
     }
+    
   } catch (error) {
-    console.error("❌ Direct SQL execution failed:", error);
-    console.log("\n📝 Manual Setup Required:");
-    console.log("1. Go to Supabase Dashboard > SQL Editor");
-    console.log("2. Copy and paste the warehouse_submissions.sql file");
-    console.log("3. Run the SQL script manually");
+    console.error('❌ Direct SQL execution failed:', error);
+    console.log('\n📝 Manual Setup Required:');
+    console.log('1. Go to Supabase Dashboard > SQL Editor');
+    console.log('2. Copy and paste the warehouse_submissions.sql file');
+    console.log('3. Run the SQL script manually');
   }
 }
 

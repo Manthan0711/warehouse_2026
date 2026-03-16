@@ -5,18 +5,17 @@
 // Get API key from environment variables - works for both server and client
 const getGeminiApiKey = (): string => {
   // Server-side (Node.js) - check process.env first
-  if (typeof process !== "undefined" && process.env) {
+  if (typeof process !== 'undefined' && process.env) {
     if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
     if (process.env.VITE_GEMINI_API_KEY) return process.env.VITE_GEMINI_API_KEY;
   }
-
+  
   // Client-side (Vite) - use import.meta.env
-  if (typeof import.meta !== "undefined" && import.meta.env) {
-    if (import.meta.env.VITE_GEMINI_API_KEY)
-      return import.meta.env.VITE_GEMINI_API_KEY;
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (import.meta.env.VITE_GEMINI_API_KEY) return import.meta.env.VITE_GEMINI_API_KEY;
   }
-
-  return "";
+  
+  return '';
 };
 
 const GEMINI_API_KEY = getGeminiApiKey();
@@ -26,32 +25,20 @@ const GEMINI_API_KEY = getGeminiApiKey();
  */
 export class GeminiClient {
   private apiKey: string;
-  private apiEndpoint: string =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+  private apiEndpoint: string = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || GEMINI_API_KEY || "";
-
+    this.apiKey = apiKey || GEMINI_API_KEY || '';
+    
     // Force log the API key for debugging (remove in production)
-    console.log(
-      "Gemini API key status:",
-      this.apiKey ? "API key is set" : "No API key provided",
-    );
-
+    console.log('Gemini API key status:', this.apiKey ? 'API key is set' : 'No API key provided');
+    
     if (!this.apiKey) {
-      console.warn(
-        "No Gemini API key provided. Will use simulated responses instead.",
-      );
-      console.info(
-        "To use real Gemini AI: Get an API key at https://aistudio.google.com/app/apikey",
-      );
-      console.info(
-        "Then add it to your .env file as VITE_GEMINI_API_KEY=your_api_key_here",
-      );
+      console.warn('No Gemini API key provided. Will use simulated responses instead.');
+      console.info('To use real Gemini AI: Get an API key at https://aistudio.google.com/app/apikey');
+      console.info('Then add it to your .env file as VITE_GEMINI_API_KEY=your_api_key_here');
     } else {
-      console.info(
-        "Gemini API key found. Using real Gemini AI for enhanced recommendations.",
-      );
+      console.info('Gemini API key found. Using real Gemini AI for enhanced recommendations.');
     }
   }
 
@@ -67,44 +54,42 @@ export class GeminiClient {
    */
   async generateContent(prompt: string): Promise<any> {
     if (!this.apiKey) {
-      throw new Error("Gemini API key is not configured");
+      throw new Error('Gemini API key is not configured');
     }
 
     try {
       const response = await fetch(`${this.apiEndpoint}?key=${this.apiKey}`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           contents: [
             {
               parts: [
                 {
-                  text: prompt,
-                },
-              ],
-            },
+                  text: prompt
+                }
+              ]
+            }
           ],
           generationConfig: {
             temperature: 0.2,
             topP: 0.8,
             topK: 40,
             maxOutputTokens: 2048,
-          },
-        }),
+          }
+        })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          `Gemini API error: ${errorData.error?.message || response.statusText}`,
-        );
+        throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error("Error calling Gemini API:", error);
+      console.error('Error calling Gemini API:', error);
       throw error;
     }
   }
@@ -114,7 +99,7 @@ export class GeminiClient {
    */
   generateRecommendationPrompt(warehouses: any[], preferences: any): string {
     // Create a subset of warehouses with essential data to avoid token limits
-    const warehouseData = warehouses.slice(0, 30).map((w) => ({
+    const warehouseData = warehouses.slice(0, 30).map(w => ({
       id: w.id,
       name: w.name || w.description || `Warehouse in ${w.city}`,
       city: w.city,
@@ -125,7 +110,7 @@ export class GeminiClient {
       rating: w.rating || 4.0,
       reviews_count: w.reviews_count || 0,
       amenities: (w.amenities || []).slice(0, 5),
-      features: (w.features || []).slice(0, 5),
+      features: (w.features || []).slice(0, 5)
     }));
 
     // Generate a prompt for the Gemini API

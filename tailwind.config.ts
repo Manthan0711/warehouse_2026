@@ -90,7 +90,7 @@ export default {
             "background-position": "right center",
           },
         },
-        glow: {
+        "glow": {
           "0%, 100%": { "box-shadow": "0 0 20px rgba(59, 130, 246, 0.3)" },
           "50%": { "box-shadow": "0 0 40px rgba(59, 130, 246, 0.6)" },
         },
@@ -99,7 +99,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "gradient-x": "gradient-x 15s ease infinite",
-        glow: "glow 2s ease-in-out infinite alternate",
+        "glow": "glow 2s ease-in-out infinite alternate",
       },
     },
   },

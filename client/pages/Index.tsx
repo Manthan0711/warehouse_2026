@@ -3,26 +3,8 @@ import { warehouseService } from "@/services/warehouseService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Search,
-  MapPin,
-  Building2,
-  Users,
-  Star,
-  ArrowRight,
-  CircleCheck as CheckCircle,
-  TrendingUp,
-  Shield,
-  Clock,
-  Bot,
-} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, MapPin, Building2, Users, Star, ArrowRight, CircleCheck as CheckCircle, TrendingUp, Shield, Clock, Bot } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,9 +15,7 @@ export default function Index() {
   const { user, profile } = useAuth();
   const [searchLocation, setSearchLocation] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [pendingWarehouseId, setPendingWarehouseId] = useState<string | null>(
-    null,
-  );
+  const [pendingWarehouseId, setPendingWarehouseId] = useState<string | null>(null);
   const [featuredWarehouses, setFeaturedWarehouses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +25,7 @@ export default function Index() {
     averagePrice: 0,
     averageOccupancy: 0,
     citiesCount: 0,
-    averageRating: 0,
+    averageRating: 0
   });
 
   useEffect(() => {
@@ -54,23 +34,24 @@ export default function Index() {
         setLoading(true);
         setError(null);
 
-        console.log("🏠 Loading homepage data from Supabase...");
+        console.log('🏠 Loading homepage data from Supabase...');
 
         // Fetch stats
         const statsData = await warehouseService.getWarehouseStats();
-        console.log("✅ Stats loaded:", statsData);
+        console.log('✅ Stats loaded:', statsData);
         setStats(statsData);
 
         // Fetch featured warehouses
         const { data: warehouses } = await warehouseService.getWarehouses({
           limit: 6,
-          status: "active",
+          status: 'active'
         });
-        console.log("✅ Featured warehouses loaded:", warehouses?.length || 0);
+        console.log('✅ Featured warehouses loaded:', warehouses?.length || 0);
         setFeaturedWarehouses(warehouses || []);
+
       } catch (error: any) {
-        console.error("❌ Error loading homepage data:", error);
-        setError(error.message || "Failed to load data");
+        console.error('❌ Error loading homepage data:', error);
+        setError(error.message || 'Failed to load data');
       } finally {
         setLoading(false);
       }
@@ -79,7 +60,7 @@ export default function Index() {
   }, []);
 
   const handleViewDetails = (warehouseId: number | string) => {
-    if (!user || !profile || profile.user_type !== "seeker") {
+    if (!user || !profile || profile.user_type !== 'seeker') {
       setPendingWarehouseId(String(warehouseId));
       setShowAuthModal(true);
     } else {
@@ -99,8 +80,7 @@ export default function Index() {
       rating: 4.8,
       reviews: 142,
       verified: true,
-      image:
-        "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
+      image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80"
     },
     {
       id: 2,
@@ -112,8 +92,7 @@ export default function Index() {
       rating: 4.6,
       reviews: 89,
       verified: true,
-      image:
-        "https://images.unsplash.com/photo-1565630571891-1e24be14b2c8?w=800&q=80",
+      image: "https://images.unsplash.com/photo-1565630571891-1e24be14b2c8?w=800&q=80"
     },
     {
       id: 3,
@@ -125,64 +104,38 @@ export default function Index() {
       rating: 4.4,
       reviews: 67,
       verified: false,
-      image:
-        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
-    },
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80"
+    }
   ];
 
   const displayStats = [
-    {
-      value:
-        stats.totalWarehouses > 0
-          ? `${stats.totalWarehouses.toLocaleString()}+`
-          : "Loading...",
-      label: "Verified Warehouses",
-      icon: Building2,
-    },
-    {
-      value:
-        stats.totalArea > 0
-          ? `${(stats.totalArea / 1000000).toFixed(1)}M+`
-          : "Loading...",
-      label: "Sq Ft Available",
-      icon: TrendingUp,
-    },
-    {
-      value: stats.citiesCount > 0 ? `${stats.citiesCount}+` : "Loading...",
-      label: "Cities Covered",
-      icon: MapPin,
-    },
-    {
-      value:
-        stats.averageRating > 0 ? `${stats.averageRating}/5` : "Loading...",
-      label: "Customer Rating",
-      icon: Star,
-    },
+    { value: stats.totalWarehouses > 0 ? `${stats.totalWarehouses.toLocaleString()}+` : "Loading...", label: "Verified Warehouses", icon: Building2 },
+    { value: stats.totalArea > 0 ? `${(stats.totalArea / 1000000).toFixed(1)}M+` : "Loading...", label: "Sq Ft Available", icon: TrendingUp },
+    { value: stats.citiesCount > 0 ? `${stats.citiesCount}+` : "Loading...", label: "Cities Covered", icon: MapPin },
+    { value: stats.averageRating > 0 ? `${stats.averageRating}/5` : "Loading...", label: "Customer Rating", icon: Star }
   ];
 
   const benefits = [
     {
       title: "AI-Powered Matching",
-      description:
-        "Find the perfect warehouse using advanced machine learning algorithms",
-      icon: Bot,
+      description: "Find the perfect warehouse using advanced machine learning algorithms",
+      icon: Bot
     },
     {
       title: "Real-time Availability",
       description: "Get instant updates on space availability and pricing",
-      icon: TrendingUp,
+      icon: TrendingUp
     },
     {
       title: "Verified Partners",
       description: "All warehouse providers are thoroughly vetted and verified",
-      icon: Shield,
+      icon: Shield
     },
     {
       title: "Quick Onboarding",
-      description:
-        "Get started in minutes with our streamlined verification process",
-      icon: Clock,
-    },
+      description: "Get started in minutes with our streamlined verification process",
+      icon: Clock
+    }
   ];
 
   return (
@@ -202,11 +155,7 @@ export default function Index() {
             Find Perfect Warehouses
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed drop-shadow-lg">
-            Discover{" "}
-            {stats.totalWarehouses > 0
-              ? `${stats.totalWarehouses.toLocaleString()}+`
-              : "verified"}{" "}
-            warehouse spaces across Maharashtra with AI-powered recommendations
+            Discover {stats.totalWarehouses > 0 ? `${stats.totalWarehouses.toLocaleString()}+` : 'verified'} warehouse spaces across Maharashtra with AI-powered recommendations
           </p>
         </div>
 
@@ -225,11 +174,7 @@ export default function Index() {
                       className="pl-10 h-12 border-2 focus:border-blue-500 transition-all duration-300"
                     />
                   </div>
-                  <Button
-                    size="lg"
-                    className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
-                    asChild
-                  >
+                  <Button size="lg" className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300" asChild>
                     <Link to="/warehouses">
                       <Search className="mr-2 h-5 w-5" />
                       Search Warehouses
@@ -237,33 +182,24 @@ export default function Index() {
                   </Button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-6">
-                  <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                    Popular:
-                  </span>
-                  {["Mumbai", "Pune", "Nashik", "Aurangabad", "Thane"].map(
-                    (city) => (
-                      <Button
-                        key={city}
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 text-xs hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
-                        onClick={() => setSearchLocation(city)}
-                      >
-                        {city}
-                      </Button>
-                    ),
-                  )}
-                  <div className="ml-auto flex items-center">
-                    <span className="text-sm text-blue-600 dark:text-blue-400 font-medium mr-2 animate-pulse">
-                      ✨ New
-                    </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Popular:</span>
+                  {["Mumbai", "Pune", "Nashik", "Aurangabad", "Thane"].map((city) => (
                     <Button
-                      variant="outline"
+                      key={city}
+                      variant="ghost"
                       size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900 shadow-md hover:shadow-lg transition-all duration-300"
-                      asChild
+                      className="h-8 text-xs hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors duration-200"
+                      onClick={() => setSearchLocation(city)}
                     >
-                      <Link to="/ai-recommendations">ML Recommendations</Link>
+                      {city}
+                    </Button>
+                  ))}
+                  <div className="ml-auto flex items-center">
+                    <span className="text-sm text-blue-600 dark:text-blue-400 font-medium mr-2 animate-pulse">✨ New</span>
+                    <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900 shadow-md hover:shadow-lg transition-all duration-300" asChild>
+                      <Link to="/ai-recommendations">
+                        ML Recommendations
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -272,17 +208,10 @@ export default function Index() {
               {/* Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {displayStats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className="text-center p-4 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border dark:border-gray-700 hover:shadow-xl transition-all duration-300"
-                  >
+                  <div key={index} className="text-center p-4 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border dark:border-gray-700 hover:shadow-xl transition-all duration-300">
                     <stat.icon className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {stat.label}
-                    </div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -299,9 +228,7 @@ export default function Index() {
               <div className="absolute -bottom-6 -left-6 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border dark:border-gray-700">
                 <div className="flex items-center space-x-3">
                   <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium">
-                    Live Inventory Updates
-                  </span>
+                  <span className="text-sm font-medium">Live Inventory Updates</span>
                 </div>
               </div>
             </div>
@@ -317,34 +244,26 @@ export default function Index() {
               Featured Warehouse Spaces
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Discover premium warehouse spaces available for immediate
-              occupancy
+              Discover premium warehouse spaces available for immediate occupancy
             </p>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">
-                Loading warehouses from database...
-              </p>
+              <p className="text-gray-600 dark:text-gray-400">Loading warehouses from database...</p>
             </div>
           ) : error ? (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">
-                \u26a0\ufe0f Database Error
-              </h3>
+              <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">\u26a0\ufe0f Database Error</h3>
               <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
               <p className="text-sm text-red-600 dark:text-red-400">
-                Please run the quick-test-import.sql script in Supabase SQL
-                Editor to add test data.
+                Please run the quick-test-import.sql script in Supabase SQL Editor to add test data.
               </p>
             </div>
           ) : featuredWarehouses.length === 0 ? (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-              <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200 mb-2">
-                \ud83d\udce5 No Warehouses Found
-              </h3>
+              <h3 className="text-lg font-bold text-yellow-800 dark:text-yellow-200 mb-2">\ud83d\udce5 No Warehouses Found</h3>
               <p className="text-yellow-700 dark:text-yellow-300 mb-4">
                 The database is empty. Please import warehouse data to continue.
               </p>
@@ -355,17 +274,14 @@ export default function Index() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredWarehouses.map((warehouse) => (
-                <Card
-                  key={warehouse.id}
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
-                >
+                <Card key={warehouse.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                   <div className="relative">
                     <img
-                      src={warehouse.images?.[0] || "/placeholder.svg"}
+                      src={warehouse.images?.[0] || '/placeholder.svg'}
                       alt={warehouse.name}
                       className="w-full h-48 object-cover"
                     />
-                    {warehouse.ownership_certificate === "Verified" && (
+                    {warehouse.ownership_certificate === 'Verified' && (
                       <Badge className="absolute top-3 right-3 bg-green-500 hover:bg-green-600">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Verified
@@ -373,9 +289,7 @@ export default function Index() {
                     )}
                   </div>
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                      {warehouse.name}
-                    </h3>
+                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{warehouse.name}</h3>
                     <p className="text-gray-600 dark:text-gray-400 flex items-center mb-4">
                       <MapPin className="h-4 w-4 mr-1" />
                       {warehouse.city}, {warehouse.district}
@@ -383,48 +297,30 @@ export default function Index() {
 
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">
-                          Total Area:
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {warehouse.total_area?.toLocaleString()} sq ft
-                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">Total Area:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{warehouse.total_area?.toLocaleString()} sq ft</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">
-                          Capacity:
-                        </span>
-                        <span className="font-medium text-green-600 dark:text-green-400">
-                          {warehouse.capacity?.toLocaleString()} MT
-                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">Capacity:</span>
+                        <span className="font-medium text-green-600 dark:text-green-400">{warehouse.capacity?.toLocaleString()} MT</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">
-                          Price:
-                        </span>
-                        <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                          ₹{warehouse.price_per_sqft}/sq ft
-                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">Price:</span>
+                        <span className="font-bold text-lg text-blue-600 dark:text-blue-400">₹{warehouse.price_per_sqft}/sq ft</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">
-                          {warehouse.rating}
-                        </span>
-                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                          ({warehouse.reviews_count} reviews)
-                        </span>
+                        <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">{warehouse.rating}</span>
+                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">({warehouse.reviews_count} reviews)</span>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
                         className="hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors"
-                        onClick={() =>
-                          handleViewDetails(warehouse.wh_id || warehouse.id)
-                        }
+                        onClick={() => handleViewDetails(warehouse.wh_id || warehouse.id)}
                       >
                         View Details
                         <ArrowRight className="ml-1 h-3 w-3" />
@@ -446,17 +342,13 @@ export default function Index() {
               Why Choose SmartSpace?
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Experience the future of warehouse management with our
-              cutting-edge platform
+              Experience the future of warehouse management with our cutting-edge platform
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, index) => (
-              <div
-                key={index}
-                className="text-center p-6 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border dark:border-gray-700 hover:shadow-xl hover:scale-105 transition-all duration-300"
-              >
+              <div key={index} className="text-center p-6 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg border dark:border-gray-700 hover:shadow-xl hover:scale-105 transition-all duration-300">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
                   <benefit.icon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                 </div>
@@ -482,15 +374,10 @@ export default function Index() {
             <div className="flex items-center justify-center mb-8">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-6 w-6 text-yellow-400 fill-current"
-                  />
+                  <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <span className="ml-2 text-lg font-medium">
-                4.8/5 from 10,000+ reviews
-              </span>
+              <span className="ml-2 text-lg font-medium">4.8/5 from 10,000+ reviews</span>
             </div>
           </div>
         </div>
@@ -504,23 +391,13 @@ export default function Index() {
               Ready to Find Your Perfect Warehouse?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of businesses who trust SmartSpace for their
-              storage needs
+              Join thousands of businesses who trust SmartSpace for their storage needs
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg"
-                asChild
-              >
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg" asChild>
                 <Link to="/warehouses">Browse Warehouses</Link>
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg"
-                asChild
-              >
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg" asChild>
                 <Link to="/ai-recommendations">Try ML Recommendations</Link>
               </Button>
             </div>
@@ -535,101 +412,34 @@ export default function Index() {
             <div>
               <h3 className="text-xl font-bold mb-4">SmartSpace</h3>
               <p className="text-gray-300 mb-4">
-                Maharashtra's leading warehouse marketplace connecting
-                businesses with premium storage solutions.
+                Maharashtra's leading warehouse marketplace connecting businesses with premium storage solutions.
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Platform</h4>
               <ul className="space-y-2 text-gray-300">
-                <li>
-                  <Link
-                    to="/warehouses"
-                    className="hover:text-white transition-colors"
-                  >
-                    Browse Warehouses
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/ai-recommendations"
-                    className="hover:text-white transition-colors"
-                  >
-                    ML Recommendations
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/dashboard"
-                    className="hover:text-white transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/about"
-                    className="hover:text-white transition-colors"
-                  >
-                    About Us
-                  </Link>
-                </li>
+                <li><Link to="/warehouses" className="hover:text-white transition-colors">Browse Warehouses</Link></li>
+                <li><Link to="/ai-recommendations" className="hover:text-white transition-colors">ML Recommendations</Link></li>
+                <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-300">
-                <li>
-                  <Link
-                    to="/contact"
-                    className="hover:text-white transition-colors"
-                  >
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Help Center
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Privacy Policy
-                  </a>
-                </li>
+                <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Connect</h4>
               <ul className="space-y-2 text-gray-300">
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    LinkedIn
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-white transition-colors">
-                    Facebook
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="tel:+91-XXXX-XXXXXX"
-                    className="hover:text-white transition-colors"
-                  >
-                    +91-XXXX-XXXXXX
-                  </a>
-                </li>
+                <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Twitter</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Facebook</a></li>
+                <li><a href="tel:+91-XXXX-XXXXXX" className="hover:text-white transition-colors">+91-XXXX-XXXXXX</a></li>
               </ul>
             </div>
           </div>
@@ -646,9 +456,7 @@ export default function Index() {
           setPendingWarehouseId(null);
         }}
         message="Login as Storage Seeker to view warehouse details"
-        redirectPath={
-          pendingWarehouseId ? `/warehouses/${pendingWarehouseId}` : undefined
-        }
+        redirectPath={pendingWarehouseId ? `/warehouses/${pendingWarehouseId}` : undefined}
       />
     </div>
   );

@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type {
   RecommendationPreferences,
-  RecommendationResponse,
-} from "../../shared/api";
-import { warehouseService } from "../services/warehouseService";
+  RecommendationResponse
+} from '../../shared/api';
+import { warehouseService } from '../services/warehouseService';
 
 interface UseRecommendationsOptions {
   enabled?: boolean;
@@ -18,36 +18,30 @@ interface UseRecommendationsOptions {
 export function useRecommendations(
   preferences: RecommendationPreferences,
   limit: number = 12,
-  options: UseRecommendationsOptions = {},
+  options: UseRecommendationsOptions = {}
 ) {
   const { enabled = true, refetchOnWindowFocus = false } = options;
 
   // Create a stable query key that changes when ANY preference changes
   // DO NOT use Date.now() - it causes infinite re-renders!
   const queryKey = [
-    "recommendations",
-    preferences.district || "all",
+    'recommendations',
+    preferences.district || 'all',
     preferences.targetPrice || 0,
     preferences.minAreaSqft || 0,
-    preferences.preferredType || "any",
-    preferences.preferVerified ? "verified" : "any",
-    preferences.preferAvailability ? "available" : "any",
-    limit,
+    preferences.preferredType || 'any',
+    preferences.preferVerified ? 'verified' : 'any',
+    preferences.preferAvailability ? 'available' : 'any',
+    limit
   ];
 
   return useQuery<RecommendationResponse, Error>({
     queryKey,
     queryFn: async (): Promise<RecommendationResponse> => {
-      console.log(
-        "🔄 Fetching LLM recommendations with preferences:",
-        JSON.stringify(preferences),
-      );
+      console.log('🔄 Fetching LLM recommendations with preferences:', JSON.stringify(preferences));
 
       try {
-        const data = await warehouseService.getLLMRecommendations(
-          preferences,
-          limit,
-        );
+        const data = await warehouseService.getLLMRecommendations(preferences, limit);
 
         if (!data?.items?.length) {
           return { items: [] };
@@ -56,7 +50,7 @@ export function useRecommendations(
         console.log(`✅ LLM returned ${data.items.length} recommendations`);
         return data;
       } catch (error) {
-        console.error("LLM recommendations failed:", error);
+        console.error('LLM recommendations failed:', error);
         return { items: [] };
       }
     },
@@ -89,10 +83,10 @@ export function useSmartRecommendations() {
     ...query,
     preferences,
     setPreferences: (newPrefs: RecommendationPreferences) => {
-      console.log("🔄 Setting new preferences:", newPrefs);
+      console.log('🔄 Setting new preferences:', newPrefs);
       setPreferences(newPrefs);
       setHasAppliedPreferences(true); // Enable fetching after preferences are set
-      setForceRefreshKey((prev) => prev + 1); // Force new query
+      setForceRefreshKey(prev => prev + 1); // Force new query
     },
     limit,
     setLimit,
@@ -101,9 +95,9 @@ export function useSmartRecommendations() {
     forceRefreshKey, // Expose for external use
     updatePreference: <K extends keyof RecommendationPreferences>(
       key: K,
-      value: RecommendationPreferences[K],
+      value: RecommendationPreferences[K]
     ) => {
-      setPreferences((prev) => ({ ...prev, [key]: value }));
+      setPreferences(prev => ({ ...prev, [key]: value }));
     },
     clearPreferences: () => {
       setPreferences({
@@ -113,28 +107,22 @@ export function useSmartRecommendations() {
     },
     // Additional helper methods for setting common preferences
     setLocation: (district: string) => {
-      setPreferences((prev) => ({ ...prev, district }));
+      setPreferences(prev => ({ ...prev, district }));
     },
     setBudget: (targetPrice: number) => {
-      setPreferences((prev) => ({ ...prev, targetPrice }));
+      setPreferences(prev => ({ ...prev, targetPrice }));
     },
     setAreaRequirement: (minAreaSqft: number) => {
-      setPreferences((prev) => ({ ...prev, minAreaSqft }));
+      setPreferences(prev => ({ ...prev, minAreaSqft }));
     },
     setWarehouseType: (preferredType: string) => {
-      setPreferences((prev) => ({ ...prev, preferredType }));
+      setPreferences(prev => ({ ...prev, preferredType }));
     },
     toggleVerified: () => {
-      setPreferences((prev) => ({
-        ...prev,
-        preferVerified: !prev.preferVerified,
-      }));
+      setPreferences(prev => ({ ...prev, preferVerified: !prev.preferVerified }));
     },
     toggleAvailability: () => {
-      setPreferences((prev) => ({
-        ...prev,
-        preferAvailability: !prev.preferAvailability,
-      }));
-    },
+      setPreferences(prev => ({ ...prev, preferAvailability: !prev.preferAvailability }));
+    }
   };
 }

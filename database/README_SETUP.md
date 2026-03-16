@@ -13,7 +13,6 @@ You need to run TWO SQL files in the correct order:
 **What it does:** Creates all the basic tables (profiles, warehouses, bookings, etc.)
 
 **Instructions:**
-
 1. Open Supabase Dashboard → SQL Editor
 2. Open the file `database/schema.sql` in your code editor
 3. Copy the **ENTIRE contents** (all ~296 lines)
@@ -27,15 +26,13 @@ You need to run TWO SQL files in the correct order:
 
 **File to run:** `database/schema_enhancements.sql`
 
-**What it does:**
-
+**What it does:** 
 - Adds new columns (seeker_type, product_details, is_active, district)
 - Creates new tables (pricing_reference, ml_recommendations, product_market_prices)
 - Inserts 60+ Maharashtra cities with pricing
 - Inserts 20 products with pricing
 
 **Instructions:**
-
 1. **AFTER Step 1 succeeds**, go back to Supabase SQL Editor
 2. Open file `database/schema_enhancements.sql`
 3. Copy the entire contents
@@ -62,7 +59,7 @@ You need to run TWO SQL files in the correct order:
 After running all files, run this query to verify:
 
 ```sql
-SELECT
+SELECT 
   (SELECT COUNT(*) FROM profiles) as profiles_count,
   (SELECT COUNT(*) FROM warehouses) as warehouses_count,
   (SELECT COUNT(*) FROM pricing_reference) as cities_count,
@@ -70,7 +67,6 @@ SELECT
 ```
 
 Expected result:
-
 - profiles_count: 0 or more (depends if you've created users)
 - warehouses_count: 0 or more (your existing warehouses)
 - cities_count: 60

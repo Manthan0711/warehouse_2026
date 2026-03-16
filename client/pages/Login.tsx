@@ -1,28 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Building2,
-  Eye,
-  EyeOff,
-  Loader2,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  MapPin,
-  Settings,
-} from "lucide-react";
+import { Building2, Eye, EyeOff, Loader2, Mail, Lock, User, Phone, MapPin, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -39,13 +22,8 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
   phone: string;
-  userType: "owner" | "seeker";
-  seekerType?:
-    | "farmer"
-    | "wholesaler"
-    | "quick_commerce"
-    | "msme"
-    | "industrial";
+  userType: 'owner' | 'seeker';
+  seekerType?: 'farmer' | 'wholesaler' | 'quick_commerce' | 'msme' | 'industrial';
   company?: string;
   location?: string;
 }
@@ -55,41 +33,41 @@ export default function Login() {
   const { signIn, signUp, resendVerification, loading } = useAuth();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [loginData, setLoginData] = useState<LoginFormData>({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
 
   const [registerData, setRegisterData] = useState<RegisterFormData>({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    userType: "seeker",
-    seekerType: "farmer",
-    company: "",
-    location: "",
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    userType: 'seeker',
+    seekerType: 'farmer',
+    company: '',
+    location: '',
   });
 
   const validateLoginForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!loginData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(loginData.email)) {
-      newErrors.email = "Email is invalid";
+      newErrors.email = 'Email is invalid';
     }
 
     if (!loginData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required';
     } else if (loginData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     setErrors(newErrors);
@@ -99,36 +77,36 @@ export default function Login() {
   const validateRegisterForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!registerData.name) newErrors.name = "Name is required";
+    if (!registerData.name) newErrors.name = 'Name is required';
 
     if (!registerData.email) {
-      newErrors.email = "Email is required";
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(registerData.email)) {
-      newErrors.email = "Email is invalid";
+      newErrors.email = 'Email is invalid';
     }
 
     if (!registerData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required';
     } else if (registerData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     if (registerData.password !== registerData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     if (!registerData.phone) {
-      newErrors.phone = "Phone number is required";
+      newErrors.phone = 'Phone number is required';
     } else if (!/^\+?[\d\s\-()]{10,}$/.test(registerData.phone)) {
-      newErrors.phone = "Please enter a valid phone number";
+      newErrors.phone = 'Please enter a valid phone number';
     }
 
-    if (registerData.userType === "owner" && !registerData.company) {
-      newErrors.company = "Company name is required for owners";
+    if (registerData.userType === 'owner' && !registerData.company) {
+      newErrors.company = 'Company name is required for owners';
     }
 
     if (!registerData.location) {
-      newErrors.location = "Location is required";
+      newErrors.location = 'Location is required';
     }
 
     setErrors(newErrors);
@@ -157,16 +135,16 @@ export default function Login() {
       });
 
       // Navigate based on user type
-      const userType = data?.user?.user_metadata?.user_type || "seeker";
-      if (userType === "admin") {
-        navigate("/admin");
-      } else if (userType === "owner") {
-        navigate("/dashboard");
+      const userType = data?.user?.user_metadata?.user_type || 'seeker';
+      if (userType === 'admin') {
+        navigate('/admin');
+      } else if (userType === 'owner') {
+        navigate('/dashboard');
       } else {
-        navigate("/seeker-dashboard");
+        navigate('/seeker-dashboard');
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error('Login error:', err);
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -210,20 +188,16 @@ export default function Login() {
         name: registerData.name,
         phone: registerData.phone,
         user_type: registerData.userType,
-        company: registerData.company || "",
-        location: registerData.location || "",
+        company: registerData.company || '',
+        location: registerData.location || '',
       };
 
       // Add seeker_type for seekers
-      if (registerData.userType === "seeker" && registerData.seekerType) {
+      if (registerData.userType === 'seeker' && registerData.seekerType) {
         userData.seeker_type = registerData.seekerType;
       }
 
-      const { error } = await signUp(
-        registerData.email,
-        registerData.password,
-        userData,
-      );
+      const { error } = await signUp(registerData.email, registerData.password, userData);
 
       if (error) {
         toast({
@@ -239,10 +213,10 @@ export default function Login() {
         description: "Please check your email to verify your account",
       });
 
-      setActiveTab("login");
-      setLoginData({ email: registerData.email, password: "" });
+      setActiveTab('login');
+      setLoginData({ email: registerData.email, password: '' });
     } catch (err) {
-      console.error("Registration error:", err);
+      console.error('Registration error:', err);
       toast({
         title: "Registration failed",
         description: "An unexpected error occurred. Please try again.",
@@ -272,16 +246,16 @@ export default function Login() {
       });
 
       // Navigate based on user type from metadata
-      const userType = data?.user?.user_metadata?.user_type || "seeker";
-      if (userType === "admin") {
-        navigate("/admin");
-      } else if (userType === "owner") {
-        navigate("/dashboard");
+      const userType = data?.user?.user_metadata?.user_type || 'seeker';
+      if (userType === 'admin') {
+        navigate('/admin');
+      } else if (userType === 'owner') {
+        navigate('/dashboard');
       } else {
-        navigate("/seeker-dashboard");
+        navigate('/seeker-dashboard');
       }
     } catch (err) {
-      console.error("Demo login error:", err);
+      console.error('Demo login error:', err);
       toast({
         title: "Demo login failed",
         description: "An unexpected error occurred. Please try again.",
@@ -291,20 +265,16 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, #0c1222 0%, #153366 100%)",
-      }}
-    >
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0c1222 0%, #153366 100%)' }}>
+      
       {/* Background pattern layer (Mesh effect) */}
-      <div
-        className="fixed inset-0 z-0 pointer-events-none opacity-40"
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40"
         style={{
           backgroundImage: `
             radial-gradient(at 21% 33%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
             radial-gradient(at 79% 76%, rgba(139, 92, 246, 0.15) 0px, transparent 50%)
-          `,
+          `
         }}
       />
 
@@ -312,9 +282,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-3 mb-4">
             <Building2 className="h-12 w-12 text-blue-400 pulse" />
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              SmartSpace
-            </span>
+            <span className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">SmartSpace</span>
           </Link>
           <p className="text-slate-300 text-lg">
             Connect with warehouse spaces across India
@@ -324,44 +292,26 @@ export default function Login() {
         <Card className="shadow-2xl border border-slate-700/50 backdrop-blur-xl bg-slate-900/90">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-center text-2xl font-bold text-slate-50">
-              {activeTab === "login" ? "Welcome Back" : "Create Account"}
+              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
             </CardTitle>
             <CardDescription className="text-center text-slate-400">
-              {activeTab === "login"
-                ? "Sign in to your account to continue"
-                : "Join SmartSpace to connect with warehouse spaces"}
+              {activeTab === 'login'
+                ? 'Sign in to your account to continue'
+                : 'Join SmartSpace to connect with warehouse spaces'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) =>
-                setActiveTab(value as "login" | "register")
-              }
-              className="w-full"
-            >
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-800/50">
-                <TabsTrigger
-                  value="login"
-                  className="font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  Sign In
-                </TabsTrigger>
-                <TabsTrigger
-                  value="register"
-                  className="font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  Sign Up
-                </TabsTrigger>
+                <TabsTrigger value="login" className="font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white">Sign In</TabsTrigger>
+                <TabsTrigger value="register" className="font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white">Sign Up</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login" className="space-y-4 mt-0">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="login-email"
-                      className="text-sm font-medium text-slate-300"
-                    >
+                    <Label htmlFor="login-email" className="text-sm font-medium text-slate-300">
                       Email Address
                     </Label>
                     <div className="relative">
@@ -371,29 +321,19 @@ export default function Login() {
                         type="email"
                         placeholder="Enter your email"
                         value={loginData.email}
-                        onChange={(e) =>
-                          setLoginData({ ...loginData, email: e.target.value })
-                        }
-                        className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 ${errors.email ? "border-red-500 focus:ring-red-500" : ""}`}
+                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                       />
                     </div>
                     {errors.email && (
-                      <Alert
-                        variant="destructive"
-                        className="py-2 bg-red-950/50 border-red-900"
-                      >
-                        <AlertDescription className="text-sm text-red-300">
-                          {errors.email}
-                        </AlertDescription>
+                      <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                        <AlertDescription className="text-sm text-red-300">{errors.email}</AlertDescription>
                       </Alert>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="login-password"
-                      className="text-sm font-medium text-slate-300"
-                    >
+                    <Label htmlFor="login-password" className="text-sm font-medium text-slate-300">
                       Password
                     </Label>
                     <div className="relative">
@@ -403,57 +343,31 @@ export default function Login() {
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={loginData.password}
-                        onChange={(e) =>
-                          setLoginData({
-                            ...loginData,
-                            password: e.target.value,
-                          })
-                        }
-                        className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 ${errors.password ? "border-red-500 focus:ring-red-500" : ""}`}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     {errors.password && (
-                      <Alert
-                        variant="destructive"
-                        className="py-2 bg-red-950/50 border-red-900"
-                      >
-                        <AlertDescription className="text-sm text-red-300">
-                          {errors.password}
-                        </AlertDescription>
+                      <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                        <AlertDescription className="text-sm text-red-300">{errors.password}</AlertDescription>
                       </Alert>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="remember"
-                        className="rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500"
-                      />
-                      <Label
-                        htmlFor="remember"
-                        className="text-sm text-slate-400"
-                      >
-                        Remember me
-                      </Label>
+                      <input type="checkbox" id="remember" className="rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500" />
+                      <Label htmlFor="remember" className="text-sm text-slate-400">Remember me</Label>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Link
-                        to="/forgot-password"
-                        className="text-sm text-blue-400 hover:text-blue-300"
-                      >
+                      <Link to="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
                         Forgot password?
                       </Link>
                       <Button
@@ -478,7 +392,7 @@ export default function Login() {
                         Signing in...
                       </>
                     ) : (
-                      "Sign In"
+                      'Sign In'
                     )}
                   </Button>
                 </form>
@@ -488,10 +402,7 @@ export default function Login() {
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="register-name"
-                        className="text-sm font-medium text-slate-300"
-                      >
+                      <Label htmlFor="register-name" className="text-sm font-medium text-slate-300">
                         Full Name
                       </Label>
                       <div className="relative">
@@ -501,32 +412,19 @@ export default function Login() {
                           type="text"
                           placeholder="Enter your full name"
                           value={registerData.name}
-                          onChange={(e) =>
-                            setRegisterData({
-                              ...registerData,
-                              name: e.target.value,
-                            })
-                          }
-                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.name ? "border-red-500 focus:ring-red-500" : ""}`}
+                          onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.name && (
-                        <Alert
-                          variant="destructive"
-                          className="py-2 bg-red-950/50 border-red-900"
-                        >
-                          <AlertDescription className="text-sm text-red-300">
-                            {errors.name}
-                          </AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.name}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="register-email"
-                        className="text-sm font-medium text-slate-300"
-                      >
+                      <Label htmlFor="register-email" className="text-sm font-medium text-slate-300">
                         Email Address
                       </Label>
                       <div className="relative">
@@ -536,32 +434,19 @@ export default function Login() {
                           type="email"
                           placeholder="Enter your email"
                           value={registerData.email}
-                          onChange={(e) =>
-                            setRegisterData({
-                              ...registerData,
-                              email: e.target.value,
-                            })
-                          }
-                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.email ? "border-red-500 focus:ring-red-500" : ""}`}
+                          onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.email && (
-                        <Alert
-                          variant="destructive"
-                          className="py-2 bg-red-950/50 border-red-900"
-                        >
-                          <AlertDescription className="text-sm text-red-300">
-                            {errors.email}
-                          </AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.email}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="register-phone"
-                        className="text-sm font-medium text-slate-300"
-                      >
+                      <Label htmlFor="register-phone" className="text-sm font-medium text-slate-300">
                         Phone Number
                       </Label>
                       <div className="relative">
@@ -571,122 +456,73 @@ export default function Login() {
                           type="tel"
                           placeholder="Enter your phone number"
                           value={registerData.phone}
-                          onChange={(e) =>
-                            setRegisterData({
-                              ...registerData,
-                              phone: e.target.value,
-                            })
-                          }
-                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.phone ? "border-red-500 focus:ring-red-500" : ""}`}
+                          onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.phone ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.phone && (
-                        <Alert
-                          variant="destructive"
-                          className="py-2 bg-red-950/50 border-red-900"
-                        >
-                          <AlertDescription className="text-sm text-red-300">
-                            {errors.phone}
-                          </AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.phone}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-slate-300">
-                        Account Type
-                      </Label>
+                      <Label className="text-sm font-medium text-slate-300">Account Type</Label>
                       <div className="grid grid-cols-2 gap-3">
                         <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                            registerData.userType === "seeker"
-                              ? "border-blue-500 bg-blue-600/20 text-blue-300"
-                              : "border-slate-700 bg-slate-800/30 text-slate-300 hover:border-slate-600"
-                          }`}
-                          onClick={() =>
-                            setRegisterData({
-                              ...registerData,
-                              userType: "seeker",
-                            })
-                          }
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${registerData.userType === 'seeker'
+                            ? 'border-blue-500 bg-blue-600/20 text-blue-300'
+                            : 'border-slate-700 bg-slate-800/30 text-slate-300 hover:border-slate-600'
+                            }`}
+                          onClick={() => setRegisterData({ ...registerData, userType: 'seeker' })}
                         >
                           <div className="text-center">
                             <User className="h-6 w-6 mx-auto mb-2" />
                             <div className="font-medium">Space Seeker</div>
-                            <div className="text-xs text-slate-500">
-                              Looking for warehouse space
-                            </div>
+                            <div className="text-xs text-slate-500">Looking for warehouse space</div>
                           </div>
                         </div>
                         <div
-                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                            registerData.userType === "owner"
-                              ? "border-blue-500 bg-blue-600/20 text-blue-300"
-                              : "border-slate-700 bg-slate-800/30 text-slate-300 hover:border-slate-600"
-                          }`}
-                          onClick={() =>
-                            setRegisterData({
-                              ...registerData,
-                              userType: "owner",
-                            })
-                          }
+                          className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${registerData.userType === 'owner'
+                            ? 'border-blue-500 bg-blue-600/20 text-blue-300'
+                            : 'border-slate-700 bg-slate-800/30 text-slate-300 hover:border-slate-600'
+                            }`}
+                          onClick={() => setRegisterData({ ...registerData, userType: 'owner' })}
                         >
                           <div className="text-center">
                             <Building2 className="h-6 w-6 mx-auto mb-2" />
                             <div className="font-medium">Space Owner</div>
-                            <div className="text-xs text-slate-500">
-                              Offering warehouse space
-                            </div>
+                            <div className="text-xs text-slate-500">Offering warehouse space</div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {registerData.userType === "seeker" && (
+                    {registerData.userType === 'seeker' && (
                       <div className="space-y-2">
-                        <Label
-                          htmlFor="register-seeker-type"
-                          className="text-sm font-medium text-slate-300"
-                        >
+                        <Label htmlFor="register-seeker-type" className="text-sm font-medium text-slate-300">
                           Seeker Type *
                         </Label>
                         <select
                           id="register-seeker-type"
-                          value={registerData.seekerType || "farmer"}
-                          onChange={(e) =>
-                            setRegisterData({
-                              ...registerData,
-                              seekerType: e.target.value as any,
-                            })
-                          }
+                          value={registerData.seekerType || 'farmer'}
+                          onChange={(e) => setRegisterData({ ...registerData, seekerType: e.target.value as any })}
                           className="w-full h-11 px-3 py-2 border border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-800/50 text-slate-100"
                         >
-                          <option value="farmer">
-                            Farmer - Agricultural Storage
-                          </option>
-                          <option value="wholesaler">
-                            Wholesaler - Bulk Distribution
-                          </option>
-                          <option value="quick_commerce">
-                            Quick Commerce - Fast Delivery
-                          </option>
+                          <option value="farmer">Farmer - Agricultural Storage</option>
+                          <option value="wholesaler">Wholesaler - Bulk Distribution</option>
+                          <option value="quick_commerce">Quick Commerce - Fast Delivery</option>
                           <option value="msme">MSME - Small Business</option>
-                          <option value="industrial">
-                            Industrial - Manufacturing
-                          </option>
+                          <option value="industrial">Industrial - Manufacturing</option>
                         </select>
-                        <p className="text-xs text-slate-500">
-                          Help us personalize your experience
-                        </p>
+                        <p className="text-xs text-slate-500">Help us personalize your experience</p>
                       </div>
                     )}
 
-                    {registerData.userType === "owner" && (
+                    {registerData.userType === 'owner' && (
                       <div className="space-y-2">
-                        <Label
-                          htmlFor="register-company"
-                          className="text-sm font-medium text-slate-300"
-                        >
+                        <Label htmlFor="register-company" className="text-sm font-medium text-slate-300">
                           Company Name
                         </Label>
                         <div className="relative">
@@ -695,34 +531,21 @@ export default function Login() {
                             id="register-company"
                             type="text"
                             placeholder="Enter your company name"
-                            value={registerData.company || ""}
-                            onChange={(e) =>
-                              setRegisterData({
-                                ...registerData,
-                                company: e.target.value,
-                              })
-                            }
-                            className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.company ? "border-red-500 focus:ring-red-500" : ""}`}
+                            value={registerData.company || ''}
+                            onChange={(e) => setRegisterData({ ...registerData, company: e.target.value })}
+                            className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.company ? 'border-red-500 focus:ring-red-500' : ''}`}
                           />
                         </div>
                         {errors.company && (
-                          <Alert
-                            variant="destructive"
-                            className="py-2 bg-red-950/50 border-red-900"
-                          >
-                            <AlertDescription className="text-sm text-red-300">
-                              {errors.company}
-                            </AlertDescription>
+                          <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                            <AlertDescription className="text-sm text-red-300">{errors.company}</AlertDescription>
                           </Alert>
                         )}
                       </div>
                     )}
 
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="register-location"
-                        className="text-sm font-medium text-slate-300"
-                      >
+                      <Label htmlFor="register-location" className="text-sm font-medium text-slate-300">
                         Location
                       </Label>
                       <div className="relative">
@@ -731,34 +554,21 @@ export default function Login() {
                           id="register-location"
                           type="text"
                           placeholder="Enter your city/state"
-                          value={registerData.location || ""}
-                          onChange={(e) =>
-                            setRegisterData({
-                              ...registerData,
-                              location: e.target.value,
-                            })
-                          }
-                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.location ? "border-red-500 focus:ring-red-500" : ""}`}
+                          value={registerData.location || ''}
+                          onChange={(e) => setRegisterData({ ...registerData, location: e.target.value })}
+                          className={`pl-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.location ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
                       </div>
                       {errors.location && (
-                        <Alert
-                          variant="destructive"
-                          className="py-2 bg-red-950/50 border-red-900"
-                        >
-                          <AlertDescription className="text-sm text-red-300">
-                            {errors.location}
-                          </AlertDescription>
+                        <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                          <AlertDescription className="text-sm text-red-300">{errors.location}</AlertDescription>
                         </Alert>
                       )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label
-                          htmlFor="register-password"
-                          className="text-sm font-medium text-slate-300"
-                        >
+                        <Label htmlFor="register-password" className="text-sm font-medium text-slate-300">
                           Password
                         </Label>
                         <div className="relative">
@@ -768,49 +578,30 @@ export default function Login() {
                             type={showPassword ? "text" : "password"}
                             placeholder="Create password"
                             value={registerData.password}
-                            onChange={(e) =>
-                              setRegisterData({
-                                ...registerData,
-                                password: e.target.value,
-                              })
-                            }
-                            className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.password ? "border-red-500 focus:ring-red-500" : ""}`}
+                            onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                            className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
                           >
-                            {showPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
 
                         {/* Password Strength Meter */}
-                        <PasswordStrengthMeter
-                          password={registerData.password}
-                        />
+                        <PasswordStrengthMeter password={registerData.password} />
 
                         {errors.password && (
-                          <Alert
-                            variant="destructive"
-                            className="py-2 bg-red-950/50 border-red-900"
-                          >
-                            <AlertDescription className="text-sm text-red-300">
-                              {errors.password}
-                            </AlertDescription>
+                          <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                            <AlertDescription className="text-sm text-red-300">{errors.password}</AlertDescription>
                           </Alert>
                         )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label
-                          htmlFor="register-confirm-password"
-                          className="text-sm font-medium text-slate-300"
-                        >
+                        <Label htmlFor="register-confirm-password" className="text-sm font-medium text-slate-300">
                           Confirm Password
                         </Label>
                         <div className="relative">
@@ -820,36 +611,20 @@ export default function Login() {
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="Confirm password"
                             value={registerData.confirmPassword}
-                            onChange={(e) =>
-                              setRegisterData({
-                                ...registerData,
-                                confirmPassword: e.target.value,
-                              })
-                            }
-                            className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.confirmPassword ? "border-red-500 focus:ring-red-500" : ""}`}
+                            onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                            className={`pl-10 pr-10 h-11 bg-slate-800/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
                           />
                           <button
                             type="button"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-300"
                           >
-                            {showConfirmPassword ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
                         </div>
                         {errors.confirmPassword && (
-                          <Alert
-                            variant="destructive"
-                            className="py-2 bg-red-950/50 border-red-900"
-                          >
-                            <AlertDescription className="text-sm text-red-300">
-                              {errors.confirmPassword}
-                            </AlertDescription>
+                          <Alert variant="destructive" className="py-2 bg-red-950/50 border-red-900">
+                            <AlertDescription className="text-sm text-red-300">{errors.confirmPassword}</AlertDescription>
                           </Alert>
                         )}
                       </div>
@@ -857,28 +632,14 @@ export default function Login() {
                   </div>
 
                   <div className="flex items-start space-x-2 pt-4">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      className="mt-0.5 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500"
-                      required
-                    />
-                    <Label
-                      htmlFor="terms"
-                      className="text-sm text-slate-400 leading-relaxed"
-                    >
-                      I agree to the{" "}
-                      <Link
-                        to="/terms"
-                        className="text-blue-400 hover:text-blue-300"
-                      >
+                    <input type="checkbox" id="terms" className="mt-0.5 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500" required />
+                    <Label htmlFor="terms" className="text-sm text-slate-400 leading-relaxed">
+                      I agree to the{' '}
+                      <Link to="/terms" className="text-blue-400 hover:text-blue-300">
                         Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link
-                        to="/privacy"
-                        className="text-blue-400 hover:text-blue-300"
-                      >
+                      </Link>{' '}
+                      and{' '}
+                      <Link to="/privacy" className="text-blue-400 hover:text-blue-300">
                         Privacy Policy
                       </Link>
                     </Label>
@@ -895,7 +656,7 @@ export default function Login() {
                         Creating account...
                       </>
                     ) : (
-                      "Create Account"
+                      'Create Account'
                     )}
                   </Button>
                 </form>
@@ -904,30 +665,26 @@ export default function Login() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-400">
-                {activeTab === "login"
-                  ? "Don't have an account?"
-                  : "Already have an account?"}{" "}
+                {activeTab === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
                 <button
-                  onClick={() =>
-                    setActiveTab(activeTab === "login" ? "register" : "login")
-                  }
+                  onClick={() => setActiveTab(activeTab === 'login' ? 'register' : 'login')}
                   className="text-blue-400 hover:text-blue-300 font-medium"
                 >
-                  {activeTab === "login" ? "Sign up" : "Sign in"}
+                  {activeTab === 'login' ? 'Sign up' : 'Sign in'}
                 </button>
               </p>
             </div>
 
             <div className="mt-6 pt-6 border-t border-slate-700">
               <div className="text-center">
-                <p className="text-xs text-slate-500 mb-4">Quick Demo Access</p>
+                <p className="text-xs text-slate-500 mb-4">
+                  Quick Demo Access
+                </p>
                 <div className="grid grid-cols-3 gap-3">
                   <Button
                     variant="outline"
                     className="h-12 bg-blue-600 hover:bg-blue-700 border-blue-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                    onClick={() =>
-                      handleDemoLogin("demo.seeker@smartspace.com", "demo123")
-                    }
+                    onClick={() => handleDemoLogin('demo.seeker@smartspace.com', 'demo123')}
                   >
                     <User className="mr-2 h-4 w-4" />
                     Seeker Demo
@@ -935,9 +692,7 @@ export default function Login() {
                   <Button
                     variant="outline"
                     className="h-12 bg-green-600 hover:bg-green-700 border-green-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                    onClick={() =>
-                      handleDemoLogin("demo.owner@smartspace.com", "demo123")
-                    }
+                    onClick={() => handleDemoLogin('demo.owner@smartspace.com', 'demo123')}
                   >
                     <Building2 className="mr-2 h-4 w-4" />
                     Owner Demo
@@ -945,9 +700,7 @@ export default function Login() {
                   <Button
                     variant="outline"
                     className="h-12 bg-purple-600 hover:bg-purple-700 border-purple-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                    onClick={() =>
-                      handleDemoLogin("demo.admin@smartspace.com", "demo123")
-                    }
+                    onClick={() => handleDemoLogin('demo.admin@smartspace.com', 'demo123')}
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     Admin Demo

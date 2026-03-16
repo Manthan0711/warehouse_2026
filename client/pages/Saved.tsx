@@ -1,33 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { toast } from "@/hooks/use-toast";
-import { Navbar } from "@/components/Navbar";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { toast } from '@/hooks/use-toast';
+import { Navbar } from '@/components/Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   SavedWarehousesResponse,
   SavedWarehouse,
   SavedWarehouseRequest,
-  SavedWarehouseResponse,
-} from "@shared/api";
+  SavedWarehouseResponse
+} from '@shared/api';
 import {
   Heart,
   MapPin,
@@ -44,22 +32,22 @@ import {
   ArrowUpDown,
   ArrowLeft,
   Loader2,
-  Eye,
-} from "lucide-react";
+  Eye
+} from 'lucide-react';
 
-type SortOption = "saved_date" | "name" | "price" | "rating" | "area";
-type SortOrder = "asc" | "desc";
+type SortOption = 'saved_date' | 'name' | 'price' | 'rating' | 'area';
+type SortOrder = 'asc' | 'desc';
 
 export default function Saved() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [savedWarehouses, setSavedWarehouses] = useState<SavedWarehouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cityFilter, setCityFilter] = useState("all");
-  const [priceFilter, setPriceFilter] = useState("all");
-  const [sortBy, setSortBy] = useState<SortOption>("saved_date");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<SortOption>('saved_date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [availableCities, setAvailableCities] = useState<string[]>([]);
 
   // Get seeker ID from auth context
@@ -67,7 +55,7 @@ export default function Saved() {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      navigate('/login');
       return;
     }
     fetchSavedWarehouses();
@@ -77,37 +65,35 @@ export default function Saved() {
   const fetchSavedWarehouses = async () => {
     try {
       setLoading(true);
-
+      
       const params = new URLSearchParams();
-      if (cityFilter && cityFilter !== "all") params.append("city", cityFilter);
-      if (priceFilter && priceFilter !== "all")
-        params.append("price_range", priceFilter);
-      if (sortBy) params.append("sort_by", sortBy);
-      if (sortOrder) params.append("sort_order", sortOrder);
+      if (cityFilter && cityFilter !== 'all') params.append('city', cityFilter);
+      if (priceFilter && priceFilter !== 'all') params.append('price_range', priceFilter);
+      if (sortBy) params.append('sort_by', sortBy);
+      if (sortOrder) params.append('sort_order', sortOrder);
 
       const response = await fetch(`/api/saved/${currentSeekerId}?${params}`);
       const data: SavedWarehousesResponse = await response.json();
 
       if (data.success) {
         setSavedWarehouses(data.warehouses);
-
+        
         // Extract unique cities for filter
-        const cities = [
-          ...new Set(
-            data.warehouses.map((sw) => sw.warehouse?.city).filter(Boolean),
-          ),
-        ] as string[];
+        const cities = [...new Set(
+          data.warehouses
+            .map(sw => sw.warehouse?.city)
+            .filter(Boolean)
+        )] as string[];
         setAvailableCities(cities);
       } else {
         // Set empty array on error
         setSavedWarehouses([]);
       }
     } catch (error) {
-      console.error("Error fetching saved warehouses:", error);
+      console.error('Error fetching saved warehouses:', error);
       toast({
         title: "Info",
-        description:
-          "No saved warehouses found. Start browsing to save your favorites!",
+        description: "No saved warehouses found. Start browsing to save your favorites!",
       });
       setSavedWarehouses([]);
     } finally {
@@ -120,33 +106,31 @@ export default function Saved() {
     try {
       const request: SavedWarehouseRequest = {
         seekerId: currentSeekerId,
-        warehouseId,
+        warehouseId
       };
 
-      const response = await fetch("/api/saved/toggle", {
-        method: "POST",
+      const response = await fetch('/api/saved/toggle', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
       });
 
       const data: SavedWarehouseResponse = await response.json();
-
+      
       if (data.success && !data.saved) {
         // Optimistically remove from list
-        setSavedWarehouses((prev) =>
-          prev.filter((sw) => sw.warehouse_id !== warehouseId),
-        );
+        setSavedWarehouses(prev => prev.filter(sw => sw.warehouse_id !== warehouseId));
         toast({
           title: "Warehouse Removed",
           description: "Warehouse removed from your saved list.",
         });
       } else {
-        throw new Error("Failed to remove warehouse");
+        throw new Error('Failed to remove warehouse');
       }
     } catch (error) {
-      console.error("Error removing saved warehouse:", error);
+      console.error('Error removing saved warehouse:', error);
       toast({
         title: "Error",
         description: "Failed to remove warehouse. Please try again.",
@@ -156,11 +140,11 @@ export default function Saved() {
   };
 
   // Filter warehouses based on search term
-  const filteredWarehouses = savedWarehouses.filter((sw) => {
+  const filteredWarehouses = savedWarehouses.filter(sw => {
     if (!searchTerm) return true;
     const warehouse = sw.warehouse;
     if (!warehouse) return false;
-
+    
     const searchLower = searchTerm.toLowerCase();
     return (
       warehouse.name.toLowerCase().includes(searchLower) ||
@@ -172,16 +156,16 @@ export default function Saved() {
 
   // Clear all filters
   const clearFilters = () => {
-    setSearchTerm("");
-    setCityFilter("all");
-    setPriceFilter("all");
-    setSortBy("saved_date");
-    setSortOrder("desc");
+    setSearchTerm('');
+    setCityFilter('all');
+    setPriceFilter('all');
+    setSortBy('saved_date');
+    setSortOrder('desc');
   };
 
   // Toggle sort order
   const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
   useEffect(() => {
@@ -207,12 +191,12 @@ export default function Saved() {
   return (
     <div className="min-h-screen">
       <Navbar />
-
+      
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/seeker-dashboard")}
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/seeker-dashboard')}
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -265,10 +249,8 @@ export default function Saved() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Cities</SelectItem>
-                  {availableCities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
+                  {availableCities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -288,10 +270,7 @@ export default function Saved() {
               </Select>
 
               {/* Sort By */}
-              <Select
-                value={sortBy}
-                onValueChange={(value: SortOption) => setSortBy(value)}
-              >
+              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                 <SelectTrigger className="bg-gray-800/50 border-gray-700">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -310,12 +289,12 @@ export default function Saved() {
                 onClick={toggleSortOrder}
                 className="justify-start"
               >
-                {sortOrder === "asc" ? (
+                {sortOrder === 'asc' ? (
                   <SortAsc className="h-4 w-4 mr-2" />
                 ) : (
                   <SortDesc className="h-4 w-4 mr-2" />
                 )}
-                {sortOrder === "asc" ? "Ascending" : "Descending"}
+                {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
               </Button>
             </div>
           </CardContent>
@@ -326,25 +305,20 @@ export default function Saved() {
           <Card className="glass-card">
             <CardContent className="text-center py-12">
               <Heart className="h-16 w-16 mx-auto mb-4 text-gray-500" />
-              <h3 className="text-xl font-semibold mb-2">
-                No Saved Warehouses
-              </h3>
+              <h3 className="text-xl font-semibold mb-2">No Saved Warehouses</h3>
               <p className="text-gray-400 mb-6">
-                {searchTerm ||
-                (cityFilter && cityFilter !== "all") ||
-                (priceFilter && priceFilter !== "all")
+                {searchTerm || (cityFilter && cityFilter !== 'all') || (priceFilter && priceFilter !== 'all')
                   ? "No warehouses match your current filters."
-                  : "Start exploring warehouses and save your favorites!"}
+                  : "Start exploring warehouses and save your favorites!"
+                }
               </p>
               <div className="space-x-4">
-                {(searchTerm ||
-                  (cityFilter && cityFilter !== "all") ||
-                  (priceFilter && priceFilter !== "all")) && (
+                {(searchTerm || (cityFilter && cityFilter !== 'all') || (priceFilter && priceFilter !== 'all')) && (
                   <Button variant="outline" onClick={clearFilters}>
                     Clear Filters
                   </Button>
                 )}
-                <Button onClick={() => navigate("/warehouses")}>
+                <Button onClick={() => navigate('/warehouses')}>
                   <Search className="h-4 w-4 mr-2" />
                   Browse Warehouses
                 </Button>
@@ -356,8 +330,7 @@ export default function Saved() {
             {/* Results Count */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-400">
-                {filteredWarehouses.length} warehouse
-                {filteredWarehouses.length !== 1 ? "s" : ""} saved
+                {filteredWarehouses.length} warehouse{filteredWarehouses.length !== 1 ? 's' : ''} saved
               </p>
             </div>
 
@@ -368,16 +341,11 @@ export default function Saved() {
                 if (!warehouse) return null;
 
                 return (
-                  <Card
-                    key={savedWarehouse.id}
-                    className="glass-card hover:border-gray-600 transition-colors overflow-hidden"
-                  >
+                  <Card key={savedWarehouse.id} className="glass-card hover:border-gray-600 transition-colors overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="text-lg line-clamp-1">
-                            {warehouse.name}
-                          </CardTitle>
+                          <CardTitle className="text-lg line-clamp-1">{warehouse.name}</CardTitle>
                           <CardDescription className="flex items-center mt-1">
                             <MapPin className="h-4 w-4 mr-1" />
                             {warehouse.city}, {warehouse.state}
@@ -393,39 +361,32 @@ export default function Saved() {
                         </Button>
                       </div>
                     </CardHeader>
-
+                    
                     <CardContent className="space-y-4">
                       {/* Stats */}
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-gray-400">Price</span>
-                          <div className="font-medium text-green-400">
-                            ₹{warehouse.price_per_sqft}/sq ft
-                          </div>
+                          <div className="font-medium text-green-400">₹{warehouse.price_per_sqft}/sq ft</div>
                         </div>
                         <div>
                           <span className="text-gray-400">Area</span>
-                          <div className="font-medium">
-                            {warehouse.total_area_sqft?.toLocaleString() ||
-                              "N/A"}{" "}
-                            sq ft
-                          </div>
+                          <div className="font-medium">{warehouse.total_area_sqft?.toLocaleString() || 'N/A'} sq ft</div>
                         </div>
                         <div>
                           <span className="text-gray-400">Rating</span>
                           <div className="flex items-center">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                            <span className="font-medium">
-                              {warehouse.rating?.toFixed(1) || "N/A"}
-                            </span>
+                            <span className="font-medium">{warehouse.rating?.toFixed(1) || 'N/A'}</span>
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-400">Availability</span>
                           <div className="font-medium text-blue-400">
-                            {warehouse.occupancy_percentage
+                            {warehouse.occupancy_percentage 
                               ? `${(100 - warehouse.occupancy_percentage).toFixed(0)}% free`
-                              : "N/A"}
+                              : 'N/A'
+                            }
                           </div>
                         </div>
                       </div>
@@ -435,14 +396,9 @@ export default function Saved() {
                         <div>
                           <div className="flex justify-between text-sm mb-1">
                             <span className="text-gray-400">Occupancy</span>
-                            <span>
-                              {warehouse.occupancy_percentage?.toFixed(0) || 0}%
-                            </span>
+                            <span>{warehouse.occupancy_percentage?.toFixed(0) || 0}%</span>
                           </div>
-                          <Progress
-                            value={warehouse.occupancy_percentage || 0}
-                            className="h-2"
-                          />
+                          <Progress value={warehouse.occupancy_percentage || 0} className="h-2" />
                         </div>
                       )}
 
@@ -452,10 +408,7 @@ export default function Saved() {
                       <div className="flex items-center justify-between text-sm text-gray-400">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
-                          Saved{" "}
-                          {new Date(
-                            savedWarehouse.created_at,
-                          ).toLocaleDateString()}
+                          Saved {new Date(savedWarehouse.created_at).toLocaleDateString()}
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {warehouse.type}
@@ -464,11 +417,9 @@ export default function Saved() {
 
                       {/* Actions */}
                       <div className="flex space-x-2">
-                        <Button
+                        <Button 
                           className="flex-1 bg-blue-600 hover:bg-blue-700"
-                          onClick={() =>
-                            navigate(`/warehouses/${warehouse.id}`)
-                          }
+                          onClick={() => navigate(`/warehouses/${warehouse.id}`)}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details

@@ -1,25 +1,20 @@
-import {
-  allMaharashtraWarehouses,
-  type WarehouseData,
-} from "../client/data/enhanced-warehouses";
-import * as fs from "fs";
-import * as path from "path";
+import { allMaharashtraWarehouses, type WarehouseData } from '../client/data/enhanced-warehouses';
+import * as fs from 'fs';
+import * as path from 'path';
 
 function escapeSQL(value: any): string {
   if (value === null || value === undefined) {
-    return "NULL";
+    return 'NULL';
   }
-  if (typeof value === "number") {
+  if (typeof value === 'number') {
     return value.toString();
   }
-  if (typeof value === "boolean") {
-    return value ? "true" : "false";
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false';
   }
   if (Array.isArray(value)) {
-    const escapedItems = value.map(
-      (item) => `'${String(item).replace(/'/g, "''")}'`,
-    );
-    return `ARRAY[${escapedItems.join(", ")}]`;
+    const escapedItems = value.map(item => `'${String(item).replace(/'/g, "''")}'`);
+    return `ARRAY[${escapedItems.join(', ')}]`;
   }
   // String - escape single quotes
   return `'${String(value).replace(/'/g, "''")}'`;
@@ -27,13 +22,9 @@ function escapeSQL(value: any): string {
 
 function generateInsertStatement(warehouse: WarehouseData): string {
   const totalBlocks = Math.ceil(warehouse.size / 1000);
-  const availableBlocks = Math.ceil(
-    totalBlocks * (1 - warehouse.occupancy / 100),
-  );
-  const pincode = warehouse.address.match(/\d{6}/)?.[0] || "400001";
-  const description =
-    warehouse.description ||
-    `${warehouse.warehouseType} facility located in ${warehouse.district}, Maharashtra. Offering ${warehouse.capacity.toLocaleString()} MT capacity across ${warehouse.size.toLocaleString()} sq ft of premium storage space.`;
+  const availableBlocks = Math.ceil(totalBlocks * (1 - warehouse.occupancy / 100));
+  const pincode = warehouse.address.match(/\d{6}/)?.[0] || '400001';
+  const description = warehouse.description || `${warehouse.warehouseType} facility located in ${warehouse.district}, Maharashtra. Offering ${warehouse.capacity.toLocaleString()} MT capacity across ${warehouse.size.toLocaleString()} sq ft of premium storage space.`;
 
   const values = [
     escapeSQL(warehouse.whId), // wh_id
@@ -44,8 +35,8 @@ function generateInsertStatement(warehouse: WarehouseData): string {
     escapeSQL(warehouse.district), // district
     escapeSQL(warehouse.state), // state
     escapeSQL(pincode), // pincode
-    "NULL", // latitude
-    "NULL", // longitude
+    'NULL', // latitude
+    'NULL', // longitude
     warehouse.size, // total_area
     warehouse.capacity, // capacity
     warehouse.pricing, // price_per_sqft
@@ -68,20 +59,16 @@ function generateInsertStatement(warehouse: WarehouseData): string {
     availableBlocks, // available_blocks
     Math.ceil(Math.sqrt(totalBlocks)), // grid_rows
     Math.ceil(Math.sqrt(totalBlocks)), // grid_cols
-    "NULL", // owner_id
+    'NULL' // owner_id
   ];
 
-  return `(${values.join(", ")})`;
+  return `(${values.join(', ')})`;
 }
 
-console.log("🚀 Generating SQL insert statements...");
+console.log('🚀 Generating SQL insert statements...');
 console.log(`📦 Total warehouses: ${allMaharashtraWarehouses.length}`);
 
-const sqlFilePath = path.join(
-  process.cwd(),
-  "scripts",
-  "insert-warehouses.sql",
-);
+const sqlFilePath = path.join(process.cwd(), 'scripts', 'insert-warehouses.sql');
 
 // Create SQL header
 let sql = `-- Insert all ${allMaharashtraWarehouses.length} warehouses from Maharashtra dataset
@@ -109,9 +96,9 @@ for (let i = 0; i < allMaharashtraWarehouses.length; i += batchSize) {
   grid_rows, grid_cols, owner_id
 ) VALUES\n`;
 
-  const values = batch.map((wh) => generateInsertStatement(wh));
-  sql += values.join(",\n");
-  sql += "\nON CONFLICT (wh_id) DO UPDATE SET\n";
+  const values = batch.map(wh => generateInsertStatement(wh));
+  sql += values.join(',\n');
+  sql += '\nON CONFLICT (wh_id) DO UPDATE SET\n';
   sql += `  name = EXCLUDED.name,
   description = EXCLUDED.description,
   address = EXCLUDED.address,
@@ -171,13 +158,11 @@ ORDER BY count DESC;
 `;
 
 // Write to file
-fs.writeFileSync(sqlFilePath, sql, "utf8");
+fs.writeFileSync(sqlFilePath, sql, 'utf8');
 
 console.log(`\n✅ SQL file generated successfully!`);
 console.log(`📄 File location: ${sqlFilePath}`);
-console.log(
-  `📊 File size: ${(fs.statSync(sqlFilePath).size / 1024 / 1024).toFixed(2)} MB`,
-);
+console.log(`📊 File size: ${(fs.statSync(sqlFilePath).size / 1024 / 1024).toFixed(2)} MB`);
 console.log(`\n📝 Instructions:`);
 console.log(`1. Open your Supabase dashboard`);
 console.log(`2. Go to SQL Editor`);

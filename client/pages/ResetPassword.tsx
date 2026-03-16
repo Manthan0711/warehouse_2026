@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,9 +134,7 @@ export default function ResetPassword() {
           {ready ? (
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password" className="text-slate-200">
-                  New password
-                </Label>
+                <Label htmlFor="new-password" className="text-slate-200">New password</Label>
                 <Input
                   id="new-password"
                   type="password"
@@ -152,9 +144,7 @@ export default function ResetPassword() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password" className="text-slate-200">
-                  Confirm password
-                </Label>
+                <Label htmlFor="confirm-password" className="text-slate-200">Confirm password</Label>
                 <Input
                   id="confirm-password"
                   type="password"
@@ -163,20 +153,10 @@ export default function ResetPassword() {
                   className="bg-slate-800 border-slate-700 text-slate-100"
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                Update password
-              </Button>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Update password</Button>
             </form>
           ) : (
-            <Button
-              onClick={() => navigate("/login")}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              Back to login
-            </Button>
+            <Button onClick={() => navigate("/login")} className="w-full bg-blue-600 hover:bg-blue-700">Back to login</Button>
           )}
         </CardContent>
       </Card>

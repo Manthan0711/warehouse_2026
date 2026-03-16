@@ -1,27 +1,22 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Brain,
-  Sparkles,
-  MapPin,
-  DollarSign,
-  Maximize,
-  Building2,
-  Zap,
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Brain, 
+  Sparkles, 
+  MapPin, 
+  DollarSign, 
+  Maximize, 
+  Building2, 
+  Zap, 
   CheckCircle2,
   AlertCircle,
   TrendingDown,
@@ -30,81 +25,60 @@ import {
   Search,
   ArrowRight,
   Star,
-  Package,
-} from "lucide-react";
-import {
-  smartBookingService,
-  BookingRequirement,
-  BookingAnalysis,
-  SmartBookingOption,
-} from "@/services/smartBookingService";
-import {
-  DEFAULT_GOODS_TYPES,
-  GOODS_TYPES_BY_WAREHOUSE,
-  WAREHOUSE_TYPES,
-} from "@/data/warehouseTaxonomy";
-import { cn } from "@/lib/utils";
+  Package
+} from 'lucide-react';
+import { smartBookingService, BookingRequirement, BookingAnalysis, SmartBookingOption, WarehouseResult } from '@/services/smartBookingService';
+import { DEFAULT_GOODS_TYPES, GOODS_TYPES_BY_WAREHOUSE, WAREHOUSE_TYPES } from '@/data/warehouseTaxonomy';
+import { cn } from '@/lib/utils';
 
 interface SmartBookingAssistantProps {
   onBookingSelect?: (option: SmartBookingOption) => void;
   className?: string;
 }
 
-export function SmartBookingAssistant({
-  onBookingSelect,
-  className,
-}: SmartBookingAssistantProps) {
-  const [activeTab, setActiveTab] = useState<"form" | "chat">("form");
+export function SmartBookingAssistant({ onBookingSelect, className }: SmartBookingAssistantProps) {
+  const [activeTab, setActiveTab] = useState<'form' | 'chat'>('form');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<BookingAnalysis | null>(null);
-  const [chatInput, setChatInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<
-    Array<{ role: "user" | "assistant"; content: string }>
-  >([]);
-
+  const [chatInput, setChatInput] = useState('');
+  const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string; warehouses?: WarehouseResult[] }>>([]);
+  
   // Form state
   const [formData, setFormData] = useState<BookingRequirement>({
     requiredSpace: 1000,
-    location: "",
+    location: '',
     maxBudget: undefined,
-    preferredType: "",
-    goodsType: "",
+    preferredType: '',
+    goodsType: '',
     duration: 1,
-    urgency: "medium",
+    urgency: 'medium',
     flexibleLocation: false,
-    flexibleSpace: true,
+    flexibleSpace: true
   });
 
   const getWarehouseTypeKey = (value?: string) => {
     if (!value) return undefined;
-    const match =
-      WAREHOUSE_TYPES.find(
-        (type) => type.toLowerCase() === value.toLowerCase(),
-      ) ||
-      WAREHOUSE_TYPES.find((type) =>
-        type.toLowerCase().includes(value.toLowerCase()),
-      );
+    const match = WAREHOUSE_TYPES.find(type => type.toLowerCase() === value.toLowerCase())
+      || WAREHOUSE_TYPES.find(type => type.toLowerCase().includes(value.toLowerCase()));
     return match;
   };
 
   const goodsOptions = (() => {
     const key = getWarehouseTypeKey(formData.preferredType);
-    if (key && GOODS_TYPES_BY_WAREHOUSE[key])
-      return GOODS_TYPES_BY_WAREHOUSE[key];
+    if (key && GOODS_TYPES_BY_WAREHOUSE[key]) return GOODS_TYPES_BY_WAREHOUSE[key];
     return DEFAULT_GOODS_TYPES;
   })();
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.location) return;
-
+    
     setIsAnalyzing(true);
     try {
-      const result =
-        await smartBookingService.analyzeBookingRequirements(formData);
+      const result = await smartBookingService.analyzeBookingRequirements(formData);
       setAnalysis(result);
     } catch (error) {
-      console.error("Analysis error:", error);
+      console.error('Analysis error:', error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -113,30 +87,23 @@ export function SmartBookingAssistant({
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-
+    
     const userMessage = chatInput;
-    setChatInput("");
-    setChatHistory((prev) => [...prev, { role: "user", content: userMessage }]);
-
+    setChatInput('');
+    setChatHistory(prev => [...prev, { role: 'user', content: userMessage }]);
+    
     setIsAnalyzing(true);
     try {
-      const result =
-        await smartBookingService.processNaturalLanguageBooking(userMessage);
-      setChatHistory((prev) => [
-        ...prev,
-        { role: "assistant", content: result.response },
-      ]);
+      const result = await smartBookingService.processNaturalLanguageBooking(userMessage);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: result.response, warehouses: result.warehouses }]);
       if (result.analysis) {
         setAnalysis(result.analysis);
       }
     } catch (error) {
-      setChatHistory((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, I encountered an error. Please try again.",
-        },
-      ]);
+      setChatHistory(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }]);
     } finally {
       setIsAnalyzing(false);
     }
@@ -144,13 +111,13 @@ export function SmartBookingAssistant({
 
   const renderOption = (option: SmartBookingOption, index: number) => {
     const isBest = index === 0;
-
+    
     return (
-      <Card
-        key={option.id}
+      <Card 
+        key={option.id} 
         className={cn(
           "cursor-pointer transition-all hover:shadow-lg",
-          isBest && "ring-2 ring-blue-500 dark:ring-blue-400",
+          isBest && "ring-2 ring-blue-500 dark:ring-blue-400"
         )}
         onClick={() => onBookingSelect?.(option)}
       >
@@ -162,17 +129,11 @@ export function SmartBookingAssistant({
                   <Star className="w-3 h-3 mr-1" /> Best Match
                 </Badge>
               )}
-              <Badge
-                variant={option.type === "merged" ? "secondary" : "outline"}
-              >
-                {option.type === "merged" ? (
-                  <>
-                    <Layers className="w-3 h-3 mr-1" /> Multi-Warehouse
-                  </>
+              <Badge variant={option.type === 'merged' ? 'secondary' : 'outline'}>
+                {option.type === 'merged' ? (
+                  <><Layers className="w-3 h-3 mr-1" /> Multi-Warehouse</>
                 ) : (
-                  <>
-                    <Building2 className="w-3 h-3 mr-1" /> Single
-                  </>
+                  <><Building2 className="w-3 h-3 mr-1" /> Single</>
                 )}
               </Badge>
             </div>
@@ -181,50 +142,34 @@ export function SmartBookingAssistant({
             </span>
           </div>
           <CardTitle className="text-lg mt-2">
-            {option.warehouses.map((w) => w.name).join(" + ")}
+            {option.warehouses.map(w => w.name).join(' + ')}
           </CardTitle>
           <CardDescription>
-            {option.warehouses
-              .map((w) => w.city)
-              .filter((v, i, a) => a.indexOf(v) === i)
-              .join(", ")}
+            {option.warehouses.map(w => w.city).filter((v, i, a) => a.indexOf(v) === i).join(', ')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Space
-              </p>
-              <p className="font-semibold">
-                {option.totalArea.toLocaleString()} sq ft
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Space</p>
+              <p className="font-semibold">{option.totalArea.toLocaleString()} sq ft</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Monthly Cost
-              </p>
-              <p className="font-semibold">
-                ₹{option.totalMonthlyCost.toLocaleString()}
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Monthly Cost</p>
+              <p className="font-semibold">₹{option.totalMonthlyCost.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Avg Price
-              </p>
-              <p className="font-semibold">
-                ₹{option.averagePricePerSqft}/sq ft
-              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Avg Price</p>
+              <p className="font-semibold">₹{option.averagePricePerSqft}/sq ft</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Blocks</p>
               <p className="font-semibold">
-                {option.warehouses.reduce((sum, w) => sum + w.blocks.length, 0)}{" "}
-                blocks
+                {option.warehouses.reduce((sum, w) => sum + w.blocks.length, 0)} blocks
               </p>
             </div>
           </div>
-
+          
           {option.savings && option.savings > 0 && (
             <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg mb-3">
               <TrendingDown className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -233,15 +178,11 @@ export function SmartBookingAssistant({
               </span>
             </div>
           )}
-
+          
           <div className="space-y-2">
             <div className="flex flex-wrap gap-1">
               {option.pros.map((pro, i) => (
-                <Badge
-                  key={i}
-                  variant="outline"
-                  className="text-xs text-green-600 border-green-200"
-                >
+                <Badge key={i} variant="outline" className="text-xs text-green-600 border-green-200">
                   <CheckCircle2 className="w-3 h-3 mr-1" /> {pro}
                 </Badge>
               ))}
@@ -249,27 +190,20 @@ export function SmartBookingAssistant({
             {option.cons.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {option.cons.map((con, i) => (
-                  <Badge
-                    key={i}
-                    variant="outline"
-                    className="text-xs text-amber-600 border-amber-200"
-                  >
+                  <Badge key={i} variant="outline" className="text-xs text-amber-600 border-amber-200">
                     <AlertCircle className="w-3 h-3 mr-1" /> {con}
                   </Badge>
                 ))}
               </div>
             )}
           </div>
-
+          
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 italic">
             <Brain className="w-4 h-4 inline mr-1" />
             {option.llmReasoning}
           </p>
-
-          <Button
-            className="w-full mt-4"
-            onClick={() => onBookingSelect?.(option)}
-          >
+          
+          <Button className="w-full mt-4" onClick={() => onBookingSelect?.(option)}>
             Select This Option <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </CardContent>
@@ -311,34 +245,25 @@ export function SmartBookingAssistant({
             <CardHeader>
               <CardTitle>Enter Your Requirements</CardTitle>
               <CardDescription>
-                Our AI will find the best warehouse options, including
-                multi-warehouse combinations
+                Our AI will find the best warehouse options, including multi-warehouse combinations
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleFormSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="location"
-                      className="flex items-center gap-2"
-                    >
+                    <Label htmlFor="location" className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" /> Location *
                     </Label>
                     <Input
                       id="location"
                       placeholder="e.g., Thane, Mumbai, Pune"
                       value={formData.location}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          location: e.target.value,
-                        }))
-                      }
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                       required
                     />
                   </div>
-
+                  
                   <div className="space-y-2">
                     <Label htmlFor="space" className="flex items-center gap-2">
                       <Maximize className="w-4 h-4" /> Required Space (sq ft) *
@@ -348,38 +273,28 @@ export function SmartBookingAssistant({
                       type="number"
                       min={100}
                       value={formData.requiredSpace}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          requiredSpace: parseInt(e.target.value) || 0,
-                        }))
-                      }
+                      onChange={(e) => setFormData(prev => ({ ...prev, requiredSpace: parseInt(e.target.value) || 0 }))}
                       required
                     />
                   </div>
-
+                  
                   <div className="space-y-2">
                     <Label htmlFor="budget" className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4" /> Max Budget (₹/sq
-                      ft/month)
+                      <DollarSign className="w-4 h-4" /> Max Budget (₹/sq ft/month)
                     </Label>
                     <Input
                       id="budget"
                       type="number"
                       min={10}
                       placeholder="Optional"
-                      value={formData.maxBudget || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          maxBudget: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        }))
-                      }
+                      value={formData.maxBudget || ''}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        maxBudget: e.target.value ? parseInt(e.target.value) : undefined 
+                      }))}
                     />
                   </div>
-
+                  
                   <div className="space-y-2">
                     <Label htmlFor="type" className="flex items-center gap-2">
                       <Building2 className="w-4 h-4" /> Warehouse Type
@@ -388,16 +303,11 @@ export function SmartBookingAssistant({
                       id="type"
                       list="warehouse-type-list"
                       placeholder="e.g., Cold Storage, General"
-                      value={formData.preferredType || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          preferredType: e.target.value,
-                        }))
-                      }
+                      value={formData.preferredType || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, preferredType: e.target.value }))}
                     />
                     <datalist id="warehouse-type-list">
-                      {WAREHOUSE_TYPES.map((option) => (
+                      {WAREHOUSE_TYPES.map(option => (
                         <option key={option} value={option} />
                       ))}
                     </datalist>
@@ -408,37 +318,26 @@ export function SmartBookingAssistant({
 
                   <div className="space-y-2">
                     <Label htmlFor="goods" className="flex items-center gap-2">
-                      <Package className="w-4 h-4" /> Goods Type (auto-maps to
-                      warehouse type)
+                      <Package className="w-4 h-4" /> Goods Type (auto-maps to warehouse type)
                     </Label>
                     <Input
                       id="goods"
                       list="goods-type-list"
                       placeholder="e.g., Vaccines, Dairy, Electronics"
-                      value={formData.goodsType || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          goodsType: e.target.value,
-                        }))
-                      }
+                      value={formData.goodsType || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, goodsType: e.target.value }))}
                     />
                     <datalist id="goods-type-list">
-                      {goodsOptions.map((option) => (
+                      {goodsOptions.map(option => (
                         <option key={option} value={option} />
                       ))}
                     </datalist>
                     <div className="flex flex-wrap gap-2">
-                      {goodsOptions.slice(0, 6).map((option) => (
+                      {goodsOptions.slice(0, 6).map(option => (
                         <button
                           key={option}
                           type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              goodsType: option,
-                            }))
-                          }
+                          onClick={() => setFormData(prev => ({ ...prev, goodsType: option }))}
                           className="rounded-full border border-slate-300/60 dark:border-slate-700 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
                           {option}
@@ -455,25 +354,18 @@ export function SmartBookingAssistant({
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="flex items-center gap-2">
-                        <Layers className="w-4 h-4" /> Allow Multi-Warehouse
-                        Booking
+                        <Layers className="w-4 h-4" /> Allow Multi-Warehouse Booking
                       </Label>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Combine spaces from multiple warehouses for better
-                        pricing
+                        Combine spaces from multiple warehouses for better pricing
                       </p>
                     </div>
                     <Switch
                       checked={formData.flexibleSpace}
-                      onCheckedChange={(checked) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          flexibleSpace: checked,
-                        }))
-                      }
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, flexibleSpace: checked }))}
                     />
                   </div>
-
+                  
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="flex items-center gap-2">
@@ -485,21 +377,12 @@ export function SmartBookingAssistant({
                     </div>
                     <Switch
                       checked={formData.flexibleLocation}
-                      onCheckedChange={(checked) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          flexibleLocation: checked,
-                        }))
-                      }
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, flexibleLocation: checked }))}
                     />
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isAnalyzing || !formData.location}
-                >
+                <Button type="submit" className="w-full" disabled={isAnalyzing || !formData.location}>
                   {isAnalyzing ? (
                     <>
                       <Zap className="w-4 h-4 mr-2 animate-pulse" />
@@ -536,29 +419,65 @@ export function SmartBookingAssistant({
                     <ul className="text-sm mt-2 space-y-1">
                       <li>"I need 400 sq ft in Thane with low budget"</li>
                       <li>"Find cold storage in Mumbai, around 5000 sq ft"</li>
-                      <li>
-                        "Looking for warehouse space in Pune under ₹50/sq ft"
-                      </li>
+                      <li>"Looking for warehouse space in Pune under ₹50/sq ft"</li>
                     </ul>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {chatHistory.map((msg, i) => (
-                      <div
-                        key={i}
+                      <div 
+                        key={i} 
                         className={cn(
                           "p-3 rounded-lg",
-                          msg.role === "user"
-                            ? "bg-blue-100 dark:bg-blue-900/30 ml-8"
-                            : "bg-gray-100 dark:bg-gray-800 mr-8",
+                          msg.role === 'user' 
+                            ? "bg-blue-100 dark:bg-blue-900/30 ml-8" 
+                            : "bg-gray-100 dark:bg-gray-800 mr-8"
                         )}
                       >
                         <p className="text-sm font-medium mb-1">
-                          {msg.role === "user" ? "You" : "🤖 Smart Assistant"}
+                          {msg.role === 'user' ? 'You' : '🤖 Smart Assistant'}
                         </p>
-                        <p className="whitespace-pre-wrap text-sm">
-                          {msg.content}
-                        </p>
+                        <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                        {msg.role === 'assistant' && msg.warehouses && msg.warehouses.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {msg.warehouses.map((w, idx) => {
+                              const rankEmoji = ['🥇','🥈','🥉','4️⃣','5️⃣'][idx] ?? `${idx+1}.`;
+                              return (
+                                <div key={w.id} className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold flex items-center gap-1">
+                                        <span>{rankEmoji}</span>
+                                        <span className="truncate">{w.name}</span>
+                                        {w.matchScore ? (
+                                          <span className="ml-1 text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full">
+                                            {w.matchScore}%
+                                          </span>
+                                        ) : null}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        📍 {w.city}
+                                        {w.total_area ? ` · ${w.total_area.toLocaleString()} sq ft` : ''}
+                                        {` · ₹${w.price_per_sqft}/sqft`}
+                                        {w.warehouse_type ? ` · ${w.warehouse_type}` : ''}
+                                        {w.rating ? ` · ⭐ ${w.rating}` : ''}
+                                      </p>
+                                      {w.reason && (
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 italic">💬 {w.reason}</p>
+                                      )}
+                                    </div>
+                                    <Link
+                                      to={`/warehouses/${w.id}`}
+                                      className="flex-shrink-0 flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors whitespace-nowrap"
+                                    >
+                                      View &amp; Book <ArrowRight className="w-3 h-3" />
+                                    </Link>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     ))}
                     {isAnalyzing && (
@@ -569,7 +488,7 @@ export function SmartBookingAssistant({
                   </div>
                 )}
               </ScrollArea>
-
+              
               <form onSubmit={handleChatSubmit} className="flex gap-2">
                 <Input
                   placeholder="Describe your warehouse needs..."
@@ -577,10 +496,7 @@ export function SmartBookingAssistant({
                   onChange={(e) => setChatInput(e.target.value)}
                   disabled={isAnalyzing}
                 />
-                <Button
-                  type="submit"
-                  disabled={isAnalyzing || !chatInput.trim()}
-                >
+                <Button type="submit" disabled={isAnalyzing || !chatInput.trim()}>
                   <Sparkles className="w-4 h-4" />
                 </Button>
               </form>
@@ -601,16 +517,14 @@ export function SmartBookingAssistant({
               {analysis.options.length} options found
             </Badge>
           </div>
-
+          
           {/* AI Summary */}
           <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
             <CardContent className="pt-4">
               <div className="flex items-start gap-3">
                 <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-100">
-                    AI Analysis
-                  </p>
+                  <p className="font-medium text-blue-900 dark:text-blue-100">AI Analysis</p>
                   <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                     {analysis.llmSummary}
                   </p>
@@ -621,29 +535,22 @@ export function SmartBookingAssistant({
               </div>
             </CardContent>
           </Card>
-
+          
           {/* Options Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {analysis.options
-              .slice(0, 6)
-              .map((option, i) => renderOption(option, i))}
+            {analysis.options.slice(0, 6).map((option, i) => renderOption(option, i))}
           </div>
-
+          
           {/* Alternative Suggestions */}
           {analysis.alternativeSuggestions.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">
-                  💡 Alternative Suggestions
-                </CardTitle>
+                <CardTitle className="text-lg">💡 Alternative Suggestions</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   {analysis.alternativeSuggestions.map((suggestion, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400"
-                    >
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <span className="text-blue-500">•</span>
                       {suggestion}
                     </li>

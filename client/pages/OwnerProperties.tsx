@@ -4,19 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
-import {
-  warehouseService,
-  type SupabaseWarehouse,
-} from "@/services/warehouseService";
-import {
-  Building2,
-  MapPin,
-  Star,
-  ArrowLeft,
-  Loader2,
-  DollarSign,
-  Package,
-} from "lucide-react";
+import { warehouseService, type SupabaseWarehouse } from "@/services/warehouseService";
+import { Building2, MapPin, Star, ArrowLeft, Loader2, DollarSign, Package } from "lucide-react";
 
 export default function OwnerProperties() {
   const { ownerId } = useParams();
@@ -34,11 +23,10 @@ export default function OwnerProperties() {
 
       try {
         setLoading(true);
-        const { data, error } =
-          await warehouseService.getWarehousesByOwner(ownerId);
-
+        const { data, error } = await warehouseService.getWarehousesByOwner(ownerId);
+        
         if (error) {
-          console.error("Error fetching owner properties:", error);
+          console.error('Error fetching owner properties:', error);
         } else if (data) {
           setWarehouses(data);
           // Get owner name from first warehouse if available
@@ -47,7 +35,7 @@ export default function OwnerProperties() {
           }
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
@@ -88,9 +76,7 @@ export default function OwnerProperties() {
             Properties by {ownerName}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {warehouses.length}{" "}
-            {warehouses.length === 1 ? "property" : "properties"} managed by
-            this owner
+            {warehouses.length} {warehouses.length === 1 ? 'property' : 'properties'} managed by this owner
           </p>
         </div>
 
@@ -98,16 +84,14 @@ export default function OwnerProperties() {
           <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardContent className="py-12 text-center">
               <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
-                No properties found for this owner
-              </p>
+              <p className="text-gray-600 dark:text-gray-400">No properties found for this owner</p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {warehouses.map((warehouse) => (
-              <Card
-                key={warehouse.id}
+              <Card 
+                key={warehouse.id} 
                 className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => navigate(`/warehouses/${warehouse.id}`)}
               >
@@ -119,15 +103,11 @@ export default function OwnerProperties() {
                       </CardTitle>
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <MapPin className="h-4 w-4" />
-                        <span>
-                          {warehouse.city}, {warehouse.state}
-                        </span>
+                        <span>{warehouse.city}, {warehouse.state}</span>
                       </div>
                     </div>
-                    <Badge
-                      variant={
-                        warehouse.status === "active" ? "default" : "secondary"
-                      }
+                    <Badge 
+                      variant={warehouse.status === 'active' ? 'default' : 'secondary'}
                       className="ml-2"
                     >
                       {warehouse.status}
@@ -139,7 +119,7 @@ export default function OwnerProperties() {
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {warehouse.rating?.toFixed(1) || "4.0"}
+                        {warehouse.rating?.toFixed(1) || '4.0'}
                       </span>
                       <span className="text-sm text-gray-500">
                         ({warehouse.reviews_count || 0} reviews)
@@ -171,9 +151,7 @@ export default function OwnerProperties() {
                   {warehouse.occupancy !== undefined && (
                     <div>
                       <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-gray-600 dark:text-gray-400">
-                          Occupancy
-                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">Occupancy</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {(warehouse.occupancy * 100).toFixed(0)}%
                         </span>

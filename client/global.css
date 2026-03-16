@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
-@import url("./enhanced-ui.css");
+@import url('./enhanced-ui.css');
 
 @tailwind base;
 @tailwind components;
@@ -120,7 +119,7 @@
     --border: 229 26% 20%;
     --input: 229 26% 20%;
     --ring: 212.7 26.8% 83.9%;
-
+    
     --sidebar-background: 230 30% 10%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 214 80% 56%;
@@ -185,10 +184,6 @@
   @apply shadow-sm focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all duration-300;
 }
 
-.font-space {
-  font-family: "Space Grotesk", "Manrope", sans-serif;
-}
-
 .shadow-glow {
   @apply shadow-lg hover:shadow-xl transition-all duration-300;
 }
@@ -207,8 +202,7 @@
 
 /* Animation utilities */
 @keyframes pulse-soft {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
   }
   50% {
@@ -222,15 +216,15 @@
 
 /* Advanced background effects */
 .bg-mesh {
-  background-image:
-    radial-gradient(at 21% 33%, hsla(225, 100%, 96%, 0.2) 0px, transparent 50%),
-    radial-gradient(at 79% 76%, hsla(218, 100%, 96%, 0.2) 0px, transparent 50%);
+  background-image: 
+    radial-gradient(at 21% 33%, hsla(225,100%,96%,0.2) 0px, transparent 50%),
+    radial-gradient(at 79% 76%, hsla(218,100%,96%,0.2) 0px, transparent 50%);
 }
 
 .bg-mesh.purple {
-  background-image:
-    radial-gradient(at 21% 33%, hsla(265, 100%, 96%, 0.2) 0px, transparent 50%),
-    radial-gradient(at 79% 76%, hsla(250, 100%, 96%, 0.2) 0px, transparent 50%);
+  background-image: 
+    radial-gradient(at 21% 33%, hsla(265,100%,96%,0.2) 0px, transparent 50%),
+    radial-gradient(at 79% 76%, hsla(250,100%,96%,0.2) 0px, transparent 50%);
 }
 
 /* Fix for env checker rendering */
@@ -245,7 +239,7 @@ pre {
 }
 
 /* Dark theme body background override */
-.dark body,
+.dark body, 
 .professional body {
   background-color: hsl(var(--background));
 }

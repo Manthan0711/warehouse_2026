@@ -12,15 +12,9 @@ console.log(`
 `);
 
 console.log(`📦 Environment Configuration:`);
-console.log(
-  `   - Supabase URL: ${process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "Not configured"}`,
-);
-console.log(
-  `   - Gemini API Key: ${process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY ? "✓ Configured" : "✗ Not configured"}`,
-);
-console.log(
-  `   - ML Service URL: ${process.env.ML_SERVICE_URL || "Not configured"}`,
-);
+console.log(`   - Supabase URL: ${process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'Not configured'}`);
+console.log(`   - Gemini API Key: ${process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY ? '✓ Configured' : '✗ Not configured'}`);
+console.log(`   - ML Service URL: ${process.env.ML_SERVICE_URL || 'Not configured'}`);
 
 app.listen(port, () => {
   console.log(`
@@ -37,8 +31,8 @@ app.listen(port, () => {
 
 🔧 Services Status:
    - Express Server: ✓ Running
-   - Supabase: ${process.env.SUPABASE_URL ? "✓ Configured" : "⚠ Using mock data"}
-   - Gemini AI: ${process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY ? "✓ Configured" : "⚠ Using simulated responses"}
+   - Supabase: ${process.env.SUPABASE_URL ? '✓ Configured' : '⚠ Using mock data'}
+   - Gemini AI: ${process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY ? '✓ Configured' : '⚠ Using simulated responses'}
    - ML Algorithms: ✓ Hybrid mode active
 
 Press Ctrl+C to stop the server

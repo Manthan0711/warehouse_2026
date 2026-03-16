@@ -1,14 +1,8 @@
 import { RequestHandler } from "express";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL ||
-  "https://bsrzqffxgvdebyofmhzg.supabase.co";
-const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE ||
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  "";
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "https://bsrzqffxgvdebyofmhzg.supabase.co";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 /**
@@ -98,9 +92,7 @@ export const getOwnerSubmissions: RequestHandler = async (req, res) => {
     const { ownerId } = req.params;
 
     if (!ownerId) {
-      return res
-        .status(400)
-        .json({ success: false, error: "ownerId is required" });
+      return res.status(400).json({ success: false, error: "ownerId is required" });
     }
 
     const { data, error } = await supabase
@@ -129,22 +121,14 @@ export const getOwnerSubmissions: RequestHandler = async (req, res) => {
  */
 export const uploadFile: RequestHandler = async (req, res) => {
   try {
-    const { fileName, fileBase64, contentType, bucket, folder } =
-      req.body || {};
+    const { fileName, fileBase64, contentType, bucket, folder } = req.body || {};
 
     if (!fileName || !fileBase64) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          error: "fileName and fileBase64 are required",
-        });
+      return res.status(400).json({ success: false, error: "fileName and fileBase64 are required" });
     }
 
     const bucketName = bucket || "warehouse-documents";
-    const filePath = folder
-      ? `${folder}/${Date.now()}_${fileName}`
-      : `${Date.now()}_${fileName}`;
+    const filePath = folder ? `${folder}/${Date.now()}_${fileName}` : `${Date.now()}_${fileName}`;
 
     // Decode base64 content
     const buffer = Buffer.from(fileBase64, "base64");

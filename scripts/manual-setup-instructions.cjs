@@ -2,9 +2,9 @@
 
 /**
  * MANUAL DATABASE SETUP INSTRUCTIONS
- *
+ * 
  * Since automated SQL execution is not working, please follow these steps:
- *
+ * 
  * 1. Go to your Supabase Dashboard: https://supabase.com/dashboard
  * 2. Select your project: bsrzqffxgvdebyofmhzg
  * 3. Go to SQL Editor (left sidebar)
@@ -29,20 +29,15 @@ console.log(`
 `);
 
 // Read and display the SQL content
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 try {
-  const sqlPath = path.join(
-    __dirname,
-    "..",
-    "database",
-    "warehouse_submissions.sql",
-  );
-  const sqlContent = fs.readFileSync(sqlPath, "utf-8");
-
+  const sqlPath = path.join(__dirname, '..', 'database', 'warehouse_submissions.sql');
+  const sqlContent = fs.readFileSync(sqlPath, 'utf-8');
+  
   console.log(sqlContent);
-
+  
   console.log(`
 ===========================================
 📋 STORAGE BUCKET SETUP:
@@ -79,6 +74,7 @@ And this bucket in Storage:
 
 ===========================================
 `);
+
 } catch (error) {
-  console.error("Error reading SQL file:", error);
+  console.error('Error reading SQL file:', error);
 }

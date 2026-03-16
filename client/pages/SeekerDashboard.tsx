@@ -2,32 +2,11 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Building2,
-  Package,
-  DollarSign,
-  Heart,
-  Calendar,
-  Clock,
-  Search,
-  TrendingUp,
-  Download,
-  Eye,
-  Circle as XCircle,
-  Star,
-  Bell,
-  History,
-} from "lucide-react";
+import { Building2, Package, DollarSign, Heart, Calendar, Clock, Search, TrendingUp, Download, Eye, Circle as XCircle, Star, Bell, History } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface DashboardStats {
@@ -57,7 +36,7 @@ export default function SeekerDashboard() {
     activeBookings: 0,
     completedBookings: 0,
     totalSpent: 0,
-    savedWarehouses: 0,
+    savedWarehouses: 0
   });
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [savedWarehouses, setSavedWarehouses] = useState<any[]>([]);
@@ -65,8 +44,8 @@ export default function SeekerDashboard() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (!user || !profile || profile.user_type !== "seeker") {
-        navigate("/login?redirect=/dashboard");
+      if (!user || !profile || profile.user_type !== 'seeker') {
+        navigate('/login?redirect=/dashboard');
       } else {
         loadDashboardData();
       }
@@ -78,66 +57,52 @@ export default function SeekerDashboard() {
       setLoading(true);
 
       // Check if this is a demo user
-      const isDemoUser = user!.id.startsWith("demo-");
-
+      const isDemoUser = user!.id.startsWith('demo-');
+      
       if (isDemoUser) {
         // For demo users, fetch real bookings from API instead of using mock data
-        console.log("Demo user detected - fetching real data from API");
-
+        console.log('Demo user detected - fetching real data from API');
+        
         try {
           // Fetch bookings from API
-          const bookingsResponse = await fetch(
-            `/api/bookings?seeker_id=${user!.id}`,
-          );
+          const bookingsResponse = await fetch(`/api/bookings?seeker_id=${user!.id}`);
           const bookingsData = await bookingsResponse.json();
-
+          
           // Fetch saved warehouses count from API
           const savedResponse = await fetch(`/api/saved/${user!.id}`);
           const savedData = await savedResponse.json();
-
+          
           if (bookingsData.success && bookingsData.bookings) {
             const mappedBookings = bookingsData.bookings.map((b: any) => ({
               id: b.id,
               warehouse_id: b.warehouse_id,
-              warehouse_name: b.warehouse_name || "N/A",
+              warehouse_name: b.warehouse_name || 'N/A',
               total_sqft: b.area_sqft || b.total_sqft,
               total_amount: b.total_amount,
               start_date: b.start_date,
               end_date: b.end_date,
               status: b.status,
-              payment_status: b.payment_status || "pending",
-              booking_reference: b.booking_reference,
+              payment_status: b.payment_status || 'pending',
+              booking_reference: b.booking_reference
             }));
-
+            
             setBookings(mappedBookings);
-
-            const active = mappedBookings.filter(
-              (b: Booking) =>
-                b.status === "active" ||
-                b.status === "confirmed" ||
-                b.status === "approved" ||
-                b.status === "pending",
+            
+            const active = mappedBookings.filter((b: Booking) => 
+              b.status === 'active' || b.status === 'confirmed' || b.status === 'approved' || b.status === 'pending'
             ).length;
-            const completed = mappedBookings.filter(
-              (b: Booking) => b.status === "completed",
-            ).length;
+            const completed = mappedBookings.filter((b: Booking) => b.status === 'completed').length;
             const spent = mappedBookings
-              .filter((b: Booking) => b.payment_status === "paid")
-              .reduce(
-                (sum: number, b: Booking) =>
-                  sum + parseFloat(String(b.total_amount) || "0"),
-                0,
-              );
-
-            const savedCount = savedData.success
-              ? savedData.saved?.length || 0
-              : 0;
-
+              .filter((b: Booking) => b.payment_status === 'paid')
+              .reduce((sum: number, b: Booking) => sum + parseFloat(String(b.total_amount) || '0'), 0);
+            
+            const savedCount = savedData.success ? (savedData.saved?.length || 0) : 0;
+            
             setStats({
               activeBookings: active,
               completedBookings: completed,
               totalSpent: spent,
-              savedWarehouses: savedCount,
+              savedWarehouses: savedCount
             });
           } else {
             // No bookings found, set zeros
@@ -145,31 +110,29 @@ export default function SeekerDashboard() {
               activeBookings: 0,
               completedBookings: 0,
               totalSpent: 0,
-              savedWarehouses: savedData.success
-                ? savedData.saved?.length || 0
-                : 0,
+              savedWarehouses: savedData.success ? (savedData.saved?.length || 0) : 0
             });
             setBookings([]);
           }
-
+          
           if (savedData.success && savedData.saved) {
             setSavedWarehouses(savedData.saved);
           } else {
             setSavedWarehouses([]);
           }
         } catch (error) {
-          console.error("Error fetching demo user data:", error);
+          console.error('Error fetching demo user data:', error);
           // Fallback to zeros on error
           setStats({
             activeBookings: 0,
             completedBookings: 0,
             totalSpent: 0,
-            savedWarehouses: 0,
+            savedWarehouses: 0
           });
           setBookings([]);
           setSavedWarehouses([]);
         }
-
+        
         setLoading(false);
         return;
       }
@@ -178,20 +141,20 @@ export default function SeekerDashboard() {
 
       try {
         const { data: seekerProfile } = await supabase
-          .from("seeker_profiles")
-          .select("id")
-          .eq("user_id", user!.id)
+          .from('seeker_profiles')
+          .select('id')
+          .eq('user_id', user!.id)
           .maybeSingle();
 
         if (!seekerProfile) {
           const { data: newProfile, error: createError } = await supabase
-            .from("seeker_profiles")
+            .from('seeker_profiles')
             .insert({ user_id: user!.id })
             .select()
             .single();
 
           if (createError) {
-            console.log("Seeker profile not available (demo mode)");
+            console.log('Seeker profile not available (demo mode)');
           } else {
             seekerId = newProfile?.id;
           }
@@ -199,28 +162,25 @@ export default function SeekerDashboard() {
           seekerId = seekerProfile.id;
         }
       } catch (error) {
-        console.log("Using demo mode without seeker profile");
+        console.log('Using demo mode without seeker profile');
       }
 
       if (seekerId) {
         const [bookingsResult, savedResult] = await Promise.all([
           supabase
-            .from("bookings")
-            .select(
-              `
+            .from('bookings')
+            .select(`
               *,
               warehouses (
                 name,
                 city
               )
-            `,
-            )
-            .eq("seeker_id", seekerId)
-            .order("created_at", { ascending: false }),
+            `)
+            .eq('seeker_id', seekerId)
+            .order('created_at', { ascending: false }),
           supabase
-            .from("saved_warehouses")
-            .select(
-              `
+            .from('saved_warehouses')
+            .select(`
               *,
               warehouses (
                 id,
@@ -233,46 +193,37 @@ export default function SeekerDashboard() {
                 rating,
                 images
               )
-            `,
-            )
-            .eq("seeker_id", seekerId),
+            `)
+            .eq('seeker_id', seekerId)
         ]);
 
         if (bookingsResult.data) {
           const mappedBookings = bookingsResult.data.map((b: any) => ({
             id: b.id,
             warehouse_id: b.warehouse_id,
-            warehouse_name: b.warehouses?.name || "N/A",
+            warehouse_name: b.warehouses?.name || 'N/A',
             total_sqft: b.total_sqft,
             total_amount: b.total_amount,
             start_date: b.start_date,
             end_date: b.end_date,
             status: b.status,
             payment_status: b.payment_status,
-            booking_reference: b.booking_reference,
+            booking_reference: b.booking_reference
           }));
 
           setBookings(mappedBookings);
 
-          const active = mappedBookings.filter(
-            (b: Booking) => b.status === "active" || b.status === "confirmed",
-          ).length;
-          const completed = mappedBookings.filter(
-            (b: Booking) => b.status === "completed",
-          ).length;
+          const active = mappedBookings.filter((b: Booking) => b.status === 'active' || b.status === 'confirmed').length;
+          const completed = mappedBookings.filter((b: Booking) => b.status === 'completed').length;
           const spent = mappedBookings
-            .filter((b: Booking) => b.payment_status === "paid")
-            .reduce(
-              (sum: number, b: Booking) =>
-                sum + parseFloat(String(b.total_amount)),
-              0,
-            );
+            .filter((b: Booking) => b.payment_status === 'paid')
+            .reduce((sum: number, b: Booking) => sum + parseFloat(String(b.total_amount)), 0);
 
           setStats({
             activeBookings: active,
             completedBookings: completed,
             totalSpent: spent,
-            savedWarehouses: savedResult.data?.length || 0,
+            savedWarehouses: savedResult.data?.length || 0
           });
         }
 
@@ -281,7 +232,7 @@ export default function SeekerDashboard() {
         }
       }
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
+      console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -293,7 +244,7 @@ export default function SeekerDashboard() {
       confirmed: { variant: "default", className: "bg-blue-600" },
       completed: { variant: "secondary", className: "bg-gray-600" },
       cancelled: { variant: "destructive" },
-      pending: { variant: "outline" },
+      pending: { variant: "outline" }
     };
 
     return variants[status] || variants.pending;
@@ -306,9 +257,7 @@ export default function SeekerDashboard() {
         <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Building2 className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-4 animate-pulse" />
-            <p className="text-gray-600 dark:text-gray-300">
-              Loading dashboard...
-            </p>
+            <p className="text-gray-600 dark:text-gray-300">Loading dashboard...</p>
           </div>
         </div>
       </div>
@@ -325,8 +274,7 @@ export default function SeekerDashboard() {
             My Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Welcome back, {profile?.name || "Seeker"}! Manage your warehouse
-            bookings and preferences.
+            Welcome back, {profile?.name || 'Seeker'}! Manage your warehouse bookings and preferences.
           </p>
         </div>
 
@@ -402,37 +350,37 @@ export default function SeekerDashboard() {
 
         {/* Quick Actions Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-500"
-            onClick={() => navigate("/warehouses")}
+            onClick={() => navigate('/warehouses')}
           >
             <Search className="h-6 w-6 text-blue-600" />
             <span>Browse Warehouses</span>
           </Button>
-
-          <Button
-            variant="outline"
+          
+          <Button 
+            variant="outline" 
             className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-500"
-            onClick={() => navigate("/saved")}
+            onClick={() => navigate('/saved')}
           >
             <Heart className="h-6 w-6 text-red-600" />
             <span>Saved Warehouses</span>
           </Button>
-
-          <Button
-            variant="outline"
+          
+          <Button 
+            variant="outline" 
             className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-500"
-            onClick={() => navigate("/activity")}
+            onClick={() => navigate('/activity')}
           >
             <History className="h-6 w-6 text-purple-600" />
             <span>Activity Timeline</span>
           </Button>
-
-          <Button
-            variant="outline"
+          
+          <Button 
+            variant="outline" 
             className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-500"
-            onClick={() => navigate("/ml-recommendations")}
+            onClick={() => navigate('/ml-recommendations')}
           >
             <TrendingUp className="h-6 w-6 text-green-600" />
             <span>ML Recommendations</span>
@@ -470,7 +418,7 @@ export default function SeekerDashboard() {
                   <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
                     Start exploring warehouses and make your first booking
                   </p>
-                  <Button onClick={() => navigate("/warehouses")}>
+                  <Button onClick={() => navigate('/warehouses')}>
                     Browse Warehouses
                   </Button>
                 </CardContent>
@@ -485,53 +433,38 @@ export default function SeekerDashboard() {
                           {booking.warehouse_name}
                         </CardTitle>
                         <CardDescription className="flex items-center mt-1">
-                          <span className="font-mono text-sm">
-                            {booking.booking_reference}
-                          </span>
+                          <span className="font-mono text-sm">{booking.booking_reference}</span>
                         </CardDescription>
                       </div>
                       <Badge {...getStatusBadge(booking.status)}>
-                        {booking.status.charAt(0).toUpperCase() +
-                          booking.status.slice(1)}
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Area
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Area</p>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {booking.total_sqft.toLocaleString()} sq ft
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Amount
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Amount</p>
                         <p className="font-semibold text-gray-900 dark:text-white">
                           ₹{booking.total_amount.toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Start Date
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Start Date</p>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {new Date(booking.start_date).toLocaleDateString(
-                            "en-IN",
-                          )}
+                          {new Date(booking.start_date).toLocaleDateString('en-IN')}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          End Date
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {new Date(booking.end_date).toLocaleDateString(
-                            "en-IN",
-                          )}
+                          {new Date(booking.end_date).toLocaleDateString('en-IN')}
                         </p>
                       </div>
                     </div>
@@ -545,13 +478,13 @@ export default function SeekerDashboard() {
                         <Download className="mr-2 h-4 w-4" />
                         Download Invoice
                       </Button>
-                      {booking.status === "active" && (
+                      {booking.status === 'active' && (
                         <Button size="sm" variant="outline">
                           <Clock className="mr-2 h-4 w-4" />
                           Extend Booking
                         </Button>
                       )}
-                      {booking.status === "completed" && (
+                      {booking.status === 'completed' && (
                         <Button size="sm" variant="outline">
                           <Star className="mr-2 h-4 w-4" />
                           Write Review
@@ -575,7 +508,7 @@ export default function SeekerDashboard() {
                   <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
                     Save warehouses you like to access them quickly later
                   </p>
-                  <Button onClick={() => navigate("/warehouses")}>
+                  <Button onClick={() => navigate('/warehouses')}>
                     Browse Warehouses
                   </Button>
                 </CardContent>
@@ -586,9 +519,7 @@ export default function SeekerDashboard() {
                   <Card key={saved.id} className="overflow-hidden">
                     <div className="aspect-video bg-gray-200 dark:bg-gray-800">
                       <img
-                        src={
-                          saved.warehouses?.images?.[0] || "/placeholder.svg"
-                        }
+                        src={saved.warehouses?.images?.[0] || "/placeholder.svg"}
                         alt={saved.warehouses?.name}
                         className="w-full h-full object-cover"
                       />
@@ -617,11 +548,7 @@ export default function SeekerDashboard() {
                         <Button
                           size="sm"
                           className="flex-1"
-                          onClick={() =>
-                            navigate(
-                              `/warehouses/${saved.warehouses?.wh_id || saved.warehouses?.id}`,
-                            )
-                          }
+                          onClick={() => navigate(`/warehouses/${saved.warehouses?.wh_id || saved.warehouses?.id}`)}
                         >
                           View Details
                         </Button>
@@ -660,7 +587,7 @@ export default function SeekerDashboard() {
                 <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
                   Based on your search history and bookings
                 </p>
-                <Button onClick={() => navigate("/ml-recommendations")}>
+                <Button onClick={() => navigate('/ml-recommendations')}>
                   View ML Recommendations
                 </Button>
               </CardContent>

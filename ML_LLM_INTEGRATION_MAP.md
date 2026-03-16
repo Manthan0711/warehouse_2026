@@ -3,17 +3,13 @@
 ## 🤖 LLM Integration (Claude 3.5 Sonnet)
 
 ### Where LLM is Used:
-
 **File**: [client/components/GeminiChatbot.tsx](client/components/GeminiChatbot.tsx)
-
 - **Lines 8**: Import `getChatbotResponse` from aiService
 - **Lines 145**: Call LLM API for intelligent responses
 - **Function**: Provides real-time conversational AI for warehouse queries
 
 ### LLM Service Implementation:
-
 **File**: [client/services/aiService.ts](client/services/aiService.ts)
-
 - **Lines 177-214**: `getAIResponse()` - Main LLM orchestrator
 - **Lines 29-60**: `callOpenRouter()` - Claude 3.5 Sonnet (PRIMARY)
 - **Lines 62-95**: `callGroq()` - Llama 3.3 70B (FALLBACK 1)
@@ -21,14 +17,12 @@
 - **Lines 132-175**: `callCloudflare()` - Llama 3.1 8B (FALLBACK 3)
 
 ### LLM Features:
-
 ✅ **Intelligent Responses**: Uses Claude 3.5 Sonnet to understand warehouse queries
 ✅ **Context Awareness**: Knows about 10,002 warehouses in Supabase
 ✅ **Multi-Provider Fallback**: 4 LLM providers for reliability
 ✅ **Real-Time**: Async API calls with streaming support
 
 ### LLM API Keys (in .env):
-
 ```
 VITE_OPENROUTER_API_KEY=sk-or-v1-your_openrouter_key_here
 VITE_GROQ_API_KEY=gsk_your_groq_api_key_here
@@ -42,17 +36,13 @@ VITE_CLOUDFLARE_API_TOKEN=your_cloudflare_token_here
 ## 🧠 ML Integration (5-Algorithm Ensemble)
 
 ### Where ML is Used:
-
 **File**: [client/pages/MLRecommendations.tsx](client/pages/MLRecommendations.tsx)
-
 - **Lines 28**: Import `getAdvancedMLRecommendations` from ML service
 - **Lines 90-110**: Fetch ML recommendations on load
 - **Lines 180-350**: Display ML results with scores
 
 ### ML Algorithm Implementation:
-
 **File**: [client/services/advanced-ml-algorithms.ts](client/services/advanced-ml-algorithms.ts)
-
 - **Total Lines**: 521 lines of ML logic
 - **Lines 1-60**: Feature engineering (normalize warehouse data)
 - **Lines 62-120**: XGBoost-inspired feature importance scoring
@@ -64,14 +54,12 @@ VITE_CLOUDFLARE_API_TOKEN=your_cloudflare_token_here
 - **Lines 422-521**: Final recommendation ranking
 
 ### ML Features:
-
 ✅ **5 Advanced Algorithms**: XGBoost, KNN, Random Forest, Gradient Boosting, Neural Net
 ✅ **Real-Time Processing**: Analyzes 1000+ warehouses in ~1.5 seconds
 ✅ **Smart Scoring**: Multi-factor scoring (location, price, availability, reviews)
 ✅ **Personalized**: Considers user preferences and search history
 
 ### ML Performance:
-
 - **Input**: 10,002 warehouses from Supabase
 - **Processing Time**: ~1.5 seconds for 1000 warehouses
 - **Output**: Top 50 recommendations with scores (0-100)
@@ -82,7 +70,6 @@ VITE_CLOUDFLARE_API_TOKEN=your_cloudflare_token_here
 ## 🔍 Integration Points Summary
 
 ### 1. **Chatbot (LLM)**
-
 ```
 User Query → GeminiChatbot.tsx → getChatbotResponse() → aiService.ts
 → callOpenRouter() → Claude 3.5 Sonnet API → Response
@@ -92,7 +79,6 @@ User Query → GeminiChatbot.tsx → getChatbotResponse() → aiService.ts
 **LLM Response**: Intelligent, context-aware answer with REAL warehouse data
 
 ### 2. **ML Recommendations**
-
 ```
 User Visit → MLRecommendations.tsx → getAdvancedMLRecommendations()
 → advanced-ml-algorithms.ts → 5 Algorithms → Ensemble Score
@@ -100,7 +86,6 @@ User Visit → MLRecommendations.tsx → getAdvancedMLRecommendations()
 ```
 
 **Example Output**:
-
 ```json
 {
   "id": "LIC007034",
@@ -117,14 +102,12 @@ User Visit → MLRecommendations.tsx → getAdvancedMLRecommendations()
 ## 🎯 How to Test
 
 ### Test LLM (Chatbot):
-
 1. Go to any warehouse detail page
 2. Click chatbot icon (bottom right)
 3. Ask: **"What are the best warehouses in Mumbai?"**
 4. You should see intelligent AI response from Claude 3.5 Sonnet
 
 ### Test ML (Recommendations):
-
 1. Go to **"ML Recommendations"** page in navigation
 2. Wait 1-2 seconds for loading
 3. You should see **50 warehouses** with ML scores
@@ -135,7 +118,6 @@ User Visit → MLRecommendations.tsx → getAdvancedMLRecommendations()
 ## 📊 Technical Details
 
 ### LLM Request Format:
-
 ```typescript
 {
   message: "User query here",
@@ -148,7 +130,6 @@ User Visit → MLRecommendations.tsx → getAdvancedMLRecommendations()
 ```
 
 ### ML Feature Vector (per warehouse):
-
 ```typescript
 {
   location_score: 0.85,
@@ -161,7 +142,6 @@ User Visit → MLRecommendations.tsx → getAdvancedMLRecommendations()
 ```
 
 ### Final ML Score Calculation:
-
 ```
 Final Score = (
   XGBoost_score × 0.30 +
@@ -191,7 +171,6 @@ Final Score = (
 **CHANGE**: Now calls `getChatbotResponse()` which uses Claude 3.5 Sonnet API
 
 **File Modified**: [client/components/GeminiChatbot.tsx](client/components/GeminiChatbot.tsx)
-
 - Deleted: Lines 55-122 (hardcoded response logic)
 - Changed: Line 145 to call real LLM service
 
@@ -200,14 +179,12 @@ Final Score = (
 ## 📈 What You Get Now
 
 ### Before (Hardcoded):
-
 ```
 User: "Show warehouses in Mumbai"
 Bot: [Template response with fake data]
 ```
 
 ### After (Real LLM):
-
 ```
 User: "Show warehouses in Mumbai"
 Bot: [Claude 3.5 Sonnet analyzes 10,002 warehouses]
@@ -217,13 +194,12 @@ Bot: [Claude 3.5 Sonnet analyzes 10,002 warehouses]
 ```
 
 **Example Real Response**:
-
 > "I found 842 warehouses in Mumbai. Here are the top 5 based on your criteria:
->
+> 
 > 1. **Mumbai Logistics Hub** - ₹85/sq ft, 45,175 sq ft available
 > 2. **Smart Storage Mumbai Central** - ₹78/sq ft, 32,500 sq ft available
 > 3. **Premium Warehouse Andheri** - ₹92/sq ft, 18,900 sq ft available
->
+> 
 > All data is live from our database. Would you like me to filter by specific price range or area requirements?"
 
 ---
@@ -231,7 +207,6 @@ Bot: [Claude 3.5 Sonnet analyzes 10,002 warehouses]
 ## 🔧 Maintenance
 
 All LLM/ML code is production-ready. No further changes needed unless:
-
 - Adding new AI providers
 - Updating ML algorithms
 - Changing feature weights

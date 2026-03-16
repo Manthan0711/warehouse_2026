@@ -25,7 +25,7 @@ export default function QuickContactWidget({
   ownerEmail,
   whatsappNumber,
   isVisible,
-  onClose,
+  onClose
 }: QuickContactWidgetProps) {
   if (!isVisible) return null;
 
@@ -39,10 +39,10 @@ export default function QuickContactWidget({
 Could you please share more details about availability and features?
 
 Thank you!`;
-
+    
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, "_blank");
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleEmailContact = () => {
@@ -64,13 +64,13 @@ Could you please share more details about:
 Looking forward to hearing from you.
 
 Best regards`;
-
+    
     const emailUrl = `mailto:${ownerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(emailUrl, "_blank");
+    window.open(emailUrl, '_blank');
   };
 
   const handlePhoneContact = () => {
-    window.open(`tel:${ownerPhone}`, "_self");
+    window.open(`tel:${ownerPhone}`, '_self');
   };
 
   return (
@@ -79,17 +79,11 @@ Best regards`;
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <h3 className="font-semibold text-sm text-gray-900">
-                {warehouseName}
-              </h3>
+              <h3 className="font-semibold text-sm text-gray-900">{warehouseName}</h3>
               <p className="text-xs text-gray-600">{location}</p>
               <div className="flex items-center space-x-2 mt-1">
-                <span className="text-blue-600 font-semibold text-sm">
-                  ₹{price}/sq ft
-                </span>
-                <Badge variant="secondary" className="text-xs">
-                  Quick Contact
-                </Badge>
+                <span className="text-blue-600 font-semibold text-sm">₹{price}/sq ft</span>
+                <Badge variant="secondary" className="text-xs">Quick Contact</Badge>
               </div>
             </div>
             <Button
@@ -101,29 +95,27 @@ Best regards`;
               <X className="h-4 w-4" />
             </Button>
           </div>
-
+          
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-gray-600 mb-3">
               <span className="flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
                 Quick Response
               </span>
-              <span className="text-green-600 font-medium">
-                Owner: {ownerName}
-              </span>
+              <span className="text-green-600 font-medium">Owner: {ownerName}</span>
             </div>
-
+            
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                size="sm"
+              <Button 
+                size="sm" 
                 onClick={handleWhatsAppContact}
                 className="bg-green-600 hover:bg-green-700 text-white text-xs"
               >
                 <MessageSquare className="h-3 w-3 mr-1" />
                 WhatsApp
               </Button>
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 size="sm"
                 onClick={handlePhoneContact}
                 className="text-xs"
@@ -131,8 +123,8 @@ Best regards`;
                 <Phone className="h-3 w-3 mr-1" />
                 Call
               </Button>
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 size="sm"
                 onClick={handleEmailContact}
                 className="text-xs"
@@ -141,7 +133,7 @@ Best regards`;
                 Email
               </Button>
             </div>
-
+            
             <p className="text-xs text-gray-500 text-center mt-2">
               Connect instantly with verified warehouse owners
             </p>

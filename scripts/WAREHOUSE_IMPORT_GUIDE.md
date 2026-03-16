@@ -14,7 +14,6 @@ This guide explains how to import all 10,000 warehouses into your Supabase datab
 ### Option 1: Using Generated SQL File (Recommended)
 
 1. **Generate the SQL file**:
-
    ```bash
    npm run generate-warehouse-sql
    ```
@@ -49,14 +48,12 @@ npm run import-all-warehouses
 The warehouses table includes these fields:
 
 ### Core Information
-
 - `id` (uuid) - Primary key
 - `wh_id` (text) - Warehouse license ID (e.g., LIC000001)
 - `name` (text) - Warehouse/company name
 - `description` (text) - Detailed description
 
 ### Location
-
 - `address` (text) - Full address
 - `city` (text) - City name
 - `district` (text) - District name
@@ -66,7 +63,6 @@ The warehouses table includes these fields:
 - `longitude` (numeric) - GPS coordinates
 
 ### Capacity & Pricing
-
 - `total_area` (integer) - Total area in sq ft
 - `capacity` (integer) - Storage capacity in MT
 - `price_per_sqft` (numeric) - Monthly price per sq ft
@@ -74,7 +70,6 @@ The warehouses table includes these fields:
 - `occupancy` (numeric) - Occupancy rate (0-1)
 
 ### Features & Status
-
 - `images` (text[]) - Warehouse images
 - `amenities` (text[]) - List of amenities
 - `features` (text[]) - Warehouse features
@@ -83,26 +78,22 @@ The warehouses table includes these fields:
 - `ownership_certificate` (text) - Verification status
 
 ### Ratings & Reviews
-
 - `rating` (numeric) - Average rating (1-5)
 - `reviews_count` (integer) - Number of reviews
 
 ### Owner Information
-
 - `owner_name` (text) - Owner name
 - `owner_email` (text) - Owner email
 - `owner_phone` (text) - Owner contact
 - `owner_id` (uuid) - Foreign key to auth.users
 
 ### Storage Layout
-
 - `total_blocks` (integer) - Total storage blocks
 - `available_blocks` (integer) - Available blocks
 - `grid_rows` (integer) - Grid layout rows
 - `grid_cols` (integer) - Grid layout columns
 
 ### Timestamps
-
 - `registration_date` (date) - Registration date
 - `license_valid_upto` (date) - License expiry
 - `created_at` (timestamptz) - Creation timestamp
@@ -113,14 +104,12 @@ The warehouses table includes these fields:
 After import, run these queries to verify:
 
 ### 1. Check Total Count
-
 ```sql
 SELECT COUNT(*) as total_warehouses FROM warehouses;
 -- Expected: 10,000
 ```
 
 ### 2. Check by District
-
 ```sql
 SELECT
   district,
@@ -133,7 +122,6 @@ ORDER BY count DESC;
 ```
 
 ### 3. Check by Warehouse Type
-
 ```sql
 SELECT
   warehouse_type,
@@ -145,7 +133,6 @@ ORDER BY count DESC;
 ```
 
 ### 4. Check Active Warehouses
-
 ```sql
 SELECT
   status,
@@ -189,17 +176,14 @@ The table has RLS enabled with these policies:
 ## Troubleshooting
 
 ### Import Fails with "duplicate key value"
-
 - The script uses `ON CONFLICT` to handle duplicates
 - Existing warehouses will be updated, not duplicated
 
 ### Import Timeout
-
 - Break the SQL file into smaller chunks (e.g., 2,000 warehouses per batch)
 - Import each chunk separately
 
 ### Memory Issues
-
 - Use the batch import script instead of SQL file
 - Reduce batch size in `import-all-warehouses.ts`
 
@@ -216,7 +200,6 @@ After importing:
 ## Support
 
 For issues or questions:
-
 - Check Supabase dashboard logs
 - Review SQL error messages
 - Verify environment variables in `.env` file

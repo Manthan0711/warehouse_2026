@@ -1,7 +1,6 @@
 Production S3 presign server
 
 How to run
-
 1. Set environment variables:
    - AWS_ACCESS_KEY_ID
    - AWS_SECRET_ACCESS_KEY
@@ -17,11 +16,9 @@ node index.js
 ```
 
 Endpoint
-
 - POST /presign
   Body: { "filename": "photo.jpg", "contentType": "image/jpeg", "kind": "image" }
   Returns: { uploadUrl, publicUrl, bucket, key }
 
 Security
-
 - Run this server only on trusted infrastructure. Keep AWS credentials on the server (do not expose to browsers). Use IAM roles where possible.

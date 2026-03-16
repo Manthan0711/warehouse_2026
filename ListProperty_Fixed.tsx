@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -20,47 +14,29 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/Navbar";
-import {
-  Upload,
-  X,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Loader,
-  Bot,
-  Camera,
-  ChevronRight,
-  MapPin,
-  DollarSign,
-  Home,
-  Zap,
-  Shield,
-  Truck,
-  Warehouse,
-  Building,
-} from "lucide-react";
+import { Upload, X, FileText, CheckCircle, AlertCircle, Loader, Bot, Camera, ChevronRight, MapPin, DollarSign, Home, Zap, Shield, Truck, Warehouse, Building } from "lucide-react";
 
 // The key fix: Proper Supabase integration in handleSubmit function
 const handleSubmit = async () => {
   setLoading(true);
-
+  
   try {
     // Upload images to Supabase Storage (if any)
     let imageUrls: string[] = [];
     if (formData.images.length > 0) {
-      console.log("📸 Uploading images to Supabase Storage...");
+      console.log('📸 Uploading images to Supabase Storage...');
       for (const image of formData.images) {
         const fileName = `warehouse-images/${user.id}/${Date.now()}-${image.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("warehouse-images")
+          .from('warehouse-images')
           .upload(fileName, image);
-
+        
         if (uploadError) {
-          console.error("Image upload error:", uploadError);
+          console.error('Image upload error:', uploadError);
         } else {
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("warehouse-images").getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabase.storage
+            .from('warehouse-images')
+            .getPublicUrl(fileName);
           imageUrls.push(publicUrl);
         }
       }
@@ -71,13 +47,13 @@ const handleSubmit = async () => {
     if (formData.documents.gstCertificate) {
       const fileName = `warehouse-documents/${user.id}/${Date.now()}-gst-${formData.documents.gstCertificate.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("warehouse-documents")
+        .from('warehouse-documents')
         .upload(fileName, formData.documents.gstCertificate);
-
+      
       if (!uploadError) {
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("warehouse-documents").getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from('warehouse-documents')
+          .getPublicUrl(fileName);
         documentUrls.gst_certificate = publicUrl;
       }
     }
@@ -85,13 +61,13 @@ const handleSubmit = async () => {
     if (formData.documents.propertyPapers) {
       const fileName = `warehouse-documents/${user.id}/${Date.now()}-property-${formData.documents.propertyPapers.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("warehouse-documents")
+        .from('warehouse-documents')
         .upload(fileName, formData.documents.propertyPapers);
-
+      
       if (!uploadError) {
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("warehouse-documents").getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from('warehouse-documents')
+          .getPublicUrl(fileName);
         documentUrls.property_papers = publicUrl;
       }
     }
@@ -99,21 +75,21 @@ const handleSubmit = async () => {
     if (formData.documents.fireCertificate) {
       const fileName = `warehouse-documents/${user.id}/${Date.now()}-fire-${formData.documents.fireCertificate.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("warehouse-documents")
+        .from('warehouse-documents')
         .upload(fileName, formData.documents.fireCertificate);
-
+      
       if (!uploadError) {
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("warehouse-documents").getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from('warehouse-documents')
+          .getPublicUrl(fileName);
         documentUrls.fire_certificate = publicUrl;
       }
     }
 
     // Create warehouse submission in Supabase
-    console.log("📋 Creating warehouse submission in Supabase...");
+    console.log('📋 Creating warehouse submission in Supabase...');
     const { data: submission, error: submissionError } = await supabase
-      .from("warehouse_submissions")
+      .from('warehouse_submissions')
       .insert({
         owner_id: user.id,
         name: formData.name,
@@ -131,9 +107,9 @@ const handleSubmit = async () => {
         ocr_results: {
           gst_certificate: documentValidation.gstCertificate,
           property_papers: documentValidation.propertyPapers,
-          fire_certificate: documentValidation.fireCertificate,
+          fire_certificate: documentValidation.fireCertificate
         },
-        status: "pending",
+        status: 'pending'
       })
       .select()
       .single();
@@ -142,15 +118,17 @@ const handleSubmit = async () => {
       throw submissionError;
     }
 
-    console.log("✅ Warehouse submission created:", submission.id);
-
+    console.log('✅ Warehouse submission created:', submission.id);
+    
     // Create notification for admin
-    await supabase.from("notifications").insert({
-      user_id: user.id,
-      title: "Warehouse Submission Received",
-      message: `Your warehouse "${formData.name}" has been submitted for admin review.`,
-      notification_type: "verification",
-    });
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: user.id,
+        title: 'Warehouse Submission Received',
+        message: `Your warehouse "${formData.name}" has been submitted for admin review.`,
+        notification_type: 'verification'
+      });
 
     toast({
       title: "🎉 Property Submitted Successfully!",
@@ -159,14 +137,14 @@ const handleSubmit = async () => {
 
     // Reset form and navigate
     setFormData({
-      name: "",
-      description: "",
-      address: "",
-      city: "",
-      state: "",
-      pincode: "",
-      totalArea: "",
-      pricePerSqft: "",
+      name: '',
+      description: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      totalArea: '',
+      pricePerSqft: '',
       amenities: [],
       features: [],
       images: [],
@@ -178,14 +156,13 @@ const handleSubmit = async () => {
     });
 
     setStep(1);
-    navigate("/dashboard");
+    navigate('/dashboard');
   } catch (error: any) {
-    console.error("Submission error:", error);
+    console.error('Submission error:', error);
     toast({
       title: "Submission Failed",
-      description:
-        error.message || "Failed to submit property. Please try again.",
-      variant: "destructive",
+      description: error.message || "Failed to submit property. Please try again.",
+      variant: "destructive"
     });
   } finally {
     setLoading(false);

@@ -2,15 +2,15 @@
 
 ## Current Data Analysis Summary
 
-| Metric           | Current Status | Target            |
-| ---------------- | -------------- | ----------------- |
-| Total Records    | 10,002         | Keep all          |
-| Columns          | 46 (too many)  | 25-30 (optimized) |
-| Missing Lat/Long | 100%           | 0%                |
-| Fake Emails      | 99.5%          | 0%                |
-| Invalid Pincodes | ~99%           | 0%                |
-| Unique Cities    | 13             | 13+               |
-| Unique Districts | 10             | 10+               |
+| Metric | Current Status | Target |
+|--------|---------------|--------|
+| Total Records | 10,002 | Keep all |
+| Columns | 46 (too many) | 25-30 (optimized) |
+| Missing Lat/Long | 100% | 0% |
+| Fake Emails | 99.5% | 0% |
+| Invalid Pincodes | ~99% | 0% |
+| Unique Cities | 13 | 13+ |
+| Unique Districts | 10 | 10+ |
 
 ---
 
@@ -42,59 +42,59 @@ node scripts/fix-warehouse-data-quality.js --verify
 
 ### Essential Columns (Keep - 25 columns)
 
-| Column           | Type      | Purpose for ML               |
-| ---------------- | --------- | ---------------------------- |
-| `id`             | UUID      | Primary key                  |
-| `wh_id`          | TEXT      | License number               |
-| `name`           | TEXT      | NLP - name matching          |
-| `description`    | TEXT      | NLP - semantic search        |
-| `address`        | TEXT      | NLP - location parsing       |
-| `city`           | TEXT      | Categorical - filtering      |
-| `district`       | TEXT      | Categorical - grouping       |
-| `state`          | TEXT      | Categorical - filtering      |
-| `pincode`        | TEXT      | Geographic clustering        |
-| `latitude`       | DECIMAL   | Geospatial ML                |
-| `longitude`      | DECIMAL   | Geospatial ML                |
-| `total_area`     | INTEGER   | Numerical feature            |
-| `capacity`       | INTEGER   | Numerical feature            |
-| `price_per_sqft` | INTEGER   | Numerical - pricing ML       |
-| `warehouse_type` | TEXT      | Categorical - classification |
-| `amenities`      | JSONB     | NLP - feature extraction     |
-| `features`       | JSONB     | NLP - feature extraction     |
-| `status`         | TEXT      | Categorical - filtering      |
-| `occupancy`      | DECIMAL   | Numerical feature            |
-| `rating`         | DECIMAL   | Numerical feature            |
-| `reviews_count`  | INTEGER   | Numerical feature            |
-| `images`         | JSONB     | Image ML (future)            |
-| `owner_id`       | UUID      | Relational                   |
-| `created_at`     | TIMESTAMP | Time series                  |
-| `updated_at`     | TIMESTAMP | Time series                  |
+| Column | Type | Purpose for ML |
+|--------|------|----------------|
+| `id` | UUID | Primary key |
+| `wh_id` | TEXT | License number |
+| `name` | TEXT | NLP - name matching |
+| `description` | TEXT | NLP - semantic search |
+| `address` | TEXT | NLP - location parsing |
+| `city` | TEXT | Categorical - filtering |
+| `district` | TEXT | Categorical - grouping |
+| `state` | TEXT | Categorical - filtering |
+| `pincode` | TEXT | Geographic clustering |
+| `latitude` | DECIMAL | Geospatial ML |
+| `longitude` | DECIMAL | Geospatial ML |
+| `total_area` | INTEGER | Numerical feature |
+| `capacity` | INTEGER | Numerical feature |
+| `price_per_sqft` | INTEGER | Numerical - pricing ML |
+| `warehouse_type` | TEXT | Categorical - classification |
+| `amenities` | JSONB | NLP - feature extraction |
+| `features` | JSONB | NLP - feature extraction |
+| `status` | TEXT | Categorical - filtering |
+| `occupancy` | DECIMAL | Numerical feature |
+| `rating` | DECIMAL | Numerical feature |
+| `reviews_count` | INTEGER | Numerical feature |
+| `images` | JSONB | Image ML (future) |
+| `owner_id` | UUID | Relational |
+| `created_at` | TIMESTAMP | Time series |
+| `updated_at` | TIMESTAMP | Time series |
 
 ### Columns to Remove (21 redundant columns)
 
-| Column                   | Reason                        |
-| ------------------------ | ----------------------------- |
-| `total_size_sqft`        | Duplicate of `total_area`     |
+| Column | Reason |
+|--------|--------|
+| `total_size_sqft` | Duplicate of `total_area` |
 | `pricing_inr_sqft_month` | Duplicate of `price_per_sqft` |
-| `contact_person`         | Duplicate of owner info       |
-| `contact_phone`          | Duplicate of `owner_phone`    |
-| `contact_email`          | Duplicate of `owner_email`    |
-| `owner_name`             | Move to profiles table        |
-| `owner_email`            | Move to profiles table        |
-| `owner_phone`            | Move to profiles table        |
-| `ownership_certificate`  | Admin metadata                |
-| `registration_date`      | Admin metadata                |
-| `license_valid_upto`     | Admin metadata                |
-| `total_blocks`           | Grid system only              |
-| `available_blocks`       | Grid system only              |
-| `grid_rows`              | Grid system only              |
-| `grid_cols`              | Grid system only              |
-| `micro_rental_spaces`    | Derived from blocks           |
-| `submission_id`          | Admin metadata                |
-| `approved_at`            | Admin metadata                |
-| `approved_by`            | Admin metadata                |
-| `documents`              | Admin metadata                |
-| `source_submission_id`   | Admin metadata                |
+| `contact_person` | Duplicate of owner info |
+| `contact_phone` | Duplicate of `owner_phone` |
+| `contact_email` | Duplicate of `owner_email` |
+| `owner_name` | Move to profiles table |
+| `owner_email` | Move to profiles table |
+| `owner_phone` | Move to profiles table |
+| `ownership_certificate` | Admin metadata |
+| `registration_date` | Admin metadata |
+| `license_valid_upto` | Admin metadata |
+| `total_blocks` | Grid system only |
+| `available_blocks` | Grid system only |
+| `grid_rows` | Grid system only |
+| `grid_cols` | Grid system only |
+| `micro_rental_spaces` | Derived from blocks |
+| `submission_id` | Admin metadata |
+| `approved_at` | Admin metadata |
+| `approved_by` | Admin metadata |
+| `documents` | Admin metadata |
+| `source_submission_id` | Admin metadata |
 
 ---
 
@@ -106,9 +106,9 @@ node scripts/fix-warehouse-data-quality.js --verify
 -- Create searchable text vector
 ALTER TABLE warehouses ADD COLUMN search_vector tsvector;
 
-UPDATE warehouses SET search_vector =
-  to_tsvector('english',
-    COALESCE(name, '') || ' ' ||
+UPDATE warehouses SET search_vector = 
+  to_tsvector('english', 
+    COALESCE(name, '') || ' ' || 
     COALESCE(description, '') || ' ' ||
     COALESCE(city, '') || ' ' ||
     COALESCE(warehouse_type, '') || ' ' ||
@@ -127,7 +127,7 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- Add geometry column
 ALTER TABLE warehouses ADD COLUMN location geography(POINT, 4326);
 
-UPDATE warehouses
+UPDATE warehouses 
 SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
 WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
 
@@ -139,8 +139,8 @@ CREATE INDEX idx_location ON warehouses USING GIST(location);
 ```sql
 ALTER TABLE warehouses ADD COLUMN price_category TEXT;
 
-UPDATE warehouses SET price_category =
-  CASE
+UPDATE warehouses SET price_category = 
+  CASE 
     WHEN price_per_sqft <= 40 THEN 'budget'
     WHEN price_per_sqft <= 70 THEN 'standard'
     WHEN price_per_sqft <= 100 THEN 'premium'
@@ -153,8 +153,8 @@ UPDATE warehouses SET price_category =
 ```sql
 ALTER TABLE warehouses ADD COLUMN size_category TEXT;
 
-UPDATE warehouses SET size_category =
-  CASE
+UPDATE warehouses SET size_category = 
+  CASE 
     WHEN total_area <= 25000 THEN 'small'
     WHEN total_area <= 75000 THEN 'medium'
     WHEN total_area <= 150000 THEN 'large'
@@ -190,17 +190,17 @@ If you want to replace with real warehouse data:
 
 1. **IndiaMART** - Warehouse listings API
 2. **99acres Commercial** - Real estate data
-3. **Magicbricks Commercial** - Warehouse listings
+3. **Magicbricks Commercial** - Warehouse listings  
 4. **WDRA (Warehousing Development Regulatory Authority)** - Official registered warehouses
 5. **CII Logistics** - Industry data
 
 ### Data Fields from Real Sources:
 
-| Source    | Available Fields                         |
-| --------- | ---------------------------------------- |
-| WDRA      | License, Capacity, Location, Owner, Type |
+| Source | Available Fields |
+|--------|-----------------|
+| WDRA | License, Capacity, Location, Owner, Type |
 | IndiaMART | Name, Address, Features, Contact, Images |
-| 99acres   | Price, Area, Amenities, Location, Photos |
+| 99acres | Price, Area, Amenities, Location, Photos |
 
 ---
 
@@ -209,29 +209,28 @@ If you want to replace with real warehouse data:
 Run this query after fixing:
 
 ```sql
-SELECT
+SELECT 
   '1. Coordinates' as check,
   ROUND(100.0 * COUNT(*) FILTER (WHERE latitude IS NOT NULL) / COUNT(*), 1) || '%' as coverage
 FROM warehouses
 UNION ALL
-SELECT
+SELECT 
   '2. Valid Pincodes',
   ROUND(100.0 * COUNT(*) FILTER (WHERE pincode NOT LIKE '400001%') / COUNT(*), 1) || '%'
 FROM warehouses
 UNION ALL
-SELECT
+SELECT 
   '3. Real Emails',
   ROUND(100.0 * COUNT(*) FILTER (WHERE owner_email NOT LIKE '%@example.com') / COUNT(*), 1) || '%'
 FROM warehouses
 UNION ALL
-SELECT
+SELECT 
   '4. Valid Phones',
   ROUND(100.0 * COUNT(*) FILTER (WHERE owner_phone NOT LIKE '%E+%') / COUNT(*), 1) || '%'
 FROM warehouses;
 ```
 
 Expected output after fix:
-
 ```
 | check            | coverage |
 |------------------|----------|

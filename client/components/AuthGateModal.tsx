@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock, UserPlus, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -20,10 +14,11 @@ export default function AuthGateModal({
   isOpen,
   onClose,
   message = "Login as Storage Seeker to view warehouse details",
-  redirectPath,
+  redirectPath
 }: AuthGateModalProps) {
+
   const handleLogin = () => {
-    sessionStorage.setItem("redirectAfterLogin", redirectPath || "/");
+    sessionStorage.setItem('redirectAfterLogin', redirectPath || '/');
     onClose();
   };
 
@@ -36,9 +31,7 @@ export default function AuthGateModal({
               <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
-          <DialogTitle className="text-center text-xl">
-            Authentication Required
-          </DialogTitle>
+          <DialogTitle className="text-center text-xl">Authentication Required</DialogTitle>
           <DialogDescription className="text-center pt-2">
             {message}
           </DialogDescription>
@@ -67,24 +60,28 @@ export default function AuthGateModal({
               asChild
               onClick={handleLogin}
             >
-              <Link
-                to={`/login${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ""}`}
-              >
+              <Link to={`/login${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`}>
                 <LogIn className="mr-2 h-4 w-4" />
                 Login
               </Link>
             </Button>
-            <Button className="w-full" asChild onClick={handleLogin}>
-              <Link
-                to={`/signup${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ""}`}
-              >
+            <Button
+              className="w-full"
+              asChild
+              onClick={handleLogin}
+            >
+              <Link to={`/signup${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Sign Up
               </Link>
             </Button>
           </div>
 
-          <Button variant="ghost" className="w-full" onClick={onClose}>
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={onClose}
+          >
             Continue Browsing
           </Button>
         </div>

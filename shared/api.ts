@@ -121,7 +121,7 @@ export interface SavedStatusResponse {
 export interface ActivityLog {
   id: string;
   seeker_id: string;
-  type: "booking" | "inquiry" | "payment" | "cancellation";
+  type: 'booking' | 'inquiry' | 'payment' | 'cancellation';
   description: string;
   metadata: Record<string, any>;
   created_at: string;
@@ -129,7 +129,7 @@ export interface ActivityLog {
 
 export interface ActivityLogRequest {
   seekerId: string;
-  type: "booking" | "inquiry" | "payment" | "cancellation";
+  type: 'booking' | 'inquiry' | 'payment' | 'cancellation';
   description: string;
   metadata?: Record<string, any>;
 }
@@ -151,7 +151,7 @@ export interface Inquiry {
   owner_id: string;
   warehouse_id: string;
   message: string;
-  status: "open" | "responded" | "closed";
+  status: 'open' | 'responded' | 'closed';
   created_at: string;
   warehouses?: {
     id: string;
@@ -212,7 +212,7 @@ export interface Booking {
   blocks_booked: number;
   total_area: number;
   price: number;
-  status: "active" | "upcoming" | "completed" | "cancelled";
+  status: 'active' | 'upcoming' | 'completed' | 'cancelled';
   blockchain_tx: string | null;
   start_date: string;
   end_date: string;

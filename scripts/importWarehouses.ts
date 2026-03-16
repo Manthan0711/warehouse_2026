@@ -1,14 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
-import * as fs from "fs";
-import * as path from "path";
-import * as csv from "csv-parse";
+import { createClient } from '@supabase/supabase-js';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as csv from 'csv-parse';
 
 // Supabase configuration
-const supabaseUrl =
-  process.env.VITE_SUPABASE_URL || "https://dgcdprcxizhfubwihslj.supabase.co";
-const supabaseKey =
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2RwcmN4aXpoZnVid2loc2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYzOTE1MjQsImV4cCI6MjA1MTk2NzUyNH0.5A8WVOGrJ9gQXl1_HJ5n3FaLgZoEKxTrJ_LIZNDz8E0";
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://dgcdprcxizhfubwihslj.supabase.co';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnY2RwcmN4aXpoZnVid2loc2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYzOTE1MjQsImV4cCI6MjA1MTk2NzUyNH0.5A8WVOGrJ9gQXl1_HJ5n3FaLgZoEKxTrJ_LIZNDz8E0';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -74,11 +71,7 @@ interface WarehouseRecord {
 }
 
 function parseBoolean(value: string): boolean {
-  return (
-    value.toLowerCase() === "yes" ||
-    value.toLowerCase() === "true" ||
-    value === "1"
-  );
+  return value.toLowerCase() === 'yes' || value.toLowerCase() === 'true' || value === '1';
 }
 
 function parseNumber(value: string): number {
@@ -121,60 +114,55 @@ function transformCSVToWarehouse(csvRow: CSVWarehouse): WarehouseRecord {
 }
 
 async function createTables() {
-  console.log("Creating warehouse table...");
-
+  console.log('Creating warehouse table...');
+  
   // First, create the warehouses table if it doesn't exist
-  const { error: tableError } = await supabase.rpc("create_warehouses_table");
-
-  if (tableError && !tableError.message.includes("already exists")) {
-    console.error("Error creating table:", tableError);
+  const { error: tableError } = await supabase.rpc('create_warehouses_table');
+  
+  if (tableError && !tableError.message.includes('already exists')) {
+    console.error('Error creating table:', tableError);
     // If RPC doesn't exist, we'll proceed anyway
   }
-
-  console.log("Table creation completed (or already exists)");
+  
+  console.log('Table creation completed (or already exists)');
 }
 
 async function readCSVFile(filePath: string): Promise<CSVWarehouse[]> {
   return new Promise((resolve, reject) => {
     const results: CSVWarehouse[] = [];
-
+    
     fs.createReadStream(filePath)
-      .pipe(
-        csv.parse({
-          columns: true,
-          skip_empty_lines: true,
-          trim: true,
-        }),
-      )
-      .on("data", (data) => results.push(data))
-      .on("end", () => {
+      .pipe(csv.parse({ 
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      }))
+      .on('data', (data) => results.push(data))
+      .on('end', () => {
         console.log(`Parsed ${results.length} rows from CSV`);
         resolve(results);
       })
-      .on("error", reject);
+      .on('error', reject);
   });
 }
 
-async function insertWarehousesBatch(
-  warehouses: WarehouseRecord[],
-  batchSize = 1000,
-) {
+async function insertWarehousesBatch(warehouses: WarehouseRecord[], batchSize = 1000) {
   const totalBatches = Math.ceil(warehouses.length / batchSize);
   let successCount = 0;
   let errorCount = 0;
-
+  
   for (let i = 0; i < totalBatches; i++) {
     const start = i * batchSize;
     const end = Math.min(start + batchSize, warehouses.length);
     const batch = warehouses.slice(start, end);
-
-    console.log(
-      `Inserting batch ${i + 1}/${totalBatches} (${batch.length} records)...`,
-    );
-
+    
+    console.log(`Inserting batch ${i + 1}/${totalBatches} (${batch.length} records)...`);
+    
     try {
-      const { error } = await supabase.from("warehouses").insert(batch);
-
+      const { error } = await supabase
+        .from('warehouses')
+        .insert(batch);
+      
       if (error) {
         console.error(`Error inserting batch ${i + 1}:`, error);
         errorCount += batch.length;
@@ -186,98 +174,86 @@ async function insertWarehousesBatch(
       console.error(`Exception in batch ${i + 1}:`, error);
       errorCount += batch.length;
     }
-
+    
     // Small delay between batches to avoid overwhelming the database
     if (i < totalBatches - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-
+  
   return { successCount, errorCount };
 }
 
 async function main() {
   try {
-    console.log("🏢 Starting Maharashtra Warehouse Dataset Import...\n");
-
+    console.log('🏢 Starting Maharashtra Warehouse Dataset Import...\n');
+    
     // Find the CSV file
-    const csvPath = path.join(
-      __dirname,
-      "..",
-      "Maharashtra_Warehouse_Dataset_50000.csv",
-    );
-
+    const csvPath = path.join(__dirname, '..', 'Maharashtra_Warehouse_Dataset_50000.csv');
+    
     if (!fs.existsSync(csvPath)) {
       console.error(`❌ CSV file not found at: ${csvPath}`);
       process.exit(1);
     }
-
+    
     console.log(`📄 Found CSV file: ${csvPath}`);
-
+    
     // Create tables
     await createTables();
-
+    
     // Check if data already exists
     const { count } = await supabase
-      .from("warehouses")
-      .select("*", { count: "exact", head: true });
-
+      .from('warehouses')
+      .select('*', { count: 'exact', head: true });
+    
     if (count && count > 0) {
       console.log(`⚠️  Database already contains ${count} warehouse records.`);
-      console.log("Do you want to continue? This will add more records.");
+      console.log('Do you want to continue? This will add more records.');
       // For now, we'll continue. In production, you might want to ask for confirmation.
     }
-
+    
     // Read and parse CSV
-    console.log("\n📖 Reading CSV file...");
+    console.log('\n📖 Reading CSV file...');
     const csvData = await readCSVFile(csvPath);
-
+    
     if (csvData.length === 0) {
-      console.error("❌ No data found in CSV file");
+      console.error('❌ No data found in CSV file');
       process.exit(1);
     }
-
+    
     console.log(`✓ Successfully parsed ${csvData.length} warehouse records`);
-
+    
     // Transform data
-    console.log("\n🔄 Transforming data...");
+    console.log('\n🔄 Transforming data...');
     const warehouses: WarehouseRecord[] = csvData.map(transformCSVToWarehouse);
-
+    
     // Validate data
-    const validWarehouses = warehouses.filter(
-      (w) => w.warehouse_name && w.city && w.state,
-    );
-    console.log(
-      `✓ ${validWarehouses.length} valid warehouse records ready for import`,
-    );
-
+    const validWarehouses = warehouses.filter(w => w.warehouse_name && w.city && w.state);
+    console.log(`✓ ${validWarehouses.length} valid warehouse records ready for import`);
+    
     if (validWarehouses.length !== warehouses.length) {
-      console.log(
-        `⚠️  Filtered out ${warehouses.length - validWarehouses.length} invalid records`,
-      );
+      console.log(`⚠️  Filtered out ${warehouses.length - validWarehouses.length} invalid records`);
     }
-
+    
     // Insert data in batches
-    console.log("\n💾 Inserting warehouses into database...");
-    const { successCount, errorCount } =
-      await insertWarehousesBatch(validWarehouses);
-
-    console.log("\n📊 Import Summary:");
+    console.log('\n💾 Inserting warehouses into database...');
+    const { successCount, errorCount } = await insertWarehousesBatch(validWarehouses);
+    
+    console.log('\n📊 Import Summary:');
     console.log(`✅ Successfully imported: ${successCount} warehouses`);
     console.log(`❌ Failed to import: ${errorCount} warehouses`);
-    console.log(
-      `📈 Success rate: ${((successCount / validWarehouses.length) * 100).toFixed(1)}%`,
-    );
-
+    console.log(`📈 Success rate: ${((successCount / validWarehouses.length) * 100).toFixed(1)}%`);
+    
     // Verify final count
     const { count: finalCount } = await supabase
-      .from("warehouses")
-      .select("*", { count: "exact", head: true });
-
+      .from('warehouses')
+      .select('*', { count: 'exact', head: true });
+    
     console.log(`\n🎉 Total warehouses in database: ${finalCount}`);
-    console.log("Import completed successfully!");
+    console.log('Import completed successfully!');
+    
   } catch (error) {
-    console.error("❌ Import failed:", error);
+    console.error('❌ Import failed:', error);
     process.exit(1);
   }
 }

@@ -18,7 +18,6 @@ A cutting-edge warehouse management platform combining traditional ML algorithms
 ## ✨ Features
 
 ### For Warehouse Seekers
-
 - 🔍 **Advanced Search & Filters**: Search warehouses by city, district, area, price, and amenities
 - 🤖 **AI-Powered Chatbot**: Conversational interface using Claude 3.5 Sonnet, Llama 3.3, and Gemini Pro
 - 📊 **ML Recommendations**: 5-algorithm ensemble (KNN, Random Forest, XGBoost, Gradient Boosting, Neural Network)
@@ -27,14 +26,12 @@ A cutting-edge warehouse management platform combining traditional ML algorithms
 - 📄 **Document Analysis**: AI-powered OCR for automatic document verification
 
 ### For Warehouse Owners
-
 - 📝 **Property Listing**: Submit warehouses with comprehensive details and images
 - 📈 **Pricing Recommendations**: ML-powered pricing suggestions based on Maharashtra market data
 - 🔔 **Booking Management**: Track inquiries, bookings, and revenue
 - ✅ **Verification System**: Profile verification with document upload
 
 ### For Administrators
-
 - 👥 **User Management**: Monitor and manage all users (Owners + Seekers)
 - 🏢 **Warehouse Approval**: Review and approve/reject warehouse submissions
 - 📊 **Analytics Dashboard**: System-wide analytics and insights
@@ -43,7 +40,6 @@ A cutting-edge warehouse management platform combining traditional ML algorithms
 ## 🛠 Tech Stack
 
 ### Frontend
-
 - **React 18.3** with TypeScript
 - **Vite 6.3** for blazing-fast builds
 - **TailwindCSS** for styling
@@ -52,13 +48,11 @@ A cutting-edge warehouse management platform combining traditional ML algorithms
 - **Recharts** for data visualization
 
 ### Backend
-
 - **Express.js** with TypeScript
 - **Node.js** runtime
 - **Supabase** PostgreSQL with Row Level Security
 
 ### AI/ML Stack
-
 - **LLM Models**:
   - Claude 3.5 Sonnet (via OpenRouter) - Primary
   - Llama 3.3 70B (via Groq) - Fallback #1
@@ -70,7 +64,6 @@ A cutting-edge warehouse management platform combining traditional ML algorithms
   - Ensemble voting system
 
 ### Database
-
 - **Supabase PostgreSQL** with 10,002+ warehouse records
 - **Row Level Security (RLS)** for multi-role access control
 - **Real-time subscriptions** for live updates
@@ -78,7 +71,6 @@ A cutting-edge warehouse management platform combining traditional ML algorithms
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - **Node.js 18+** and npm
 - **Git** for version control
 - **Supabase Account** (free tier works)
@@ -119,7 +111,6 @@ Due to bolt.new compatibility and file size restrictions, the following are **ex
 ### Files INCLUDED (Unusual but Intentional)
 
 ✅ **`.env` file IS included** for bolt.new compatibility:
-
 - Contains placeholder API keys (NOT working keys for security)
 - **REQUIRED**: You MUST replace all placeholder values with your own API keys
 - For production deployment:
@@ -132,13 +123,11 @@ Due to bolt.new compatibility and file size restrictions, the following are **ex
 The `.env` file is included but you should obtain your own API keys for production:
 
 ### 1. Supabase Setup
-
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE=your_service_role_key
 ```
-
 - Create account at [supabase.com](https://supabase.com)
 - Create new project
 - Get keys from Project Settings → API
@@ -146,48 +135,39 @@ SUPABASE_SERVICE_ROLE=your_service_role_key
 ### 2. LLM API Keys (Choose one or more)
 
 #### Option 1: OpenRouter (Recommended - 100+ models)
-
 ```env
 VITE_OPENROUTER_API_KEY=sk-or-v1-your-key
 ```
-
 - Get key at [openrouter.ai/keys](https://openrouter.ai/keys)
 - Free tier available, pay-as-you-go pricing
 - Access to Claude 3.5 Sonnet, GPT-4, Llama models
 
 #### Option 2: Groq (Fastest)
-
 ```env
 VITE_GROQ_API_KEY=gsk_your-key
 ```
-
 - Get key at [console.groq.com/keys](https://console.groq.com/keys)
 - Free tier: 100 requests/min
 - Llama 3.3 70B inference in 0.5 seconds
 
 #### Option 3: Google Gemini
-
 ```env
 VITE_GEMINI_API_KEY=AIzaSy-your-key
 ```
-
 - Get key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 - Free tier: 60 requests/min
 - Multimodal support
 
 #### Option 4: Cloudflare Workers AI
-
 ```env
 VITE_CLOUDFLARE_API_KEY=your-key
 VITE_CLOUDFLARE_ACCOUNT_ID=your-account-id
 ```
-
 - Get key at [dash.cloudflare.com](https://dash.cloudflare.com)
 - Free tier available
 - Emergency fallback
 
 ### 3. Optional Services
-
 ```env
 # Presign Server (for file uploads in development)
 VITE_PRESIGN_SERVER_URL=http://localhost:4001
@@ -199,7 +179,6 @@ ML_SERVICE_URL=http://127.0.0.1:5000
 ## 🗄️ Database Setup
 
 ### Option 1: Use Existing Demo Database (Quick Start)
-
 The `.env` includes a working Supabase instance with 10,002 warehouses.
 
 ### Option 2: Set Up Your Own Database
@@ -208,17 +187,15 @@ The `.env` includes a working Supabase instance with 10,002 warehouses.
    - Go to [supabase.com](https://supabase.com) → New Project
 
 2. **Run Schema Migrations**
-
    ```bash
    # Navigate to database folder
    cd database
-
+   
    # Run the complete setup (recommended)
    # Copy contents of complete_supabase_setup.sql into Supabase SQL Editor
    ```
 
 3. **Load Demo Data** (Optional)
-
    ```bash
    # For Maharashtra warehouse data
    # Run maharashtra_pricing_data.sql in Supabase SQL Editor
@@ -233,7 +210,6 @@ The `.env` includes a working Supabase instance with 10,002 warehouses.
    - `user_activities` - Activity tracking
 
 ### Database Documentation
-
 See `/database/README_SETUP.md` for detailed schema documentation.
 
 ## 🏃 Running the Project
@@ -271,17 +247,14 @@ node test-llm.mjs
 The system includes demo authentication for testing:
 
 **Admin Account**:
-
 - Email: `admin@smartspace.com`
 - Password: `admin123`
 
 **Owner Account**:
-
 - Email: `owner@example.com`
 - Password: `owner123`
 
 **Seeker Account**:
-
 - Email: `seeker@example.com`
 - Password: `seeker123`
 
@@ -355,7 +328,6 @@ Response (96.8% accuracy)          Response (94.3%)      Response (92.1%)    Res
 ```
 
 **Features**:
-
 - Natural language warehouse search
 - Context-aware recommendations
 - Multilingual support (Marathi, Hindi, English)
@@ -375,7 +347,6 @@ Response (96.8% accuracy)          Response (94.3%)      Response (92.1%)    Res
 **Voting System**: Weighted ensemble combines all 5 algorithms
 
 **Performance**:
-
 - Processes 10,002 warehouses in <2 seconds
 - 87.9% accuracy on test set
 - Precision@10: 0.83
@@ -384,13 +355,13 @@ Response (96.8% accuracy)          Response (94.3%)      Response (92.1%)    Res
 
 **Why Hybrid?**
 
-| Feature                   | ML Algorithm | LLM       |
-| ------------------------- | ------------ | --------- |
-| Numerical Recommendations | ✅ Better    | ❌        |
-| Explainability            | ❌ Limited   | ✅ Better |
-| Conversational Interface  | ❌           | ✅ Better |
-| Zero-shot Adaptability    | ❌           | ✅ Better |
-| Cost (per query)          | $0.0001      | $0.01     |
+| Feature | ML Algorithm | LLM |
+|---------|-------------|-----|
+| Numerical Recommendations | ✅ Better | ❌ |
+| Explainability | ❌ Limited | ✅ Better |
+| Conversational Interface | ❌ | ✅ Better |
+| Zero-shot Adaptability | ❌ | ✅ Better |
+| Cost (per query) | $0.0001 | $0.01 |
 
 **Solution**: Use ML for recommendations, LLM for conversation
 
@@ -430,21 +401,18 @@ Response (96.8% accuracy)          Response (94.3%)      Response (92.1%)    Res
 ### Common Issues After Cloning
 
 1. **"Cannot find module" errors**
-
    ```bash
    # Solution: Install dependencies
    npm install
    ```
 
 2. **"Supabase connection failed"**
-
    ```bash
    # Solution: Update .env with your Supabase credentials
    # Or use the included demo credentials (limited access)
    ```
 
 3. **"LLM API error"**
-
    ```bash
    # Solution: Get your own API keys from:
    # - OpenRouter: https://openrouter.ai/keys
@@ -453,11 +421,10 @@ Response (96.8% accuracy)          Response (94.3%)      Response (92.1%)    Res
    ```
 
 4. **Build fails in bolt.new**
-
    ```bash
    # Ensure you're using the correct Node version
    node --version  # Should be 18+
-
+   
    # Clear cache and reinstall
    rm -rf node_modules package-lock.json
    npm install
@@ -468,7 +435,7 @@ Response (96.8% accuracy)          Response (94.3%)      Response (92.1%)    Res
 - **Development**: Use `npm run dev` (includes HMR)
 - **Production**: Run `npm run build` first
 - **Large Dataset**: ML recommendations may take 1-2 seconds for 10k+ warehouses
-- **LLM Response Time**:
+- **LLM Response Time**: 
   - Claude/Llama: 1-3 seconds
   - Gemini: 2-4 seconds
   - Cloudflare: 3-5 seconds
@@ -504,7 +471,6 @@ This project was created for warehouse management demonstration purposes.
 ## 📞 Support
 
 For issues or questions:
-
 1. Check the troubleshooting section above
 2. Review documentation in `/docs/`
 3. Ensure all dependencies are installed (`npm install`)
@@ -513,4 +479,4 @@ For issues or questions:
 
 **Built with ❤️ for intelligent warehouse management**
 
-_Last Updated: February 2026_
+*Last Updated: February 2026*

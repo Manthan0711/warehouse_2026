@@ -1,11 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, ArrowRight, Construction } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -15,11 +9,7 @@ interface PlaceholderProps {
   suggestions?: string[];
 }
 
-export default function Placeholder({
-  title,
-  description,
-  suggestions = [],
-}: PlaceholderProps) {
+export default function Placeholder({ title, description, suggestions = [] }: PlaceholderProps) {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -30,30 +20,10 @@ export default function Placeholder({
             <span className="font-bold text-xl text-gray-900">SmartSpace</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              to="/warehouses"
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              Find Warehouses
-            </Link>
-            <Link
-              to="/list-property"
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              List Your Property
-            </Link>
-            <Link
-              to="/about"
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              Contact
-            </Link>
+            <Link to="/warehouses" className="text-gray-600 hover:text-gray-900 font-medium">Find Warehouses</Link>
+            <Link to="/list-property" className="text-gray-600 hover:text-gray-900 font-medium">List Your Property</Link>
+            <Link to="/about" className="text-gray-600 hover:text-gray-900 font-medium">About</Link>
+            <Link to="/contact" className="text-gray-600 hover:text-gray-900 font-medium">Contact</Link>
           </nav>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" asChild>
@@ -79,18 +49,16 @@ export default function Placeholder({
                 {description}
               </CardDescription>
             </CardHeader>
-
+            
             <CardContent className="space-y-6">
               <p className="text-gray-600">
-                This page is currently under development. Our team is working
-                hard to bring you the best experience possible.
+                This page is currently under development. Our team is working hard to bring you 
+                the best experience possible.
               </p>
-
+              
               {suggestions.length > 0 && (
                 <div className="space-y-4">
-                  <p className="font-medium text-gray-900">
-                    In the meantime, you can:
-                  </p>
+                  <p className="font-medium text-gray-900">In the meantime, you can:</p>
                   <ul className="space-y-2">
                     {suggestions.map((suggestion, index) => (
                       <li key={index} className="text-gray-600 text-left">
@@ -100,7 +68,7 @@ export default function Placeholder({
                   </ul>
                 </div>
               )}
-
+              
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
                 <Button asChild>
                   <Link to="/">
@@ -112,13 +80,10 @@ export default function Placeholder({
                   <Link to="/warehouses">Browse Warehouses</Link>
                 </Button>
               </div>
-
+              
               <div className="pt-6 border-t">
                 <p className="text-sm text-gray-500">
-                  Have questions or need help?{" "}
-                  <Link to="/contact" className="text-blue-600 hover:underline">
-                    Contact our team
-                  </Link>
+                  Have questions or need help? <Link to="/contact" className="text-blue-600 hover:underline">Contact our team</Link>
                 </p>
               </div>
             </CardContent>

@@ -1,7 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
-import { join } from "path";
-import * as dotenv from "dotenv";
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -9,19 +9,19 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("❌ Missing Supabase credentials in .env");
+  console.error('❌ Missing Supabase credentials in .env');
   process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false,
-  },
+    persistSession: false
+  }
 });
 
 async function createTable() {
-  console.log("🚀 Creating warehouses table with policies...\n");
+  console.log('🚀 Creating warehouses table with policies...\n');
 
   const sql = `
 -- Create warehouses table
@@ -102,18 +102,15 @@ WITH CHECK (true);
     // Since Supabase doesn't have a direct SQL execution endpoint via the client,
     // we need to use the REST API or create an RPC function
 
-    console.log("📝 SQL to execute (copy and paste to Supabase SQL Editor):\n");
-    console.log(
-      "   https://supabase.com/dashboard/project/bsrzqffxgvdebyofmhzg/sql\n",
-    );
-    console.log("─".repeat(80));
+    console.log('📝 SQL to execute (copy and paste to Supabase SQL Editor):\n');
+    console.log('   https://supabase.com/dashboard/project/bsrzqffxgvdebyofmhzg/sql\n');
+    console.log('─'.repeat(80));
     console.log(sql);
-    console.log("─".repeat(80));
-    console.log(
-      "\n✅ After running the SQL above, you can import warehouses.\n",
-    );
+    console.log('─'.repeat(80));
+    console.log('\n✅ After running the SQL above, you can import warehouses.\n');
+
   } catch (error: any) {
-    console.error("❌ Error:", error.message);
+    console.error('❌ Error:', error.message);
     process.exit(1);
   }
 }

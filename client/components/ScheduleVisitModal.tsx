@@ -3,25 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  Phone,
-  Mail,
-  CheckCircle,
-  Loader2,
-} from "lucide-react";
+import { Calendar, Clock, MapPin, User, Phone, Mail, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface ScheduleVisitModalProps {
@@ -47,7 +32,7 @@ export default function ScheduleVisitModal({
   ownerPhone = "+91 98765 43210",
   ownerEmail = "owner@smartspace.com",
   ownerId,
-  seekerId,
+  seekerId
 }: ScheduleVisitModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,34 +43,28 @@ export default function ScheduleVisitModal({
     visitDate: "",
     visitTime: "",
     purpose: "inspection",
-    notes: "",
+    notes: ""
   });
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   // Get minimum date (today)
   const getMinDate = () => {
     const today = new Date();
-    return today.toISOString().split("T")[0];
+    return today.toISOString().split('T')[0];
   };
 
   // Get max date (30 days from now)
   const getMaxDate = () => {
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 30);
-    return maxDate.toISOString().split("T")[0];
+    return maxDate.toISOString().split('T')[0];
   };
 
   const handleSubmit = async () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.visitDate ||
-      !formData.visitTime
-    ) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.visitDate || !formData.visitTime) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -108,20 +87,20 @@ export default function ScheduleVisitModal({
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          company: formData.company,
+          company: formData.company
         },
         visitDate: formData.visitDate,
         visitTime: formData.visitTime,
         purpose: formData.purpose,
         notes: formData.notes,
-        status: "pending",
+        status: 'pending'
       };
 
       // Send to API
-      const response = await fetch("/api/schedule-visit", {
-        method: "POST",
+      const response = await fetch('/api/schedule-visit', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(visitData),
       });
@@ -133,7 +112,7 @@ export default function ScheduleVisitModal({
           title: "Visit Scheduled! ✓",
           description: `Your visit request for ${formData.visitDate} at ${formData.visitTime} has been sent to ${ownerName}. You'll receive a confirmation soon.`,
         });
-
+        
         // Reset form and close
         setFormData({
           name: "",
@@ -143,18 +122,17 @@ export default function ScheduleVisitModal({
           visitDate: "",
           visitTime: "",
           purpose: "inspection",
-          notes: "",
+          notes: ""
         });
         onClose();
       } else {
-        throw new Error(result.error || "Failed to schedule visit");
+        throw new Error(result.error || 'Failed to schedule visit');
       }
     } catch (error) {
-      console.error("Schedule visit error:", error);
+      console.error('Schedule visit error:', error);
       toast({
         title: "Scheduling Failed",
-        description:
-          "There was an error scheduling your visit. Please try again or contact the owner directly.",
+        description: "There was an error scheduling your visit. Please try again or contact the owner directly.",
         variant: "destructive",
       });
     } finally {
@@ -187,9 +165,7 @@ export default function ScheduleVisitModal({
         <DialogHeader className="border-b border-gray-700 pb-4">
           <DialogTitle className="flex items-center space-x-2 text-white">
             <Calendar className="h-5 w-5 text-blue-400" />
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Schedule Site Visit
-            </span>
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Schedule Site Visit</span>
           </DialogTitle>
           <DialogDescription className="text-gray-400">
             Book a visit to inspect the warehouse in person
@@ -213,10 +189,7 @@ export default function ScheduleVisitModal({
           {/* Date & Time Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label
-                htmlFor="visitDate"
-                className="text-gray-300 flex items-center gap-1"
-              >
+              <Label htmlFor="visitDate" className="text-gray-300 flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" /> Visit Date *
               </Label>
               <Input
@@ -231,10 +204,7 @@ export default function ScheduleVisitModal({
               />
             </div>
             <div>
-              <Label
-                htmlFor="visitTime"
-                className="text-gray-300 flex items-center gap-1"
-              >
+              <Label htmlFor="visitTime" className="text-gray-300 flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" /> Time Slot *
               </Label>
               <select
@@ -245,10 +215,8 @@ export default function ScheduleVisitModal({
                 required
               >
                 <option value="">Select time</option>
-                {timeSlots.map((slot) => (
-                  <option key={slot.value} value={slot.value}>
-                    {slot.label}
-                  </option>
+                {timeSlots.map(slot => (
+                  <option key={slot.value} value={slot.value}>{slot.label}</option>
                 ))}
               </select>
             </div>
@@ -256,19 +224,15 @@ export default function ScheduleVisitModal({
 
           {/* Visit Purpose */}
           <div>
-            <Label htmlFor="purpose" className="text-gray-300">
-              Visit Purpose
-            </Label>
+            <Label htmlFor="purpose" className="text-gray-300">Visit Purpose</Label>
             <select
               id="purpose"
               value={formData.purpose}
               onChange={(e) => handleInputChange("purpose", e.target.value)}
               className="w-full h-10 px-3 rounded-md bg-gray-800 border border-gray-600 text-white focus:border-blue-500 focus:outline-none"
             >
-              {visitPurposes.map((purpose) => (
-                <option key={purpose.value} value={purpose.value}>
-                  {purpose.label}
-                </option>
+              {visitPurposes.map(purpose => (
+                <option key={purpose.value} value={purpose.value}>{purpose.label}</option>
               ))}
             </select>
           </div>
@@ -278,12 +242,10 @@ export default function ScheduleVisitModal({
             <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
               <User className="h-4 w-4 text-blue-400" /> Your Details
             </h4>
-
+            
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="name" className="text-gray-400 text-xs">
-                  Full Name *
-                </Label>
+                <Label htmlFor="name" className="text-gray-400 text-xs">Full Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -294,9 +256,7 @@ export default function ScheduleVisitModal({
                 />
               </div>
               <div>
-                <Label htmlFor="phone" className="text-gray-400 text-xs">
-                  Phone Number *
-                </Label>
+                <Label htmlFor="phone" className="text-gray-400 text-xs">Phone Number *</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -310,9 +270,7 @@ export default function ScheduleVisitModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="email" className="text-gray-400 text-xs">
-                  Email Address *
-                </Label>
+                <Label htmlFor="email" className="text-gray-400 text-xs">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -324,9 +282,7 @@ export default function ScheduleVisitModal({
                 />
               </div>
               <div>
-                <Label htmlFor="company" className="text-gray-400 text-xs">
-                  Company (Optional)
-                </Label>
+                <Label htmlFor="company" className="text-gray-400 text-xs">Company (Optional)</Label>
                 <Input
                   id="company"
                   value={formData.company}
@@ -338,9 +294,7 @@ export default function ScheduleVisitModal({
             </div>
 
             <div>
-              <Label htmlFor="notes" className="text-gray-400 text-xs">
-                Additional Notes
-              </Label>
+              <Label htmlFor="notes" className="text-gray-400 text-xs">Additional Notes</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
@@ -361,12 +315,8 @@ export default function ScheduleVisitModal({
                     <User className="h-4 w-4 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">
-                      {ownerName}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Will confirm your visit
-                    </p>
+                    <p className="text-sm font-medium text-white">{ownerName}</p>
+                    <p className="text-xs text-gray-400">Will confirm your visit</p>
                   </div>
                 </div>
                 <Badge className="bg-green-900/50 text-green-400 border-green-700">
@@ -379,14 +329,7 @@ export default function ScheduleVisitModal({
           {/* Submit Button */}
           <Button
             onClick={handleSubmit}
-            disabled={
-              isSubmitting ||
-              !formData.name ||
-              !formData.email ||
-              !formData.phone ||
-              !formData.visitDate ||
-              !formData.visitTime
-            }
+            disabled={isSubmitting || !formData.name || !formData.email || !formData.phone || !formData.visitDate || !formData.visitTime}
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-5 shadow-lg shadow-blue-900/30"
           >
             {isSubmitting ? (
@@ -403,8 +346,7 @@ export default function ScheduleVisitModal({
           </Button>
 
           <p className="text-xs text-center text-gray-500">
-            The warehouse owner will receive your visit request and confirm
-            within 24 hours.
+            The warehouse owner will receive your visit request and confirm within 24 hours.
           </p>
         </div>
       </DialogContent>

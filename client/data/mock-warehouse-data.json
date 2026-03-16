@@ -14,14 +14,7 @@
       "size": 125000,
       "pricing": 5.25,
       "image": "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
-      "amenities": [
-        "24/7 Security",
-        "Loading Dock",
-        "Large Scale Storage",
-        "Power Backup",
-        "Fire Safety",
-        "Industrial Equipment"
-      ],
+      "amenities": ["24/7 Security", "Loading Dock", "Large Scale Storage", "Power Backup", "Fire Safety", "Industrial Equipment"],
       "status": "Active",
       "occupancy": 0.65,
       "rating": 4.7,
@@ -45,13 +38,7 @@
       "size": 85000,
       "pricing": 6.75,
       "image": "https://images.unsplash.com/photo-1565610222536-ef2bdc4a7fd2?w=800&q=80",
-      "amenities": [
-        "Temperature Control",
-        "Refrigeration",
-        "Climate Monitoring",
-        "24/7 Security",
-        "Loading Dock"
-      ],
+      "amenities": ["Temperature Control", "Refrigeration", "Climate Monitoring", "24/7 Security", "Loading Dock"],
       "status": "Active",
       "occupancy": 0.42,
       "rating": 4.5,
@@ -75,13 +62,7 @@
       "size": 110000,
       "pricing": 9.25,
       "image": "https://images.unsplash.com/photo-1553864250-05b20249ee6c?w=800&q=80",
-      "amenities": [
-        "Fast Moving Goods",
-        "Inventory Management",
-        "Quick Dispatch",
-        "24/7 Security",
-        "Loading Dock"
-      ],
+      "amenities": ["Fast Moving Goods", "Inventory Management", "Quick Dispatch", "24/7 Security", "Loading Dock"],
       "status": "Active",
       "occupancy": 0.78,
       "rating": 4.2,
@@ -103,15 +84,9 @@
       "latitude": 21.0915,
       "longitude": 79.0478,
       "size": 95000,
-      "pricing": 4.5,
+      "pricing": 4.50,
       "image": "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&q=80",
-      "amenities": [
-        "Grain Storage",
-        "Pest Control",
-        "Quality Testing",
-        "Fumigation",
-        "24/7 Security"
-      ],
+      "amenities": ["Grain Storage", "Pest Control", "Quality Testing", "Fumigation", "24/7 Security"],
       "status": "Active",
       "occupancy": 0.35,
       "rating": 4.4,
@@ -135,13 +110,7 @@
       "size": 135000,
       "pricing": 5.75,
       "image": "https://images.unsplash.com/photo-1601980169411-4c0d37967c2e?w=800&q=80",
-      "amenities": [
-        "Rail Access",
-        "Road Connectivity",
-        "Intermodal Transfer",
-        "24/7 Security",
-        "Large Scale Storage"
-      ],
+      "amenities": ["Rail Access", "Road Connectivity", "Intermodal Transfer", "24/7 Security", "Large Scale Storage"],
       "status": "Active",
       "occupancy": 0.52,
       "rating": 4.6,

@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,9 +56,7 @@ export default function ForgotPassword() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="forgot-email" className="text-slate-200">
-                Email address
-              </Label>
+              <Label htmlFor="forgot-email" className="text-slate-200">Email address</Label>
               <Input
                 id="forgot-email"
                 type="email"
@@ -73,11 +65,7 @@ export default function ForgotPassword() {
                 className="bg-slate-800 border-slate-700 text-slate-100"
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
               {loading ? "Sending..." : "Send reset link"}
             </Button>
           </form>

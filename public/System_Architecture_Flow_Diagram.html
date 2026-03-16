@@ -1,4889 +1,857 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartSpace — System Workflow &amp; Flow Diagram</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        background: #fff;
-        color: #1a1a1a;
-        font-family: "Segoe UI", system-ui, sans-serif;
-      }
-      .page {
-        width: 1500px;
-        margin: 0 auto;
-        padding: 30px 20px 40px;
-        position: relative;
-      }
-
-      /* Title */
-      .title {
-        text-align: center;
-        margin-bottom: 24px;
-      }
-      .title h1 {
-        font-size: 1.5rem;
-        color: #111;
-      }
-      .title p {
-        font-size: 0.82rem;
-        color: #555;
-        margin-top: 3px;
-      }
-
-      /* Stick figure */
-      .actor {
-        text-align: center;
-        display: inline-block;
-      }
-      .actor-label {
-        font-size: 0.85rem;
-        font-weight: 700;
-        margin-top: 4px;
-        letter-spacing: 0.5px;
-      }
-      .actor-sub {
-        font-size: 0.7rem;
-        color: #666;
-        max-width: 160px;
-        margin: 2px auto 0;
-        line-height: 1.3;
-      }
-
-      /* Boxes */
-      .module-box {
-        border: 2.5px solid #333;
-        background: #fff;
-        position: relative;
-      }
-      .module-header {
-        padding: 8px 14px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        letter-spacing: 0.3px;
-        border-bottom: 2px solid #333;
-        text-align: center;
-      }
-
-      /* Color schemes */
-      .orange-header {
-        background: #ff9800;
-        color: #fff;
-      }
-      .blue-header {
-        background: #2196f3;
-        color: #fff;
-      }
-      .green-header {
-        background: #4caf50;
-        color: #fff;
-      }
-      .purple-header {
-        background: #9c27b0;
-        color: #fff;
-      }
-      .red-header {
-        background: #e53935;
-        color: #fff;
-      }
-      .cyan-header {
-        background: #00acc1;
-        color: #fff;
-      }
-      .teal-header {
-        background: #009688;
-        color: #fff;
-      }
-      .brown-header {
-        background: #795548;
-        color: #fff;
-      }
-      .deep-orange-header {
-        background: #f57c00;
-        color: #fff;
-      }
-      .light-blue-header {
-        background: #0288d1;
-        color: #fff;
-      }
-
-      .module-body {
-        padding: 10px 14px;
-      }
-
-      /* Sub-blocks */
-      .sub-block {
-        background: #b2ebf2;
-        border: 1.5px solid #333;
-        border-radius: 6px;
-        padding: 8px 12px;
-        margin: 6px 2px;
-        font-size: 0.78rem;
-        text-align: center;
-        font-weight: 600;
-        color: #1a1a1a;
-        line-height: 1.35;
-      }
-      .sub-block small {
-        font-weight: 400;
-        font-size: 0.68rem;
-        color: #444;
-        display: block;
-        margin-top: 2px;
-      }
-      .sub-block.light-blue {
-        background: #b2ebf2;
-      }
-      .sub-block.light-green {
-        background: #c8e6c9;
-      }
-      .sub-block.light-orange {
-        background: #ffe0b2;
-      }
-      .sub-block.light-purple {
-        background: #e1bee7;
-      }
-      .sub-block.light-red {
-        background: #ffcdd2;
-      }
-      .sub-block.light-yellow {
-        background: #fff9c4;
-      }
-      .sub-block.light-teal {
-        background: #b2dfdb;
-      }
-
-      /* Tags */
-      .tag {
-        display: inline-block;
-        padding: 1px 6px;
-        border-radius: 3px;
-        font-size: 0.6rem;
-        font-weight: 700;
-        color: #fff;
-        vertical-align: middle;
-        margin-left: 3px;
-      }
-      .tag-ml {
-        background: #9c27b0;
-      }
-      .tag-llm {
-        background: #e53935;
-      }
-
-      /* Footer */
-      .footer {
-        text-align: center;
-        margin-top: 24px;
-        font-size: 0.72rem;
-        color: #777;
-        line-height: 1.5;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page">
-      <div class="title">
-        <h1>
-          SmartSpace — Complete System Architecture &amp; AI Workflow Diagram
-        </h1>
-        <p>
-          Intelligent Warehouse Management Platform | Three-Role System: Seeker
-          &rarr; Owner &rarr; Admin | ML + LLM Hybrid Architecture | Meta Llama
-          3.3 70B
-        </p>
-      </div>
-
-      <!-- ===== COMPLETE DIAGRAM WITH SVG ARROWS ===== -->
-      <svg
-        width="1460"
-        height="3050"
-        viewBox="0 0 1460 3050"
-        xmlns="http://www.w3.org/2000/svg"
-        style="display: block; margin: 0 auto"
-      >
-        <defs>
-          <marker
-            id="ah"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#444" />
-          </marker>
-          <marker
-            id="ah-blue"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#2196f3" />
-          </marker>
-          <marker
-            id="ah-red"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#e53935" />
-          </marker>
-          <marker
-            id="ah-purple"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#9c27b0" />
-          </marker>
-          <marker
-            id="ah-green"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#4caf50" />
-          </marker>
-          <marker
-            id="ah-orange"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#f57c00" />
-          </marker>
-          <marker
-            id="ah-teal"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#009688" />
-          </marker>
-          <marker
-            id="ah-cyan"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#00acc1" />
-          </marker>
-          <marker
-            id="ah-gray"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0,10 3.5,0 7" fill="#888" />
-          </marker>
-        </defs>
-
-        <!-- ===================== ROW 1: STICK FIGURES (ACTORS) ===================== -->
-        <!-- SEEKER stick figure -->
-        <circle
-          cx="250"
-          cy="28"
-          r="16"
-          fill="none"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="250"
-          y1="44"
-          x2="250"
-          y2="80"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="250"
-          y1="55"
-          x2="228"
-          y2="72"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="250"
-          y1="55"
-          x2="272"
-          y2="72"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="250"
-          y1="80"
-          x2="232"
-          y2="105"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="250"
-          y1="80"
-          x2="268"
-          y2="105"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="250"
-          y="122"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#111"
-        >
-          SEEKER
-        </text>
-        <text x="250" y="137" text-anchor="middle" font-size="10" fill="#666">
-          Searches, books, compares
-        </text>
-
-        <!-- OWNER stick figure -->
-        <circle
-          cx="730"
-          cy="28"
-          r="16"
-          fill="none"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="730"
-          y1="44"
-          x2="730"
-          y2="80"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="730"
-          y1="55"
-          x2="708"
-          y2="72"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="730"
-          y1="55"
-          x2="752"
-          y2="72"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="730"
-          y1="80"
-          x2="712"
-          y2="105"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="730"
-          y1="80"
-          x2="748"
-          y2="105"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="730"
-          y="122"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#111"
-        >
-          OWNER
-        </text>
-        <text x="730" y="137" text-anchor="middle" font-size="10" fill="#666">
-          Lists, prices, manages
-        </text>
-
-        <!-- ADMIN stick figure -->
-        <circle
-          cx="1210"
-          cy="28"
-          r="16"
-          fill="none"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="1210"
-          y1="44"
-          x2="1210"
-          y2="80"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="1210"
-          y1="55"
-          x2="1188"
-          y2="72"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="1210"
-          y1="55"
-          x2="1232"
-          y2="72"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="1210"
-          y1="80"
-          x2="1192"
-          y2="105"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <line
-          x1="1210"
-          y1="80"
-          x2="1228"
-          y2="105"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="1210"
-          y="122"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#111"
-        >
-          ADMIN
-        </text>
-        <text x="1210" y="137" text-anchor="middle" font-size="10" fill="#666">
-          Verifies, moderates, manages
-        </text>
-
-        <!-- ===================== ARROWS: Actors → Frontend ===================== -->
-        <!-- Seeker → Frontend -->
-        <line
-          x1="250"
-          y1="142"
-          x2="250"
-          y2="170"
-          stroke="#333"
-          stroke-width="2"
-          marker-end="url(#ah)"
-        />
-        <text x="256" y="160" font-size="9.5" fill="#333" font-weight="600">
-          Submits search query
-        </text>
-
-        <!-- Owner → Frontend -->
-        <line
-          x1="730"
-          y1="142"
-          x2="730"
-          y2="170"
-          stroke="#333"
-          stroke-width="2"
-          marker-end="url(#ah)"
-        />
-        <text x="736" y="160" font-size="9.5" fill="#333" font-weight="600">
-          Lists warehouse
-        </text>
-
-        <!-- Admin → Frontend -->
-        <line
-          x1="1210"
-          y1="142"
-          x2="1210"
-          y2="170"
-          stroke="#333"
-          stroke-width="2"
-          marker-end="url(#ah)"
-        />
-        <text x="1216" y="160" font-size="9.5" fill="#333" font-weight="600">
-          Reviews submissions
-        </text>
-
-        <!-- ===================== ROW 2: FRONTEND ===================== -->
-        <rect
-          x="30"
-          y="172"
-          width="1400"
-          height="310"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="30"
-          y="172"
-          width="1400"
-          height="34"
-          fill="#ff9800"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="730"
-          y="195"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#fff"
-        >
-          Frontend (React 18 + TypeScript + Vite 6)
-        </text>
-
-        <!-- Seeker Interface box -->
-        <rect
-          x="50"
-          y="218"
-          width="420"
-          height="250"
-          rx="6"
-          fill="#e0f7fa"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="260"
-          y="238"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#006064"
-        >
-          Seeker Interface
-        </text>
-        <text x="260" y="252" text-anchor="middle" font-size="9" fill="#555">
-          Search, Browse, Book, Compare Warehouses
-        </text>
-
-        <!-- Seeker sub-blocks -->
-        <rect
-          x="60"
-          y="262"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="122"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          NL Search
-        </text>
-        <rect x="80" y="272" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="94"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="195"
-          y="262"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="257"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          AI Chatbot
-        </text>
-        <rect x="215" y="272" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="229"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="330"
-          y="262"
-          width="130"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="395"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Recommendations
-        </text>
-        <rect x="345" y="272" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="355"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="367" y="272" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="381"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="60"
-          y="300"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="122"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Smart Booking
-        </text>
-        <rect x="80" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="94"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="195"
-          y="300"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="257"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Comparison Report
-        </text>
-        <rect x="215" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="229"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="330"
-          y="300"
-          width="130"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="395"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Contact Drafting
-        </text>
-        <rect x="350" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="364"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="60"
-          y="338"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="122"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Activity Summary
-        </text>
-        <rect x="80" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="94"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="195"
-          y="338"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="257"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Smart Inquiry
-        </text>
-        <rect x="215" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="229"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="330"
-          y="338"
-          width="130"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="395"
-          y="352"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Booking &amp; Payment
-        </text>
-
-        <rect
-          x="60"
-          y="376"
-          width="195"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="157"
-          y="395"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          AI Contract Understanding
-        </text>
-        <rect x="80" y="386" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="94"
-          y="395"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="265"
-          y="376"
-          width="195"
-          height="32"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="362"
-          y="395"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          AI Negotiation Agent
-        </text>
-        <rect x="285" y="386" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="299"
-          y="395"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <!-- Owner Interface box -->
-        <rect
-          x="490"
-          y="218"
-          width="420"
-          height="250"
-          rx="6"
-          fill="#e8f5e9"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="700"
-          y="238"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#1b5e20"
-        >
-          Owner Interface
-        </text>
-        <text x="700" y="252" text-anchor="middle" font-size="9" fill="#555">
-          List Property, Pricing, Dashboard, Bookings
-        </text>
-
-        <rect
-          x="500"
-          y="262"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="562"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          List Property
-        </text>
-
-        <rect
-          x="635"
-          y="262"
-          width="130"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="700"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          AI Pricing
-        </text>
-        <rect x="650" y="272" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="660"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="672" y="272" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="686"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="775"
-          y="262"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="837"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Description Gen
-        </text>
-        <rect x="793" y="272" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="807"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="500"
-          y="300"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="562"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Invoice Gen
-        </text>
-        <rect x="518" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="532"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="635"
-          y="300"
-          width="130"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="700"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Contract Gen
-        </text>
-        <rect x="653" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="667"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="775"
-          y="300"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="837"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Email Templates
-        </text>
-        <rect x="793" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="807"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="500"
-          y="338"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="562"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Demand Forecast
-        </text>
-        <rect x="518" y="348" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="528"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="540" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="554"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="635"
-          y="338"
-          width="130"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="700"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Avail. Forecast
-        </text>
-        <rect x="653" y="348" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="663"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="675" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="689"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="775"
-          y="338"
-          width="125"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="837"
-          y="352"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Inquiry Mgmt
-        </text>
-        <rect x="793" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="807"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="500"
-          y="376"
-          width="195"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="597"
-          y="395"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          AI Negotiation Agent
-        </text>
-        <rect x="520" y="386" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="534"
-          y="395"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="705"
-          y="376"
-          width="195"
-          height="32"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="802"
-          y="395"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Micro-Space Management
-        </text>
-
-        <!-- Admin Interface box -->
-        <rect
-          x="930"
-          y="218"
-          width="480"
-          height="250"
-          rx="6"
-          fill="#fff3e0"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="1170"
-          y="238"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#e65100"
-        >
-          Admin Interface
-        </text>
-        <text x="1170" y="252" text-anchor="middle" font-size="9" fill="#555">
-          Verify, Approve, Moderate, Manage Users, Analytics
-        </text>
-
-        <rect
-          x="945"
-          y="262"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1017"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Doc Verification
-        </text>
-        <rect x="960" y="272" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="970"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-
-        <rect
-          x="1100"
-          y="262"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1172"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Approval Workflow
-        </text>
-        <rect x="1115" y="272" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="1125"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-
-        <rect
-          x="1255"
-          y="262"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1327"
-          y="281"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Fraud Detection
-        </text>
-        <rect x="1270" y="272" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="1280"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="1292" y="272" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="1306"
-          y="281"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="945"
-          y="300"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1017"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Market Insights
-        </text>
-        <rect x="960" y="310" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="974"
-          y="319"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="1100"
-          y="300"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1172"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          User Management
-        </text>
-
-        <rect
-          x="1255"
-          y="300"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1327"
-          y="319"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Analytics Dashboard
-        </text>
-
-        <rect
-          x="945"
-          y="338"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1017"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Risk Scoring
-        </text>
-        <rect x="960" y="348" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="970"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="982" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="996"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="1100"
-          y="338"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1172"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Knowledge Graph
-        </text>
-        <rect x="1118" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="1132"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="1255"
-          y="338"
-          width="145"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1327"
-          y="357"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Notification Mgmt
-        </text>
-        <rect x="1270" y="348" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="1284"
-          y="357"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="945"
-          y="376"
-          width="225"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1057"
-          y="395"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Dispute Resolution
-        </text>
-        <rect x="963" y="386" width="28" height="12" rx="2" fill="#e53935" />
-        <text
-          x="977"
-          y="395"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="1180"
-          y="376"
-          width="220"
-          height="32"
-          rx="5"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1290"
-          y="395"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Security &amp; RLS
-        </text>
-
-        <!-- ===================== ARROWS: Frontend → Backend & LLM Gateway ===================== -->
-        <!-- Frontend → Backend -->
-        <line
-          x1="350"
-          y1="482"
-          x2="350"
-          y2="530"
-          stroke="#2196f3"
-          stroke-width="2.5"
-          marker-end="url(#ah-blue)"
-        />
-        <rect
-          x="255"
-          y="496"
-          width="190"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#2196f3"
-          stroke-width="0.5"
-        />
-        <text
-          x="350"
-          y="508"
-          text-anchor="middle"
-          font-size="10"
-          fill="#2196f3"
-          font-weight="600"
-        >
-          API Requests (HTTPS/REST)
-        </text>
-
-        <!-- Frontend → LLM Gateway (client-side calls) -->
-        <line
-          x1="900"
-          y1="482"
-          x2="1050"
-          y2="530"
-          stroke="#e53935"
-          stroke-width="2.5"
-          marker-end="url(#ah-red)"
-        />
-        <rect
-          x="900"
-          y="496"
-          width="165"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#e53935"
-          stroke-width="0.5"
-        />
-        <text
-          x="982"
-          y="508"
-          text-anchor="middle"
-          font-size="10"
-          fill="#e53935"
-          font-weight="600"
-        >
-          Client-Side LLM API Calls
-        </text>
-
-        <!-- Response arrows (dashed) -->
-        <line
-          x1="370"
-          y1="530"
-          x2="370"
-          y2="482"
-          stroke="#888"
-          stroke-width="1.5"
-          stroke-dasharray="5,3"
-          marker-end="url(#ah-gray)"
-        />
-        <text x="376" y="510" font-size="9" fill="#888">Response</text>
-
-        <!-- ===================== ROW 3: BACKEND + LLM GATEWAY ===================== -->
-        <!-- Backend Box -->
-        <rect
-          x="30"
-          y="532"
-          width="660"
-          height="290"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="30"
-          y="532"
-          width="660"
-          height="34"
-          fill="#2196f3"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="360"
-          y="555"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#fff"
-        >
-          Backend (Express.js REST API Server)
-        </text>
-
-        <!-- Backend sub-blocks -->
-        <rect
-          x="50"
-          y="578"
-          width="190"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="145"
-          y="595"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/recommend
-        </text>
-        <text x="145" y="607" text-anchor="middle" font-size="8" fill="#555">
-          ML ensemble + LLM reasoning
-        </text>
-        <rect x="55" y="586" width="20" height="11" rx="2" fill="#9c27b0" />
-        <text
-          x="65"
-          y="595"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="77" y="586" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="90"
-          y="595"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="250"
-          y="578"
-          width="190"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="345"
-          y="595"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/warehouses
-        </text>
-        <text x="345" y="607" text-anchor="middle" font-size="8" fill="#555">
-          CRUD, search, filter
-        </text>
-
-        <rect
-          x="450"
-          y="578"
-          width="220"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="560"
-          y="595"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/approve-submission
-        </text>
-        <text x="560" y="607" text-anchor="middle" font-size="8" fill="#555">
-          Admin verification workflow
-        </text>
-        <rect x="455" y="586" width="20" height="11" rx="2" fill="#9c27b0" />
-        <text
-          x="465"
-          y="595"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-
-        <rect
-          x="50"
-          y="622"
-          width="190"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="145"
-          y="639"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/bookings
-        </text>
-        <text x="145" y="651" text-anchor="middle" font-size="8" fill="#555">
-          Booking lifecycle management
-        </text>
-
-        <rect
-          x="250"
-          y="622"
-          width="190"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="345"
-          y="639"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/nlp-search
-        </text>
-        <text x="345" y="651" text-anchor="middle" font-size="8" fill="#555">
-          NL → structured filters
-        </text>
-        <rect x="255" y="630" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="268"
-          y="639"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="450"
-          y="622"
-          width="220"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="560"
-          y="639"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/market-insights
-        </text>
-        <text x="560" y="651" text-anchor="middle" font-size="8" fill="#555">
-          AI trend analysis
-        </text>
-        <rect x="455" y="630" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="468"
-          y="639"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="50"
-          y="666"
-          width="190"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="145"
-          y="683"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/availability-forecast
-        </text>
-        <text x="145" y="695" text-anchor="middle" font-size="8" fill="#555">
-          Predictive analytics
-        </text>
-        <rect x="55" y="674" width="20" height="11" rx="2" fill="#9c27b0" />
-        <text
-          x="65"
-          y="683"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-
-        <rect
-          x="250"
-          y="666"
-          width="190"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="345"
-          y="683"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/contract-generator
-        </text>
-        <text x="345" y="695" text-anchor="middle" font-size="8" fill="#555">
-          Lease document generation
-        </text>
-        <rect x="255" y="674" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="268"
-          y="683"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="450"
-          y="666"
-          width="220"
-          height="36"
-          rx="5"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="560"
-          y="683"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          /api/notifications
-        </text>
-        <text x="560" y="695" text-anchor="middle" font-size="8" fill="#555">
-          AI template generation
-        </text>
-        <rect x="455" y="674" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="468"
-          y="683"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <!-- Server-Side LLM inside backend -->
-        <rect
-          x="50"
-          y="712"
-          width="630"
-          height="42"
-          rx="5"
-          fill="#ffcdd2"
-          stroke="#e53935"
-          stroke-width="2"
-        />
-        <text
-          x="365"
-          y="730"
-          text-anchor="middle"
-          font-size="10.5"
-          font-weight="700"
-          fill="#b71c1c"
-        >
-          Server-Side LLM (advanced-llm-service.ts)
-        </text>
-        <text x="365" y="744" text-anchor="middle" font-size="8.5" fill="#555">
-          Prompt: 50 warehouse profiles + user prefs → JSON | temp=0.3 | Loc 30%
-          | Price 25% | Size 25% | Quality 20%
-        </text>
-
-        <!-- LLM Gateway Box -->
-        <rect
-          x="710"
-          y="532"
-          width="720"
-          height="290"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="710"
-          y="532"
-          width="720"
-          height="34"
-          fill="#e53935"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="1070"
-          y="555"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#fff"
-        >
-          LLM Service Gateway (aiService.ts) — Fallback Chain
-        </text>
-
-        <!-- Groq (primary) -->
-        <rect
-          x="730"
-          y="578"
-          width="680"
-          height="55"
-          rx="6"
-          fill="#ffcdd2"
-          stroke="#e53935"
-          stroke-width="2.5"
-        />
-        <text
-          x="1070"
-          y="600"
-          text-anchor="middle"
-          font-size="13"
-          font-weight="700"
-          fill="#b71c1c"
-        >
-          ① Groq API — PRIMARY — Meta Llama 3.3 70B Versatile
-        </text>
-        <text x="1070" y="618" text-anchor="middle" font-size="10" fill="#555">
-          Model: llama-3.3-70b-versatile | 500 tokens/sec | 128K context window
-          | LPU Inference Engine
-        </text>
-        <rect x="740" y="590" width="62" height="16" rx="3" fill="#e53935" />
-        <text
-          x="771"
-          y="602"
-          text-anchor="middle"
-          font-size="9"
-          fill="#fff"
-          font-weight="700"
-        >
-          PRIMARY
-        </text>
-
-        <!-- Fallback 2 -->
-        <rect
-          x="730"
-          y="642"
-          width="325"
-          height="40"
-          rx="5"
-          fill="#f5f5f5"
-          stroke="#999"
-          stroke-width="1"
-          stroke-dasharray="5,3"
-        />
-        <text
-          x="892"
-          y="660"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="600"
-          fill="#888"
-        >
-          ② OpenRouter — Claude 3.5 Sonnet
-        </text>
-        <text x="892" y="673" text-anchor="middle" font-size="8" fill="#aaa">
-          Fallback only — never reached when Groq works
-        </text>
-
-        <!-- Fallback 3 -->
-        <rect
-          x="1065"
-          y="642"
-          width="345"
-          height="40"
-          rx="5"
-          fill="#f5f5f5"
-          stroke="#999"
-          stroke-width="1"
-          stroke-dasharray="5,3"
-        />
-        <text
-          x="1237"
-          y="660"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="600"
-          fill="#888"
-        >
-          ③ Cloudflare Workers AI — Llama 3.1 8B
-        </text>
-        <text x="1237" y="673" text-anchor="middle" font-size="8" fill="#aaa">
-          Lightweight backup — rarely used
-        </text>
-
-        <!-- Fallback 4 -->
-        <rect
-          x="730"
-          y="692"
-          width="680"
-          height="36"
-          rx="5"
-          fill="#f5f5f5"
-          stroke="#999"
-          stroke-width="1"
-          stroke-dasharray="5,3"
-        />
-        <text
-          x="1070"
-          y="712"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="600"
-          fill="#888"
-        >
-          ④ Google Gemini Pro — Last Resort Fallback
-        </text>
-        <text x="1070" y="722" text-anchor="middle" font-size="8" fill="#aaa">
-          Final fallback in chain — used if all above fail
-        </text>
-
-        <!-- Fallback chain label -->
-        <text
-          x="1070"
-          y="752"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#e53935"
-        >
-          Fallback: Groq → OpenRouter → Cloudflare → Gemini
-        </text>
-        <text x="1070" y="766" text-anchor="middle" font-size="9" fill="#555">
-          Groq is ALWAYS tried first. With active API key, only Llama 3.3 70B is
-          used.
-        </text>
-
-        <!-- ===================== ARROWS: Backend → ML/Doc Verification/LLM ===================== -->
-        <!-- Backend → ML Engine -->
-        <line
-          x1="200"
-          y1="822"
-          x2="200"
-          y2="880"
-          stroke="#9c27b0"
-          stroke-width="2.5"
-          marker-end="url(#ah-purple)"
-        />
-        <rect
-          x="105"
-          y="840"
-          width="190"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#9c27b0"
-          stroke-width="0.5"
-        />
-        <text
-          x="200"
-          y="852"
-          text-anchor="middle"
-          font-size="10"
-          fill="#9c27b0"
-          font-weight="600"
-        >
-          ?algorithm=ensemble | hybrid
-        </text>
-
-        <!-- Backend → Doc Verification -->
-        <line
-          x1="500"
-          y1="822"
-          x2="620"
-          y2="880"
-          stroke="#009688"
-          stroke-width="2.5"
-          marker-end="url(#ah-teal)"
-        />
-        <rect
-          x="490"
-          y="840"
-          width="160"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#009688"
-          stroke-width="0.5"
-        />
-        <text
-          x="570"
-          y="852"
-          text-anchor="middle"
-          font-size="10"
-          fill="#009688"
-          font-weight="600"
-        >
-          Upload documents
-        </text>
-
-        <!-- Backend → LLM Use Cases -->
-        <line
-          x1="660"
-          y1="758"
-          x2="950"
-          y2="880"
-          stroke="#e53935"
-          stroke-width="2"
-          marker-end="url(#ah-red)"
-        />
-        <rect
-          x="730"
-          y="812"
-          width="140"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#e53935"
-          stroke-width="0.5"
-        />
-        <text
-          x="800"
-          y="824"
-          text-anchor="middle"
-          font-size="10"
-          fill="#e53935"
-          font-weight="600"
-        >
-          ?algorithm=llm
-        </text>
-
-        <!-- ML → Backend (return scores) -->
-        <line
-          x1="220"
-          y1="880"
-          x2="220"
-          y2="822"
-          stroke="#888"
-          stroke-width="1.5"
-          stroke-dasharray="5,3"
-          marker-end="url(#ah-gray)"
-        />
-        <text x="226" y="856" font-size="8.5" fill="#888">Scores</text>
-
-        <!-- LLM Gateway → Groq API (external) -->
-        <line
-          x1="1350"
-          y1="602"
-          x2="1410"
-          y2="602"
-          stroke="#e53935"
-          stroke-width="2"
-          marker-end="url(#ah-red)"
-        />
-        <text x="1418" y="600" font-size="9" fill="#e53935" font-weight="600">
-          Groq
-        </text>
-        <text x="1418" y="612" font-size="9" fill="#e53935" font-weight="600">
-          Cloud
-        </text>
-
-        <!-- ===================== ROW 4: ML ENGINE + DOC VERIFICATION + LLM USE CASES + MULTI-AGENT ===================== -->
-        <!-- ML Engine Box -->
-        <rect
-          x="30"
-          y="882"
-          width="380"
-          height="420"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="30"
-          y="882"
-          width="380"
-          height="34"
-          fill="#9c27b0"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="220"
-          y="905"
-          text-anchor="middle"
-          font-size="13"
-          font-weight="700"
-          fill="#fff"
-        >
-          ML Engine — 12 Algorithms (2,142 LOC)
-        </text>
-
-        <!-- Primary ensemble label -->
-        <rect
-          x="50"
-          y="926"
-          width="340"
-          height="22"
-          rx="4"
-          fill="#e1bee7"
-          stroke="#9c27b0"
-          stroke-width="1.5"
-        />
-        <text
-          x="220"
-          y="941"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#4a148c"
-        >
-          PRIMARY: 5-Algorithm Ensemble (ml-algorithms.ts)
-        </text>
-
-        <rect
-          x="50"
-          y="954"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="970"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ① KNN
-        </text>
-        <text x="132" y="982" text-anchor="middle" font-size="7.5" fill="#555">
-          K=8, 8-dim, loc wt=6.0
-        </text>
-
-        <rect
-          x="225"
-          y="954"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="970"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ② Random Forest
-        </text>
-        <text x="307" y="982" text-anchor="middle" font-size="7.5" fill="#555">
-          50 trees, 80% bootstrap
-        </text>
-
-        <rect
-          x="50"
-          y="994"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="1010"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ③ Gradient Boost
-        </text>
-        <text x="132" y="1022" text-anchor="middle" font-size="7.5" fill="#555">
-          10 iter, η=0.1
-        </text>
-
-        <rect
-          x="225"
-          y="994"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="1010"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ④ Neural Network
-        </text>
-        <text x="307" y="1022" text-anchor="middle" font-size="7.5" fill="#555">
-          10→10→4→1, LeakyReLU
-        </text>
-
-        <rect
-          x="50"
-          y="1034"
-          width="340"
-          height="28"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="220"
-          y="1052"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑤ Hybrid Stacking — Meta-learner over KNN + RF
-        </text>
-
-        <!-- Secondary ensemble label -->
-        <rect
-          x="50"
-          y="1072"
-          width="340"
-          height="22"
-          rx="4"
-          fill="#e1bee7"
-          stroke="#9c27b0"
-          stroke-width="1.5"
-        />
-        <text
-          x="220"
-          y="1087"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#4a148c"
-        >
-          ADVANCED: 5-Algorithm Ensemble (advanced-ml-algorithms.ts)
-        </text>
-
-        <rect
-          x="50"
-          y="1100"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="1116"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑥ KNN Gaussian
-        </text>
-        <text x="132" y="1128" text-anchor="middle" font-size="7.5" fill="#555">
-          K=15, σ=0.8
-        </text>
-
-        <rect
-          x="225"
-          y="1100"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="1116"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑦ Content-Based
-        </text>
-        <text x="307" y="1128" text-anchor="middle" font-size="7.5" fill="#555">
-          TF-IDF, loc=0.35
-        </text>
-
-        <rect
-          x="50"
-          y="1140"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="1156"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑧ Collaborative
-        </text>
-        <text x="132" y="1168" text-anchor="middle" font-size="7.5" fill="#555">
-          Simulated patterns
-        </text>
-
-        <rect
-          x="225"
-          y="1140"
-          width="165"
-          height="34"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="1156"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑨ Sigmoid NN
-        </text>
-        <text x="307" y="1168" text-anchor="middle" font-size="7.5" fill="#555">
-          6→3→2→1 MLP
-        </text>
-
-        <rect
-          x="50"
-          y="1180"
-          width="340"
-          height="28"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="220"
-          y="1198"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑩ Bayesian Scoring — Prior × Likelihood / Evidence
-        </text>
-
-        <rect
-          x="50"
-          y="1218"
-          width="165"
-          height="28"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="1236"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          ⑪ License Validator
-        </text>
-
-        <rect
-          x="225"
-          y="1218"
-          width="165"
-          height="28"
-          rx="5"
-          fill="#e1bee7"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="1236"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          ⑫ Dynamic Weights
-        </text>
-
-        <!-- Doc Verification Box -->
-        <rect
-          x="430"
-          y="882"
-          width="310"
-          height="420"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="430"
-          y="882"
-          width="310"
-          height="34"
-          fill="#009688"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="585"
-          y="905"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          Document Verification (552 LOC)
-        </text>
-
-        <rect
-          x="445"
-          y="926"
-          width="280"
-          height="40"
-          rx="5"
-          fill="#b2dfdb"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="585"
-          y="945"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          TensorFlow.js + MobileNet v2
-        </text>
-        <text x="585" y="958" text-anchor="middle" font-size="8" fill="#555">
-          Neural network doc classification
-        </text>
-
-        <rect
-          x="445"
-          y="974"
-          width="280"
-          height="40"
-          rx="5"
-          fill="#b2dfdb"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="585"
-          y="993"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          Tesseract.js OCR
-        </text>
-        <text x="585" y="1006" text-anchor="middle" font-size="8" fill="#555">
-          Text extraction (PDF up to 5 pages, 2× scale)
-        </text>
-
-        <rect
-          x="445"
-          y="1022"
-          width="280"
-          height="40"
-          rx="5"
-          fill="#b2dfdb"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="585"
-          y="1041"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          Levenshtein Distance
-        </text>
-        <text x="585" y="1054" text-anchor="middle" font-size="8" fill="#555">
-          80% similarity threshold
-        </text>
-
-        <rect
-          x="445"
-          y="1070"
-          width="280"
-          height="40"
-          rx="5"
-          fill="#b2dfdb"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="585"
-          y="1089"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          Regex Pattern Detection
-        </text>
-        <text x="585" y="1102" text-anchor="middle" font-size="8" fill="#555">
-          GST &amp; PAN number extraction
-        </text>
-
-        <!-- Internal arrow: flow inside doc verification -->
-        <line
-          x1="585"
-          y1="966"
-          x2="585"
-          y2="974"
-          stroke="#009688"
-          stroke-width="1.5"
-          marker-end="url(#ah-teal)"
-        />
-        <line
-          x1="585"
-          y1="1014"
-          x2="585"
-          y2="1022"
-          stroke="#009688"
-          stroke-width="1.5"
-          marker-end="url(#ah-teal)"
-        />
-        <line
-          x1="585"
-          y1="1062"
-          x2="585"
-          y2="1070"
-          stroke="#009688"
-          stroke-width="1.5"
-          marker-end="url(#ah-teal)"
-        />
-        <line
-          x1="585"
-          y1="1110"
-          x2="585"
-          y2="1130"
-          stroke="#009688"
-          stroke-width="1.5"
-          marker-end="url(#ah-teal)"
-        />
-
-        <!-- 100-point scoring -->
-        <rect
-          x="445"
-          y="1130"
-          width="280"
-          height="48"
-          rx="5"
-          fill="#b2dfdb"
-          stroke="#009688"
-          stroke-width="2.5"
-        />
-        <text
-          x="585"
-          y="1150"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#004d40"
-        >
-          100-Point Scoring System
-        </text>
-        <text x="585" y="1164" text-anchor="middle" font-size="8" fill="#555">
-          GST(25) + PAN(25) + Name(15) + Company(15) + Phone(10) + DocType(10)
-        </text>
-
-        <line
-          x1="585"
-          y1="1178"
-          x2="585"
-          y2="1196"
-          stroke="#009688"
-          stroke-width="1.5"
-          marker-end="url(#ah-teal)"
-        />
-
-        <!-- Decision -->
-        <rect
-          x="445"
-          y="1196"
-          width="280"
-          height="44"
-          rx="5"
-          fill="#e0f2f1"
-          stroke="#009688"
-          stroke-width="2"
-        />
-        <text
-          x="585"
-          y="1212"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#004d40"
-        >
-          Decision Engine
-        </text>
-        <text x="585" y="1228" text-anchor="middle" font-size="9" fill="#333">
-          ≥70 → APPROVE | ≥40 → REVIEW | &lt;40 → REJECT
-        </text>
-
-        <!-- LLM Use Cases Box -->
-        <rect
-          x="760"
-          y="882"
-          width="340"
-          height="420"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="760"
-          y="882"
-          width="340"
-          height="34"
-          fill="#e53935"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="930"
-          y="905"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          LLM Use Cases — Llama 3.3 70B
-        </text>
-
-        <!-- LLM use case grid -->
-        <rect
-          x="775"
-          y="924"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="942"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          AI Chatbot (temp=0.7)
-        </text>
-
-        <rect
-          x="935"
-          y="924"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="942"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Rec. Reasoning (0.3)
-        </text>
-
-        <rect
-          x="775"
-          y="957"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="975"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          NL Search → Filters
-        </text>
-
-        <rect
-          x="935"
-          y="957"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="975"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Description Gen
-        </text>
-
-        <rect
-          x="775"
-          y="990"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1008"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Pricing Intelligence
-        </text>
-
-        <rect
-          x="935"
-          y="990"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1008"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Comparison Reports
-        </text>
-
-        <rect
-          x="775"
-          y="1023"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1041"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Invoice Generation
-        </text>
-
-        <rect
-          x="935"
-          y="1023"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1041"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Contract Generation
-        </text>
-
-        <rect
-          x="775"
-          y="1056"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1074"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Email Templates
-        </text>
-
-        <rect
-          x="935"
-          y="1056"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1074"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Market Insights
-        </text>
-
-        <rect
-          x="775"
-          y="1089"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1107"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Activity Summaries
-        </text>
-
-        <rect
-          x="935"
-          y="1089"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1107"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Inquiry Response
-        </text>
-
-        <rect
-          x="775"
-          y="1122"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1140"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Contact Drafting
-        </text>
-
-        <rect
-          x="935"
-          y="1122"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1140"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Avail. Forecast
-        </text>
-
-        <rect
-          x="775"
-          y="1155"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1173"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Fraud Detection
-        </text>
-
-        <rect
-          x="935"
-          y="1155"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1173"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Demand Forecast
-        </text>
-
-        <rect
-          x="775"
-          y="1188"
-          width="155"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="852"
-          y="1206"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Contract Analysis
-        </text>
-
-        <rect
-          x="935"
-          y="1188"
-          width="150"
-          height="28"
-          rx="4"
-          fill="#ffcdd2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="1010"
-          y="1206"
-          text-anchor="middle"
-          font-size="8.5"
-          font-weight="600"
-          fill="#111"
-        >
-          Knowledge Graph
-        </text>
-
-        <!-- Multi-Agent Box -->
-        <rect
-          x="1120"
-          y="882"
-          width="310"
-          height="420"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="1120"
-          y="882"
-          width="310"
-          height="34"
-          fill="#f57c00"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="1275"
-          y="905"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          Multi-Agent AI System
-        </text>
-
-        <rect
-          x="1135"
-          y="930"
-          width="280"
-          height="48"
-          rx="6"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1275"
-          y="950"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#111"
-        >
-          Pricing Agent
-        </text>
-        <text x="1275" y="968" text-anchor="middle" font-size="8" fill="#555">
-          ML calculates optimal price → LLM explains
-        </text>
-        <rect x="1145" y="940" width="20" height="11" rx="2" fill="#9c27b0" />
-        <text
-          x="1155"
-          y="949"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="1167" y="940" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="1180"
-          y="949"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <!-- Arrow between agents -->
-        <line
-          x1="1275"
-          y1="978"
-          x2="1275"
-          y2="990"
-          stroke="#f57c00"
-          stroke-width="1.5"
-          marker-end="url(#ah-orange)"
-        />
-
-        <rect
-          x="1135"
-          y="992"
-          width="280"
-          height="48"
-          rx="6"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1275"
-          y="1012"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#111"
-        >
-          Market Analyst Agent
-        </text>
-        <text x="1275" y="1030" text-anchor="middle" font-size="8" fill="#555">
-          Demand &amp; supply trend analysis
-        </text>
-        <rect x="1145" y="1002" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="1158"
-          y="1011"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <line
-          x1="1275"
-          y1="1040"
-          x2="1275"
-          y2="1052"
-          stroke="#f57c00"
-          stroke-width="1.5"
-          marker-end="url(#ah-orange)"
-        />
-
-        <rect
-          x="1135"
-          y="1054"
-          width="280"
-          height="48"
-          rx="6"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1275"
-          y="1074"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#111"
-        >
-          Risk Detection Agent
-        </text>
-        <text x="1275" y="1092" text-anchor="middle" font-size="8" fill="#555">
-          Fake listings, anomaly detection
-        </text>
-        <rect x="1145" y="1064" width="20" height="11" rx="2" fill="#9c27b0" />
-        <text
-          x="1155"
-          y="1073"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <rect x="1167" y="1064" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="1180"
-          y="1073"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <line
-          x1="1275"
-          y1="1102"
-          x2="1275"
-          y2="1114"
-          stroke="#f57c00"
-          stroke-width="1.5"
-          marker-end="url(#ah-orange)"
-        />
-
-        <rect
-          x="1135"
-          y="1116"
-          width="280"
-          height="48"
-          rx="6"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1275"
-          y="1136"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#111"
-        >
-          Explanation Agent
-        </text>
-        <text x="1275" y="1154" text-anchor="middle" font-size="8" fill="#555">
-          ML scores → human-readable language
-        </text>
-        <rect x="1145" y="1126" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="1158"
-          y="1135"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <line
-          x1="1275"
-          y1="1164"
-          x2="1275"
-          y2="1176"
-          stroke="#f57c00"
-          stroke-width="1.5"
-          marker-end="url(#ah-orange)"
-        />
-
-        <rect
-          x="1135"
-          y="1178"
-          width="280"
-          height="48"
-          rx="6"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1275"
-          y="1198"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#111"
-        >
-          Negotiation Agent
-        </text>
-        <text x="1275" y="1216" text-anchor="middle" font-size="8" fill="#555">
-          Multi-step AI-powered price negotiation
-        </text>
-        <rect x="1145" y="1188" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="1158"
-          y="1197"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <rect
-          x="1135"
-          y="1240"
-          width="280"
-          height="48"
-          rx="6"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1.2"
-        />
-        <text
-          x="1275"
-          y="1260"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#111"
-        >
-          Dispute Resolver Agent
-        </text>
-        <text x="1275" y="1278" text-anchor="middle" font-size="8" fill="#555">
-          Contract analysis &amp; fair resolution
-        </text>
-        <rect x="1145" y="1250" width="26" height="11" rx="2" fill="#e53935" />
-        <text
-          x="1158"
-          y="1259"
-          text-anchor="middle"
-          font-size="6"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-
-        <line
-          x1="1275"
-          y1="1226"
-          x2="1275"
-          y2="1240"
-          stroke="#f57c00"
-          stroke-width="1.5"
-          marker-end="url(#ah-orange)"
-        />
-
-        <!-- Cross-link: Multi-Agent → LLM Use Cases -->
-        <line
-          x1="1120"
-          y1="1050"
-          x2="1085"
-          y2="1050"
-          stroke="#e53935"
-          stroke-width="1.5"
-          stroke-dasharray="4,3"
-          marker-end="url(#ah-red)"
-        />
-        <text x="1086" y="1042" font-size="8" fill="#e53935" text-anchor="end">
-          LLM calls
-        </text>
-
-        <!-- Cross-link: ML Engine → Multi-Agent -->
-        <line
-          x1="410"
-          y1="1050"
-          x2="430"
-          y2="1050"
-          stroke="#9c27b0"
-          stroke-width="1.5"
-          stroke-dasharray="4,3"
-        />
-        <text x="415" y="1042" font-size="8" fill="#9c27b0">Scores</text>
-
-        <!-- ===================== ARROWS: Engine layer → Database ===================== -->
-        <line
-          x1="400"
-          y1="1302"
-          x2="400"
-          y2="1370"
-          stroke="#00acc1"
-          stroke-width="2.5"
-          marker-end="url(#ah-cyan)"
-        />
-        <rect
-          x="305"
-          y="1326"
-          width="190"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#00acc1"
-          stroke-width="0.5"
-        />
-        <text
-          x="400"
-          y="1338"
-          text-anchor="middle"
-          font-size="10"
-          fill="#00acc1"
-          font-weight="600"
-        >
-          SQL Queries (Supabase-JS)
-        </text>
-
-        <line
-          x1="950"
-          y1="1302"
-          x2="950"
-          y2="1370"
-          stroke="#00acc1"
-          stroke-width="2.5"
-          marker-end="url(#ah-cyan)"
-        />
-        <rect
-          x="855"
-          y="1326"
-          width="190"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#00acc1"
-          stroke-width="0.5"
-        />
-        <text
-          x="950"
-          y="1338"
-          text-anchor="middle"
-          font-size="10"
-          fill="#00acc1"
-          font-weight="600"
-        >
-          Store conversations &amp; logs
-        </text>
-
-        <!-- Response from DB -->
-        <line
-          x1="420"
-          y1="1370"
-          x2="420"
-          y2="1302"
-          stroke="#888"
-          stroke-width="1.5"
-          stroke-dasharray="5,3"
-          marker-end="url(#ah-gray)"
-        />
-        <text x="428" y="1340" font-size="8.5" fill="#888">Query results</text>
-
-        <!-- ===================== ROW 5: DATABASE ===================== -->
-        <rect
-          x="100"
-          y="1372"
-          width="1260"
-          height="180"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="100"
-          y="1372"
-          width="1260"
-          height="34"
-          fill="#00acc1"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="730"
-          y="1395"
-          text-anchor="middle"
-          font-size="14"
-          font-weight="700"
-          fill="#fff"
-        >
-          Database — Supabase PostgreSQL 15+ (Row Level Security)
-        </text>
-
-        <!-- DB Cylinders -->
-        <!-- warehouses -->
-        <ellipse
-          cx="240"
-          cy="1430"
-          rx="80"
-          ry="14"
-          fill="#4caf50"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <rect
-          x="160"
-          y="1430"
-          width="160"
-          height="50"
-          fill="#4caf50"
-          stroke="none"
-        />
-        <line
-          x1="160"
-          y1="1430"
-          x2="160"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <line
-          x1="320"
-          y1="1430"
-          x2="320"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <ellipse
-          cx="240"
-          cy="1480"
-          rx="80"
-          ry="14"
-          fill="#388e3c"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="240"
-          y="1460"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          warehouses
-        </text>
-        <text x="240" y="1514" text-anchor="middle" font-size="9" fill="#555">
-          10,002 records | 33 cols
-        </text>
-
-        <!-- profiles -->
-        <ellipse
-          cx="520"
-          cy="1430"
-          rx="80"
-          ry="14"
-          fill="#2196f3"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <rect
-          x="440"
-          y="1430"
-          width="160"
-          height="50"
-          fill="#2196f3"
-          stroke="none"
-        />
-        <line
-          x1="440"
-          y1="1430"
-          x2="440"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <line
-          x1="600"
-          y1="1430"
-          x2="600"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <ellipse
-          cx="520"
-          cy="1480"
-          rx="80"
-          ry="14"
-          fill="#1565c0"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="520"
-          y="1460"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          profiles
-        </text>
-        <text x="520" y="1514" text-anchor="middle" font-size="9" fill="#555">
-          Users (auth.users FK)
-        </text>
-
-        <!-- bookings -->
-        <ellipse
-          cx="800"
-          cy="1430"
-          rx="80"
-          ry="14"
-          fill="#ff9800"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <rect
-          x="720"
-          y="1430"
-          width="160"
-          height="50"
-          fill="#ff9800"
-          stroke="none"
-        />
-        <line
-          x1="720"
-          y1="1430"
-          x2="720"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <line
-          x1="880"
-          y1="1430"
-          x2="880"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <ellipse
-          cx="800"
-          cy="1480"
-          rx="80"
-          ry="14"
-          fill="#e65100"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="800"
-          y="1460"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          bookings
-        </text>
-        <text x="800" y="1514" text-anchor="middle" font-size="9" fill="#555">
-          Lease management
-        </text>
-
-        <!-- inquiries -->
-        <ellipse
-          cx="1080"
-          cy="1430"
-          rx="80"
-          ry="14"
-          fill="#9c27b0"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <rect
-          x="1000"
-          y="1430"
-          width="160"
-          height="50"
-          fill="#9c27b0"
-          stroke="none"
-        />
-        <line
-          x1="1000"
-          y1="1430"
-          x2="1000"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <line
-          x1="1160"
-          y1="1430"
-          x2="1160"
-          y2="1480"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <ellipse
-          cx="1080"
-          cy="1480"
-          rx="80"
-          ry="14"
-          fill="#6a1b9a"
-          stroke="#333"
-          stroke-width="1.5"
-        />
-        <text
-          x="1080"
-          y="1460"
-          text-anchor="middle"
-          font-size="12"
-          font-weight="700"
-          fill="#fff"
-        >
-          inquiries
-        </text>
-        <text x="1080" y="1514" text-anchor="middle" font-size="9" fill="#555">
-          Seeker-Owner messages
-        </text>
-
-        <!-- ===================== ARROWS: DB → Data Sources ===================== -->
-        <line
-          x1="730"
-          y1="1552"
-          x2="730"
-          y2="1610"
-          stroke="#333"
-          stroke-width="2"
-          marker-end="url(#ah)"
-        />
-        <rect
-          x="640"
-          y="1570"
-          width="180"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="0.5"
-        />
-        <text
-          x="730"
-          y="1582"
-          text-anchor="middle"
-          font-size="10"
-          fill="#333"
-          font-weight="600"
-        >
-          Preprocessed &amp; enriched data
-        </text>
-
-        <!-- ===================== ROW 6: DATA SOURCES ===================== -->
-        <!-- WDRA Box -->
-        <rect
-          x="30"
-          y="1612"
-          width="380"
-          height="220"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="30"
-          y="1612"
-          width="380"
-          height="34"
-          fill="#4caf50"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="220"
-          y="1635"
-          text-anchor="middle"
-          font-size="13"
-          font-weight="700"
-          fill="#fff"
-        >
-          WDRA Government Data (wdra.gov.in)
-        </text>
-
-        <rect
-          x="50"
-          y="1656"
-          width="340"
-          height="30"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="220"
-          y="1676"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          Source: Registered Warehouses — Maharashtra
-        </text>
-
-        <rect
-          x="50"
-          y="1692"
-          width="165"
-          height="30"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="1712"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          424 warehouses
-        </text>
-
-        <rect
-          x="225"
-          y="1692"
-          width="165"
-          height="30"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="1712"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          12 cols, 33 districts
-        </text>
-
-        <rect
-          x="50"
-          y="1728"
-          width="165"
-          height="30"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="132"
-          y="1748"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          Dec 2020 – Oct 2025
-        </text>
-
-        <rect
-          x="225"
-          y="1728"
-          width="165"
-          height="30"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="307"
-          y="1748"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          1 – 97,406 MT
-        </text>
-
-        <rect
-          x="50"
-          y="1764"
-          width="340"
-          height="30"
-          rx="5"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="220"
-          y="1784"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          373 Active | 50 Inactive | 1 Cancelled
-        </text>
-
-        <!-- Preprocessing Box -->
-        <rect
-          x="430"
-          y="1612"
-          width="440"
-          height="220"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="430"
-          y="1612"
-          width="440"
-          height="34"
-          fill="#795548"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="650"
-          y="1635"
-          text-anchor="middle"
-          font-size="13"
-          font-weight="700"
-          fill="#fff"
-        >
-          Data Preprocessing Pipeline
-        </text>
-
-        <rect
-          x="450"
-          y="1656"
-          width="400"
-          height="26"
-          rx="5"
-          fill="#fff9c4"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="650"
-          y="1674"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          ① CSV Parse &amp; Validate (csv-to-json.js)
-        </text>
-        <text
-          x="650"
-          y="1688"
-          text-anchor="middle"
-          font-size="10"
-          fill="#795548"
-        >
-          ↓
-        </text>
-        <rect
-          x="450"
-          y="1692"
-          width="400"
-          height="26"
-          rx="5"
-          fill="#fff9c4"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="650"
-          y="1710"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          ② Pincode Extraction + City Imputation (30+ cities)
-        </text>
-        <text
-          x="650"
-          y="1724"
-          text-anchor="middle"
-          font-size="10"
-          fill="#795548"
-        >
-          ↓
-        </text>
-        <rect
-          x="450"
-          y="1728"
-          width="400"
-          height="26"
-          rx="5"
-          fill="#fff9c4"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="650"
-          y="1746"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          ③ Lat/Lng Centroid + Gaussian Offset (±0.05°)
-        </text>
-        <text
-          x="650"
-          y="1760"
-          text-anchor="middle"
-          font-size="10"
-          fill="#795548"
-        >
-          ↓
-        </text>
-        <rect
-          x="450"
-          y="1764"
-          width="400"
-          height="26"
-          rx="5"
-          fill="#fff9c4"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text
-          x="650"
-          y="1782"
-          text-anchor="middle"
-          font-size="9"
-          font-weight="600"
-          fill="#111"
-        >
-          ④ Feature Engineering: 12 → 33 attributes
-        </text>
-        <text
-          x="650"
-          y="1796"
-          text-anchor="middle"
-          font-size="10"
-          fill="#795548"
-        >
-          ↓
-        </text>
-        <rect
-          x="450"
-          y="1800"
-          width="400"
-          height="26"
-          rx="5"
-          fill="#fff9c4"
-          stroke="#795548"
-          stroke-width="2"
-        />
-        <text
-          x="650"
-          y="1818"
-          text-anchor="middle"
-          font-size="9.5"
-          font-weight="700"
-          fill="#111"
-        >
-          ⑤ Synthetic Augmentation: 424 → 10,002 records
-        </text>
-
-        <!-- External APIs Box  -->
-        <rect
-          x="890"
-          y="1612"
-          width="540"
-          height="220"
-          rx="0"
-          fill="#fff"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <rect
-          x="890"
-          y="1612"
-          width="540"
-          height="34"
-          fill="#0288d1"
-          stroke="#333"
-          stroke-width="2.5"
-        />
-        <text
-          x="1160"
-          y="1635"
-          text-anchor="middle"
-          font-size="13"
-          font-weight="700"
-          fill="#fff"
-        >
-          External APIs &amp; Cloud Services
-        </text>
-
-        <rect
-          x="910"
-          y="1658"
-          width="250"
-          height="36"
-          rx="5"
-          fill="#e1f5fe"
-          stroke="#0288d1"
-          stroke-width="1.5"
-        />
-        <text
-          x="1035"
-          y="1676"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#01579b"
-        >
-          Groq Cloud (LPU Hardware)
-        </text>
-        <text x="1035" y="1690" text-anchor="middle" font-size="8" fill="#555">
-          Llama 3.3 70B inference | 500 tok/s
-        </text>
-
-        <rect
-          x="1170"
-          y="1658"
-          width="250"
-          height="36"
-          rx="5"
-          fill="#e1f5fe"
-          stroke="#0288d1"
-          stroke-width="1.5"
-        />
-        <text
-          x="1295"
-          y="1676"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#01579b"
-        >
-          Supabase Auth
-        </text>
-        <text x="1295" y="1690" text-anchor="middle" font-size="8" fill="#555">
-          JWT tokens | RLS policies
-        </text>
-
-        <rect
-          x="910"
-          y="1704"
-          width="250"
-          height="36"
-          rx="5"
-          fill="#e1f5fe"
-          stroke="#0288d1"
-          stroke-width="1.5"
-        />
-        <text
-          x="1035"
-          y="1722"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#01579b"
-        >
-          Supabase Storage
-        </text>
-        <text x="1035" y="1736" text-anchor="middle" font-size="8" fill="#555">
-          Document &amp; image uploads
-        </text>
-
-        <rect
-          x="1170"
-          y="1704"
-          width="250"
-          height="36"
-          rx="5"
-          fill="#e1f5fe"
-          stroke="#0288d1"
-          stroke-width="1.5"
-        />
-        <text
-          x="1295"
-          y="1722"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#01579b"
-        >
-          Netlify CDN
-        </text>
-        <text x="1295" y="1736" text-anchor="middle" font-size="8" fill="#555">
-          Static hosting + serverless
-        </text>
-
-        <rect
-          x="910"
-          y="1750"
-          width="250"
-          height="36"
-          rx="5"
-          fill="#e1f5fe"
-          stroke="#0288d1"
-          stroke-width="1.5"
-        />
-        <text
-          x="1035"
-          y="1768"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#01579b"
-        >
-          TensorFlow.js CDN
-        </text>
-        <text x="1035" y="1782" text-anchor="middle" font-size="8" fill="#555">
-          MobileNet v2 model weights
-        </text>
-
-        <rect
-          x="1170"
-          y="1750"
-          width="250"
-          height="36"
-          rx="5"
-          fill="#e1f5fe"
-          stroke="#0288d1"
-          stroke-width="1.5"
-        />
-        <text
-          x="1295"
-          y="1768"
-          text-anchor="middle"
-          font-size="10"
-          font-weight="700"
-          fill="#01579b"
-        >
-          Tesseract.js WASM
-        </text>
-        <text x="1295" y="1782" text-anchor="middle" font-size="8" fill="#555">
-          OCR engine for doc verification
-        </text>
-
-        <!-- WDRA → Preprocessing arrow -->
-        <line
-          x1="410"
-          y1="1730"
-          x2="450"
-          y2="1730"
-          stroke="#4caf50"
-          stroke-width="2"
-          marker-end="url(#ah-green)"
-        />
-        <rect
-          x="412"
-          y="1714"
-          width="36"
-          height="14"
-          rx="2"
-          fill="#fff"
-          stroke="#4caf50"
-          stroke-width="0.5"
-        />
-        <text
-          x="430"
-          y="1724"
-          text-anchor="middle"
-          font-size="8"
-          fill="#4caf50"
-          font-weight="600"
-        >
-          424
-        </text>
-
-        <!-- Preprocessing → DB arrow -->
-        <line
-          x1="650"
-          y1="1612"
-          x2="650"
-          y2="1552"
-          stroke="#795548"
-          stroke-width="2"
-          marker-end="url(#ah)"
-        />
-        <rect
-          x="570"
-          y="1572"
-          width="160"
-          height="16"
-          rx="3"
-          fill="#fff"
-          stroke="#795548"
-          stroke-width="0.5"
-        />
-        <text
-          x="650"
-          y="1584"
-          text-anchor="middle"
-          font-size="10"
-          fill="#795548"
-          font-weight="600"
-        >
-          10,002 enriched records
-        </text>
-
-        <!-- External APIs → LLM Gateway -->
-        <line
-          x1="1035"
-          y1="1658"
-          x2="1035"
-          y2="822"
-          stroke="#0288d1"
-          stroke-width="1.5"
-          stroke-dasharray="5,3"
-          marker-end="url(#ah-blue)"
-        />
-        <rect
-          x="1040"
-          y="1240"
-          width="68"
-          height="14"
-          rx="2"
-          fill="#fff"
-          stroke="#0288d1"
-          stroke-width="0.5"
-        />
-        <text
-          x="1074"
-          y="1250"
-          text-anchor="middle"
-          font-size="8"
-          fill="#0288d1"
-          font-weight="600"
-        >
-          API calls
-        </text>
-
-        <!-- ===================== LEGEND ===================== -->
-        <rect
-          x="30"
-          y="1860"
-          width="1400"
-          height="40"
-          rx="0"
-          fill="#f5f5f5"
-          stroke="#ddd"
-          stroke-width="1"
-        />
-        <text x="50" y="1885" font-size="10" font-weight="700" fill="#333">
-          LEGEND:
-        </text>
-        <!-- Seeker -->
-        <rect
-          x="120"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#b2ebf2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text x="140" y="1884" font-size="9" fill="#333">Seeker</text>
-        <!-- Owner -->
-        <rect
-          x="190"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#c8e6c9"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text x="210" y="1884" font-size="9" fill="#333">Owner</text>
-        <!-- Admin -->
-        <rect
-          x="260"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#ffe0b2"
-          stroke="#333"
-          stroke-width="1"
-        />
-        <text x="280" y="1884" font-size="9" fill="#333">Admin</text>
-        <!-- ML -->
-        <rect
-          x="330"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#e1bee7"
-          stroke="#9c27b0"
-          stroke-width="1"
-        />
-        <text x="350" y="1884" font-size="9" fill="#333">ML Engine</text>
-        <!-- LLM -->
-        <rect
-          x="415"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#ffcdd2"
-          stroke="#e53935"
-          stroke-width="1"
-        />
-        <text x="435" y="1884" font-size="9" fill="#333">
-          LLM (Llama 3.3 70B)
-        </text>
-        <!-- DocVer -->
-        <rect
-          x="550"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#b2dfdb"
-          stroke="#009688"
-          stroke-width="1"
-        />
-        <text x="570" y="1884" font-size="9" fill="#333">Doc Verification</text>
-        <!-- DB -->
-        <rect
-          x="670"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#b3e5fc"
-          stroke="#00acc1"
-          stroke-width="1"
-        />
-        <text x="690" y="1884" font-size="9" fill="#333">Database</text>
-        <!-- Multi-Agent -->
-        <rect
-          x="755"
-          y="1872"
-          width="14"
-          height="14"
-          rx="2"
-          fill="#ffe0b2"
-          stroke="#f57c00"
-          stroke-width="1"
-        />
-        <text x="775" y="1884" font-size="9" fill="#333">Multi-Agent</text>
-        <!-- Solid arrow -->
-        <line
-          x1="860"
-          y1="1879"
-          x2="900"
-          y2="1879"
-          stroke="#333"
-          stroke-width="2"
-          marker-end="url(#ah)"
-        />
-        <text x="910" y="1884" font-size="9" fill="#333">Data flow</text>
-        <!-- Dashed arrow -->
-        <line
-          x1="970"
-          y1="1879"
-          x2="1010"
-          y2="1879"
-          stroke="#888"
-          stroke-width="1.5"
-          stroke-dasharray="5,3"
-          marker-end="url(#ah-gray)"
-        />
-        <text x="1020" y="1884" font-size="9" fill="#333">Response</text>
-        <!-- ML tag -->
-        <rect x="1090" y="1873" width="20" height="12" rx="2" fill="#9c27b0" />
-        <text
-          x="1100"
-          y="1882"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          ML
-        </text>
-        <text x="1116" y="1884" font-size="9" fill="#333">ML-powered</text>
-        <!-- LLM tag -->
-        <rect x="1190" y="1873" width="26" height="12" rx="2" fill="#e53935" />
-        <text
-          x="1203"
-          y="1882"
-          text-anchor="middle"
-          font-size="6.5"
-          fill="#fff"
-          font-weight="700"
-        >
-          LLM
-        </text>
-        <text x="1222" y="1884" font-size="9" fill="#333">LLM-powered</text>
-      </svg>
-
-      <div class="footer" style="margin-top: 10px">
-        <strong
-          >SmartSpace — Complete System Architecture &amp; AI Workflow
-          Diagram</strong
-        ><br />
-        Primary LLM: Meta Llama 3.3 70B Versatile via Groq | ML: 12-Algorithm
-        Ensemble | Data: WDRA Maharashtra (424 &rarr; 10,002 records)<br />
-        Tech Stack: React 18 + TypeScript + Express.js + Supabase PostgreSQL +
-        TensorFlow.js + Tesseract.js<br />
-        &copy; 2025 SmartSpace Intelligent Warehouse Management Platform
-      </div>
-    </div>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartSpace — System Workflow &amp; Flow Diagram</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background: #fff; color: #1a1a1a; font-family: 'Segoe UI', system-ui, sans-serif; }
+.page { width: 1500px; margin: 0 auto; padding: 30px 20px 40px; position: relative; }
+
+/* Title */
+.title { text-align: center; margin-bottom: 24px; }
+.title h1 { font-size: 1.5rem; color: #111; }
+.title p { font-size: 0.82rem; color: #555; margin-top: 3px; }
+
+/* Stick figure */
+.actor { text-align: center; display: inline-block; }
+.actor-label { font-size: 0.85rem; font-weight: 700; margin-top: 4px; letter-spacing: 0.5px; }
+.actor-sub { font-size: 0.7rem; color: #666; max-width: 160px; margin: 2px auto 0; line-height: 1.3; }
+
+/* Boxes */
+.module-box {
+  border: 2.5px solid #333;
+  background: #fff;
+  position: relative;
+}
+.module-header {
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid #333;
+  text-align: center;
+}
+
+/* Color schemes */
+.orange-header { background: #ff9800; color: #fff; }
+.blue-header { background: #2196f3; color: #fff; }
+.green-header { background: #4caf50; color: #fff; }
+.purple-header { background: #9c27b0; color: #fff; }
+.red-header { background: #e53935; color: #fff; }
+.cyan-header { background: #00acc1; color: #fff; }
+.teal-header { background: #009688; color: #fff; }
+.brown-header { background: #795548; color: #fff; }
+.deep-orange-header { background: #f57c00; color: #fff; }
+.light-blue-header { background: #0288d1; color: #fff; }
+
+.module-body { padding: 10px 14px; }
+
+/* Sub-blocks */
+.sub-block {
+  background: #b2ebf2;
+  border: 1.5px solid #333;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 6px 2px;
+  font-size: 0.78rem;
+  text-align: center;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.35;
+}
+.sub-block small { font-weight: 400; font-size: 0.68rem; color: #444; display: block; margin-top: 2px; }
+.sub-block.light-blue { background: #b2ebf2; }
+.sub-block.light-green { background: #c8e6c9; }
+.sub-block.light-orange { background: #ffe0b2; }
+.sub-block.light-purple { background: #e1bee7; }
+.sub-block.light-red { background: #ffcdd2; }
+.sub-block.light-yellow { background: #fff9c4; }
+.sub-block.light-teal { background: #b2dfdb; }
+
+/* Tags */
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  vertical-align: middle;
+  margin-left: 3px;
+}
+.tag-ml { background: #9c27b0; }
+.tag-llm { background: #e53935; }
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.72rem;
+  color: #777;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<div class="title">
+  <h1>SmartSpace — Complete System Architecture &amp; AI Workflow Diagram</h1>
+  <p>Intelligent Warehouse Management Platform | Three-Role System: Seeker &rarr; Owner &rarr; Admin | ML + LLM Hybrid Architecture | Meta Llama 3.3 70B</p>
+</div>
+
+<!-- ===== COMPLETE DIAGRAM WITH SVG ARROWS ===== -->
+<svg width="1460" height="3050" viewBox="0 0 1460 3050" xmlns="http://www.w3.org/2000/svg" style="display:block; margin:0 auto;">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#444"/></marker>
+    <marker id="ah-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#2196f3"/></marker>
+    <marker id="ah-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#e53935"/></marker>
+    <marker id="ah-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#9c27b0"/></marker>
+    <marker id="ah-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#4caf50"/></marker>
+    <marker id="ah-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#f57c00"/></marker>
+    <marker id="ah-teal" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#009688"/></marker>
+    <marker id="ah-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#00acc1"/></marker>
+    <marker id="ah-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#888"/></marker>
+  </defs>
+
+  <!-- ===================== ROW 1: STICK FIGURES (ACTORS) ===================== -->
+  <!-- SEEKER stick figure -->
+  <circle cx="250" cy="28" r="16" fill="none" stroke="#333" stroke-width="2.5"/>
+  <line x1="250" y1="44" x2="250" y2="80" stroke="#333" stroke-width="2.5"/>
+  <line x1="250" y1="55" x2="228" y2="72" stroke="#333" stroke-width="2.5"/>
+  <line x1="250" y1="55" x2="272" y2="72" stroke="#333" stroke-width="2.5"/>
+  <line x1="250" y1="80" x2="232" y2="105" stroke="#333" stroke-width="2.5"/>
+  <line x1="250" y1="80" x2="268" y2="105" stroke="#333" stroke-width="2.5"/>
+  <text x="250" y="122" text-anchor="middle" font-size="14" font-weight="700" fill="#111">SEEKER</text>
+  <text x="250" y="137" text-anchor="middle" font-size="10" fill="#666">Searches, books, compares</text>
+
+  <!-- OWNER stick figure -->
+  <circle cx="730" cy="28" r="16" fill="none" stroke="#333" stroke-width="2.5"/>
+  <line x1="730" y1="44" x2="730" y2="80" stroke="#333" stroke-width="2.5"/>
+  <line x1="730" y1="55" x2="708" y2="72" stroke="#333" stroke-width="2.5"/>
+  <line x1="730" y1="55" x2="752" y2="72" stroke="#333" stroke-width="2.5"/>
+  <line x1="730" y1="80" x2="712" y2="105" stroke="#333" stroke-width="2.5"/>
+  <line x1="730" y1="80" x2="748" y2="105" stroke="#333" stroke-width="2.5"/>
+  <text x="730" y="122" text-anchor="middle" font-size="14" font-weight="700" fill="#111">OWNER</text>
+  <text x="730" y="137" text-anchor="middle" font-size="10" fill="#666">Lists, prices, manages</text>
+
+  <!-- ADMIN stick figure -->
+  <circle cx="1210" cy="28" r="16" fill="none" stroke="#333" stroke-width="2.5"/>
+  <line x1="1210" y1="44" x2="1210" y2="80" stroke="#333" stroke-width="2.5"/>
+  <line x1="1210" y1="55" x2="1188" y2="72" stroke="#333" stroke-width="2.5"/>
+  <line x1="1210" y1="55" x2="1232" y2="72" stroke="#333" stroke-width="2.5"/>
+  <line x1="1210" y1="80" x2="1192" y2="105" stroke="#333" stroke-width="2.5"/>
+  <line x1="1210" y1="80" x2="1228" y2="105" stroke="#333" stroke-width="2.5"/>
+  <text x="1210" y="122" text-anchor="middle" font-size="14" font-weight="700" fill="#111">ADMIN</text>
+  <text x="1210" y="137" text-anchor="middle" font-size="10" fill="#666">Verifies, moderates, manages</text>
+
+  <!-- ===================== ARROWS: Actors → Frontend ===================== -->
+  <!-- Seeker → Frontend -->
+  <line x1="250" y1="142" x2="250" y2="170" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="256" y="160" font-size="9.5" fill="#333" font-weight="600">Submits search query</text>
+
+  <!-- Owner → Frontend -->
+  <line x1="730" y1="142" x2="730" y2="170" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="736" y="160" font-size="9.5" fill="#333" font-weight="600">Lists warehouse</text>
+
+  <!-- Admin → Frontend -->
+  <line x1="1210" y1="142" x2="1210" y2="170" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="1216" y="160" font-size="9.5" fill="#333" font-weight="600">Reviews submissions</text>
+
+  <!-- ===================== ROW 2: FRONTEND ===================== -->
+  <rect x="30" y="172" width="1400" height="310" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="30" y="172" width="1400" height="34" fill="#ff9800" stroke="#333" stroke-width="2.5"/>
+  <text x="730" y="195" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Frontend (React 18 + TypeScript + Vite 6)</text>
+
+  <!-- Seeker Interface box -->
+  <rect x="50" y="218" width="420" height="250" rx="6" fill="#e0f7fa" stroke="#333" stroke-width="1.5"/>
+  <text x="260" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#006064">Seeker Interface</text>
+  <text x="260" y="252" text-anchor="middle" font-size="9" fill="#555">Search, Browse, Book, Compare Warehouses</text>
+
+  <!-- Seeker sub-blocks -->
+  <rect x="60" y="262" width="125" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="122" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">NL Search</text>
+  <rect x="80" y="272" width="28" height="12" rx="2" fill="#e53935"/><text x="94" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="195" y="262" width="125" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="257" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">AI Chatbot</text>
+  <rect x="215" y="272" width="28" height="12" rx="2" fill="#e53935"/><text x="229" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="330" y="262" width="130" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="395" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Recommendations</text>
+  <rect x="345" y="272" width="20" height="12" rx="2" fill="#9c27b0"/><text x="355" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <rect x="367" y="272" width="28" height="12" rx="2" fill="#e53935"/><text x="381" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="60" y="300" width="125" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="122" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Smart Booking</text>
+  <rect x="80" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="94" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="195" y="300" width="125" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="257" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Comparison Report</text>
+  <rect x="215" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="229" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="330" y="300" width="130" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="395" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Contact Drafting</text>
+  <rect x="350" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="364" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="60" y="338" width="125" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="122" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Activity Summary</text>
+  <rect x="80" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="94" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="195" y="338" width="125" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="257" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Smart Inquiry</text>
+  <rect x="215" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="229" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="330" y="338" width="130" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="395" y="352" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Booking &amp; Payment</text>
+
+  <rect x="60" y="376" width="195" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="157" y="395" text-anchor="middle" font-size="9" font-weight="600" fill="#111">AI Contract Understanding</text>
+  <rect x="80" y="386" width="28" height="12" rx="2" fill="#e53935"/><text x="94" y="395" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="265" y="376" width="195" height="32" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="362" y="395" text-anchor="middle" font-size="9" font-weight="600" fill="#111">AI Negotiation Agent</text>
+  <rect x="285" y="386" width="28" height="12" rx="2" fill="#e53935"/><text x="299" y="395" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <!-- Owner Interface box -->
+  <rect x="490" y="218" width="420" height="250" rx="6" fill="#e8f5e9" stroke="#333" stroke-width="1.5"/>
+  <text x="700" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">Owner Interface</text>
+  <text x="700" y="252" text-anchor="middle" font-size="9" fill="#555">List Property, Pricing, Dashboard, Bookings</text>
+
+  <rect x="500" y="262" width="125" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="562" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">List Property</text>
+
+  <rect x="635" y="262" width="130" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="700" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">AI Pricing</text>
+  <rect x="650" y="272" width="20" height="12" rx="2" fill="#9c27b0"/><text x="660" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <rect x="672" y="272" width="28" height="12" rx="2" fill="#e53935"/><text x="686" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="775" y="262" width="125" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="837" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Description Gen</text>
+  <rect x="793" y="272" width="28" height="12" rx="2" fill="#e53935"/><text x="807" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="500" y="300" width="125" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="562" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Invoice Gen</text>
+  <rect x="518" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="532" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="635" y="300" width="130" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="700" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Contract Gen</text>
+  <rect x="653" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="667" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="775" y="300" width="125" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="837" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Email Templates</text>
+  <rect x="793" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="807" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="500" y="338" width="125" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="562" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Demand Forecast</text>
+  <rect x="518" y="348" width="20" height="12" rx="2" fill="#9c27b0"/><text x="528" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <rect x="540" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="554" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="635" y="338" width="130" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="700" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Avail. Forecast</text>
+  <rect x="653" y="348" width="20" height="12" rx="2" fill="#9c27b0"/><text x="663" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <rect x="675" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="689" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="775" y="338" width="125" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="837" y="352" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Inquiry Mgmt</text>
+  <rect x="793" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="807" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="500" y="376" width="195" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="597" y="395" text-anchor="middle" font-size="9" font-weight="600" fill="#111">AI Negotiation Agent</text>
+  <rect x="520" y="386" width="28" height="12" rx="2" fill="#e53935"/><text x="534" y="395" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="705" y="376" width="195" height="32" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1.2"/>
+  <text x="802" y="395" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Micro-Space Management</text>
+
+  <!-- Admin Interface box -->
+  <rect x="930" y="218" width="480" height="250" rx="6" fill="#fff3e0" stroke="#333" stroke-width="1.5"/>
+  <text x="1170" y="238" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">Admin Interface</text>
+  <text x="1170" y="252" text-anchor="middle" font-size="9" fill="#555">Verify, Approve, Moderate, Manage Users, Analytics</text>
+
+  <rect x="945" y="262" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1017" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Doc Verification</text>
+  <rect x="960" y="272" width="20" height="12" rx="2" fill="#9c27b0"/><text x="970" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+
+  <rect x="1100" y="262" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1172" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Approval Workflow</text>
+  <rect x="1115" y="272" width="20" height="12" rx="2" fill="#9c27b0"/><text x="1125" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+
+  <rect x="1255" y="262" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1327" y="281" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Fraud Detection</text>
+  <rect x="1270" y="272" width="20" height="12" rx="2" fill="#9c27b0"/><text x="1280" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <rect x="1292" y="272" width="28" height="12" rx="2" fill="#e53935"/><text x="1306" y="281" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="945" y="300" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1017" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Market Insights</text>
+  <rect x="960" y="310" width="28" height="12" rx="2" fill="#e53935"/><text x="974" y="319" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="1100" y="300" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1172" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">User Management</text>
+
+  <rect x="1255" y="300" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1327" y="319" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Analytics Dashboard</text>
+
+  <rect x="945" y="338" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1017" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Risk Scoring</text>
+  <rect x="960" y="348" width="20" height="12" rx="2" fill="#9c27b0"/><text x="970" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <rect x="982" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="996" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="1100" y="338" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1172" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Knowledge Graph</text>
+  <rect x="1118" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="1132" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="1255" y="338" width="145" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1327" y="357" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Notification Mgmt</text>
+  <rect x="1270" y="348" width="28" height="12" rx="2" fill="#e53935"/><text x="1284" y="357" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="945" y="376" width="225" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1057" y="395" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Dispute Resolution</text>
+  <rect x="963" y="386" width="28" height="12" rx="2" fill="#e53935"/><text x="977" y="395" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="1180" y="376" width="220" height="32" rx="5" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1290" y="395" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Security &amp; RLS</text>
+
+  <!-- ===================== ARROWS: Frontend → Backend & LLM Gateway ===================== -->
+  <!-- Frontend → Backend -->
+  <line x1="350" y1="482" x2="350" y2="530" stroke="#2196f3" stroke-width="2.5" marker-end="url(#ah-blue)"/>
+  <rect x="255" y="496" width="190" height="16" rx="3" fill="#fff" stroke="#2196f3" stroke-width="0.5"/>
+  <text x="350" y="508" text-anchor="middle" font-size="10" fill="#2196f3" font-weight="600">API Requests (HTTPS/REST)</text>
+
+  <!-- Frontend → LLM Gateway (client-side calls) -->
+  <line x1="900" y1="482" x2="1050" y2="530" stroke="#e53935" stroke-width="2.5" marker-end="url(#ah-red)"/>
+  <rect x="900" y="496" width="165" height="16" rx="3" fill="#fff" stroke="#e53935" stroke-width="0.5"/>
+  <text x="982" y="508" text-anchor="middle" font-size="10" fill="#e53935" font-weight="600">Client-Side LLM API Calls</text>
+
+  <!-- Response arrows (dashed) -->
+  <line x1="370" y1="530" x2="370" y2="482" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah-gray)"/>
+  <text x="376" y="510" font-size="9" fill="#888">Response</text>
+
+  <!-- ===================== ROW 3: BACKEND + LLM GATEWAY ===================== -->
+  <!-- Backend Box -->
+  <rect x="30" y="532" width="660" height="290" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="30" y="532" width="660" height="34" fill="#2196f3" stroke="#333" stroke-width="2.5"/>
+  <text x="360" y="555" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Backend (Express.js REST API Server)</text>
+
+  <!-- Backend sub-blocks -->
+  <rect x="50" y="578" width="190" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="145" y="595" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/recommend</text>
+  <text x="145" y="607" text-anchor="middle" font-size="8" fill="#555">ML ensemble + LLM reasoning</text>
+  <rect x="55" y="586" width="20" height="11" rx="2" fill="#9c27b0"/><text x="65" y="595" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">ML</text>
+  <rect x="77" y="586" width="26" height="11" rx="2" fill="#e53935"/><text x="90" y="595" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="250" y="578" width="190" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="345" y="595" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/warehouses</text>
+  <text x="345" y="607" text-anchor="middle" font-size="8" fill="#555">CRUD, search, filter</text>
+
+  <rect x="450" y="578" width="220" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="560" y="595" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/approve-submission</text>
+  <text x="560" y="607" text-anchor="middle" font-size="8" fill="#555">Admin verification workflow</text>
+  <rect x="455" y="586" width="20" height="11" rx="2" fill="#9c27b0"/><text x="465" y="595" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">ML</text>
+
+  <rect x="50" y="622" width="190" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="145" y="639" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/bookings</text>
+  <text x="145" y="651" text-anchor="middle" font-size="8" fill="#555">Booking lifecycle management</text>
+
+  <rect x="250" y="622" width="190" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="345" y="639" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/nlp-search</text>
+  <text x="345" y="651" text-anchor="middle" font-size="8" fill="#555">NL → structured filters</text>
+  <rect x="255" y="630" width="26" height="11" rx="2" fill="#e53935"/><text x="268" y="639" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="450" y="622" width="220" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="560" y="639" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/market-insights</text>
+  <text x="560" y="651" text-anchor="middle" font-size="8" fill="#555">AI trend analysis</text>
+  <rect x="455" y="630" width="26" height="11" rx="2" fill="#e53935"/><text x="468" y="639" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="50" y="666" width="190" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="145" y="683" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/availability-forecast</text>
+  <text x="145" y="695" text-anchor="middle" font-size="8" fill="#555">Predictive analytics</text>
+  <rect x="55" y="674" width="20" height="11" rx="2" fill="#9c27b0"/><text x="65" y="683" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">ML</text>
+
+  <rect x="250" y="666" width="190" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="345" y="683" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/contract-generator</text>
+  <text x="345" y="695" text-anchor="middle" font-size="8" fill="#555">Lease document generation</text>
+  <rect x="255" y="674" width="26" height="11" rx="2" fill="#e53935"/><text x="268" y="683" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="450" y="666" width="220" height="36" rx="5" fill="#b2ebf2" stroke="#333" stroke-width="1.2"/>
+  <text x="560" y="683" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">/api/notifications</text>
+  <text x="560" y="695" text-anchor="middle" font-size="8" fill="#555">AI template generation</text>
+  <rect x="455" y="674" width="26" height="11" rx="2" fill="#e53935"/><text x="468" y="683" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <!-- Server-Side LLM inside backend -->
+  <rect x="50" y="712" width="630" height="42" rx="5" fill="#ffcdd2" stroke="#e53935" stroke-width="2"/>
+  <text x="365" y="730" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b71c1c">Server-Side LLM (advanced-llm-service.ts)</text>
+  <text x="365" y="744" text-anchor="middle" font-size="8.5" fill="#555">Prompt: 50 warehouse profiles + user prefs → JSON | temp=0.3 | Loc 30% | Price 25% | Size 25% | Quality 20%</text>
+
+  <!-- LLM Gateway Box -->
+  <rect x="710" y="532" width="720" height="290" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="710" y="532" width="720" height="34" fill="#e53935" stroke="#333" stroke-width="2.5"/>
+  <text x="1070" y="555" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">LLM Service Gateway (aiService.ts) — Fallback Chain</text>
+
+  <!-- Groq (primary) -->
+  <rect x="730" y="578" width="680" height="55" rx="6" fill="#ffcdd2" stroke="#e53935" stroke-width="2.5"/>
+  <text x="1070" y="600" text-anchor="middle" font-size="13" font-weight="700" fill="#b71c1c">① Groq API — PRIMARY — Meta Llama 3.3 70B Versatile</text>
+  <text x="1070" y="618" text-anchor="middle" font-size="10" fill="#555">Model: llama-3.3-70b-versatile | 500 tokens/sec | 128K context window | LPU Inference Engine</text>
+  <rect x="740" y="590" width="62" height="16" rx="3" fill="#e53935"/><text x="771" y="602" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">PRIMARY</text>
+
+  <!-- Fallback 2 -->
+  <rect x="730" y="642" width="325" height="40" rx="5" fill="#f5f5f5" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="892" y="660" text-anchor="middle" font-size="10" font-weight="600" fill="#888">② OpenRouter — Claude 3.5 Sonnet</text>
+  <text x="892" y="673" text-anchor="middle" font-size="8" fill="#aaa">Fallback only — never reached when Groq works</text>
+
+  <!-- Fallback 3 -->
+  <rect x="1065" y="642" width="345" height="40" rx="5" fill="#f5f5f5" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="1237" y="660" text-anchor="middle" font-size="10" font-weight="600" fill="#888">③ Cloudflare Workers AI — Llama 3.1 8B</text>
+  <text x="1237" y="673" text-anchor="middle" font-size="8" fill="#aaa">Lightweight backup — rarely used</text>
+
+  <!-- Fallback 4 -->
+  <rect x="730" y="692" width="680" height="36" rx="5" fill="#f5f5f5" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="1070" y="712" text-anchor="middle" font-size="10" font-weight="600" fill="#888">④ Google Gemini Pro — Last Resort Fallback</text>
+  <text x="1070" y="722" text-anchor="middle" font-size="8" fill="#aaa">Final fallback in chain — used if all above fail</text>
+
+  <!-- Fallback chain label -->
+  <text x="1070" y="752" text-anchor="middle" font-size="10" font-weight="700" fill="#e53935">Fallback: Groq → OpenRouter → Cloudflare → Gemini</text>
+  <text x="1070" y="766" text-anchor="middle" font-size="9" fill="#555">Groq is ALWAYS tried first. With active API key, only Llama 3.3 70B is used.</text>
+
+  <!-- ===================== ARROWS: Backend → ML/Doc Verification/LLM ===================== -->
+  <!-- Backend → ML Engine -->
+  <line x1="200" y1="822" x2="200" y2="880" stroke="#9c27b0" stroke-width="2.5" marker-end="url(#ah-purple)"/>
+  <rect x="105" y="840" width="190" height="16" rx="3" fill="#fff" stroke="#9c27b0" stroke-width="0.5"/>
+  <text x="200" y="852" text-anchor="middle" font-size="10" fill="#9c27b0" font-weight="600">?algorithm=ensemble | hybrid</text>
+
+  <!-- Backend → Doc Verification -->
+  <line x1="500" y1="822" x2="620" y2="880" stroke="#009688" stroke-width="2.5" marker-end="url(#ah-teal)"/>
+  <rect x="490" y="840" width="160" height="16" rx="3" fill="#fff" stroke="#009688" stroke-width="0.5"/>
+  <text x="570" y="852" text-anchor="middle" font-size="10" fill="#009688" font-weight="600">Upload documents</text>
+
+  <!-- Backend → LLM Use Cases -->
+  <line x1="660" y1="758" x2="950" y2="880" stroke="#e53935" stroke-width="2" marker-end="url(#ah-red)"/>
+  <rect x="730" y="812" width="140" height="16" rx="3" fill="#fff" stroke="#e53935" stroke-width="0.5"/>
+  <text x="800" y="824" text-anchor="middle" font-size="10" fill="#e53935" font-weight="600">?algorithm=llm</text>
+
+  <!-- ML → Backend (return scores) -->
+  <line x1="220" y1="880" x2="220" y2="822" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah-gray)"/>
+  <text x="226" y="856" font-size="8.5" fill="#888">Scores</text>
+
+  <!-- LLM Gateway → Groq API (external) -->
+  <line x1="1350" y1="602" x2="1410" y2="602" stroke="#e53935" stroke-width="2" marker-end="url(#ah-red)"/>
+  <text x="1418" y="600" font-size="9" fill="#e53935" font-weight="600">Groq</text>
+  <text x="1418" y="612" font-size="9" fill="#e53935" font-weight="600">Cloud</text>
+
+  <!-- ===================== ROW 4: ML ENGINE + DOC VERIFICATION + LLM USE CASES + MULTI-AGENT ===================== -->
+  <!-- ML Engine Box -->
+  <rect x="30" y="882" width="380" height="420" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="30" y="882" width="380" height="34" fill="#9c27b0" stroke="#333" stroke-width="2.5"/>
+  <text x="220" y="905" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">ML Engine — 12 Algorithms (2,142 LOC)</text>
+
+  <!-- Primary ensemble label -->
+  <rect x="50" y="926" width="340" height="22" rx="4" fill="#e1bee7" stroke="#9c27b0" stroke-width="1.5"/>
+  <text x="220" y="941" text-anchor="middle" font-size="10" font-weight="700" fill="#4a148c">PRIMARY: 5-Algorithm Ensemble (ml-algorithms.ts)</text>
+
+  <rect x="50" y="954" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="132" y="970" text-anchor="middle" font-size="9" font-weight="700" fill="#111">① KNN</text>
+  <text x="132" y="982" text-anchor="middle" font-size="7.5" fill="#555">K=8, 8-dim, loc wt=6.0</text>
+
+  <rect x="225" y="954" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="307" y="970" text-anchor="middle" font-size="9" font-weight="700" fill="#111">② Random Forest</text>
+  <text x="307" y="982" text-anchor="middle" font-size="7.5" fill="#555">50 trees, 80% bootstrap</text>
+
+  <rect x="50" y="994" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1010" text-anchor="middle" font-size="9" font-weight="700" fill="#111">③ Gradient Boost</text>
+  <text x="132" y="1022" text-anchor="middle" font-size="7.5" fill="#555">10 iter, η=0.1</text>
+
+  <rect x="225" y="994" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="307" y="1010" text-anchor="middle" font-size="9" font-weight="700" fill="#111">④ Neural Network</text>
+  <text x="307" y="1022" text-anchor="middle" font-size="7.5" fill="#555">10→10→4→1, LeakyReLU</text>
+
+  <rect x="50" y="1034" width="340" height="28" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="220" y="1052" text-anchor="middle" font-size="9" font-weight="700" fill="#111">⑤ Hybrid Stacking — Meta-learner over KNN + RF</text>
+
+  <!-- Secondary ensemble label -->
+  <rect x="50" y="1072" width="340" height="22" rx="4" fill="#e1bee7" stroke="#9c27b0" stroke-width="1.5"/>
+  <text x="220" y="1087" text-anchor="middle" font-size="10" font-weight="700" fill="#4a148c">ADVANCED: 5-Algorithm Ensemble (advanced-ml-algorithms.ts)</text>
+
+  <rect x="50" y="1100" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1116" text-anchor="middle" font-size="9" font-weight="700" fill="#111">⑥ KNN Gaussian</text>
+  <text x="132" y="1128" text-anchor="middle" font-size="7.5" fill="#555">K=15, σ=0.8</text>
+
+  <rect x="225" y="1100" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="307" y="1116" text-anchor="middle" font-size="9" font-weight="700" fill="#111">⑦ Content-Based</text>
+  <text x="307" y="1128" text-anchor="middle" font-size="7.5" fill="#555">TF-IDF, loc=0.35</text>
+
+  <rect x="50" y="1140" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1156" text-anchor="middle" font-size="9" font-weight="700" fill="#111">⑧ Collaborative</text>
+  <text x="132" y="1168" text-anchor="middle" font-size="7.5" fill="#555">Simulated patterns</text>
+
+  <rect x="225" y="1140" width="165" height="34" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="307" y="1156" text-anchor="middle" font-size="9" font-weight="700" fill="#111">⑨ Sigmoid NN</text>
+  <text x="307" y="1168" text-anchor="middle" font-size="7.5" fill="#555">6→3→2→1 MLP</text>
+
+  <rect x="50" y="1180" width="340" height="28" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="220" y="1198" text-anchor="middle" font-size="9" font-weight="700" fill="#111">⑩ Bayesian Scoring — Prior × Likelihood / Evidence</text>
+
+  <rect x="50" y="1218" width="165" height="28" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1236" text-anchor="middle" font-size="9" font-weight="600" fill="#111">⑪ License Validator</text>
+
+  <rect x="225" y="1218" width="165" height="28" rx="5" fill="#e1bee7" stroke="#333" stroke-width="1"/>
+  <text x="307" y="1236" text-anchor="middle" font-size="9" font-weight="600" fill="#111">⑫ Dynamic Weights</text>
+
+  <!-- Doc Verification Box -->
+  <rect x="430" y="882" width="310" height="420" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="430" y="882" width="310" height="34" fill="#009688" stroke="#333" stroke-width="2.5"/>
+  <text x="585" y="905" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Document Verification (552 LOC)</text>
+
+  <rect x="445" y="926" width="280" height="40" rx="5" fill="#b2dfdb" stroke="#333" stroke-width="1.2"/>
+  <text x="585" y="945" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">TensorFlow.js + MobileNet v2</text>
+  <text x="585" y="958" text-anchor="middle" font-size="8" fill="#555">Neural network doc classification</text>
+
+  <rect x="445" y="974" width="280" height="40" rx="5" fill="#b2dfdb" stroke="#333" stroke-width="1.2"/>
+  <text x="585" y="993" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">Tesseract.js OCR</text>
+  <text x="585" y="1006" text-anchor="middle" font-size="8" fill="#555">Text extraction (PDF up to 5 pages, 2× scale)</text>
+
+  <rect x="445" y="1022" width="280" height="40" rx="5" fill="#b2dfdb" stroke="#333" stroke-width="1.2"/>
+  <text x="585" y="1041" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">Levenshtein Distance</text>
+  <text x="585" y="1054" text-anchor="middle" font-size="8" fill="#555">80% similarity threshold</text>
+
+  <rect x="445" y="1070" width="280" height="40" rx="5" fill="#b2dfdb" stroke="#333" stroke-width="1.2"/>
+  <text x="585" y="1089" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">Regex Pattern Detection</text>
+  <text x="585" y="1102" text-anchor="middle" font-size="8" fill="#555">GST &amp; PAN number extraction</text>
+
+  <!-- Internal arrow: flow inside doc verification -->
+  <line x1="585" y1="966" x2="585" y2="974" stroke="#009688" stroke-width="1.5" marker-end="url(#ah-teal)"/>
+  <line x1="585" y1="1014" x2="585" y2="1022" stroke="#009688" stroke-width="1.5" marker-end="url(#ah-teal)"/>
+  <line x1="585" y1="1062" x2="585" y2="1070" stroke="#009688" stroke-width="1.5" marker-end="url(#ah-teal)"/>
+  <line x1="585" y1="1110" x2="585" y2="1130" stroke="#009688" stroke-width="1.5" marker-end="url(#ah-teal)"/>
+
+  <!-- 100-point scoring -->
+  <rect x="445" y="1130" width="280" height="48" rx="5" fill="#b2dfdb" stroke="#009688" stroke-width="2.5"/>
+  <text x="585" y="1150" text-anchor="middle" font-size="10" font-weight="700" fill="#004d40">100-Point Scoring System</text>
+  <text x="585" y="1164" text-anchor="middle" font-size="8" fill="#555">GST(25) + PAN(25) + Name(15) + Company(15) + Phone(10) + DocType(10)</text>
+
+  <line x1="585" y1="1178" x2="585" y2="1196" stroke="#009688" stroke-width="1.5" marker-end="url(#ah-teal)"/>
+
+  <!-- Decision -->
+  <rect x="445" y="1196" width="280" height="44" rx="5" fill="#e0f2f1" stroke="#009688" stroke-width="2"/>
+  <text x="585" y="1212" text-anchor="middle" font-size="10" font-weight="700" fill="#004d40">Decision Engine</text>
+  <text x="585" y="1228" text-anchor="middle" font-size="9" fill="#333">≥70 → APPROVE | ≥40 → REVIEW | &lt;40 → REJECT</text>
+
+  <!-- LLM Use Cases Box -->
+  <rect x="760" y="882" width="340" height="420" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="760" y="882" width="340" height="34" fill="#e53935" stroke="#333" stroke-width="2.5"/>
+  <text x="930" y="905" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">LLM Use Cases — Llama 3.3 70B</text>
+
+  <!-- LLM use case grid -->
+  <rect x="775" y="924" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="942" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">AI Chatbot (temp=0.7)</text>
+
+  <rect x="935" y="924" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="942" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Rec. Reasoning (0.3)</text>
+
+  <rect x="775" y="957" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="975" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">NL Search → Filters</text>
+
+  <rect x="935" y="957" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="975" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Description Gen</text>
+
+  <rect x="775" y="990" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1008" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Pricing Intelligence</text>
+
+  <rect x="935" y="990" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1008" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Comparison Reports</text>
+
+  <rect x="775" y="1023" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1041" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Invoice Generation</text>
+
+  <rect x="935" y="1023" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1041" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Contract Generation</text>
+
+  <rect x="775" y="1056" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1074" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Email Templates</text>
+
+  <rect x="935" y="1056" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1074" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Market Insights</text>
+
+  <rect x="775" y="1089" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1107" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Activity Summaries</text>
+
+  <rect x="935" y="1089" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1107" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Inquiry Response</text>
+
+  <rect x="775" y="1122" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1140" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Contact Drafting</text>
+
+  <rect x="935" y="1122" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1140" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Avail. Forecast</text>
+
+  <rect x="775" y="1155" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1173" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Fraud Detection</text>
+
+  <rect x="935" y="1155" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1173" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Demand Forecast</text>
+
+  <rect x="775" y="1188" width="155" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="852" y="1206" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Contract Analysis</text>
+
+  <rect x="935" y="1188" width="150" height="28" rx="4" fill="#ffcdd2" stroke="#333" stroke-width="1"/>
+  <text x="1010" y="1206" text-anchor="middle" font-size="8.5" font-weight="600" fill="#111">Knowledge Graph</text>
+
+  <!-- Multi-Agent Box -->
+  <rect x="1120" y="882" width="310" height="420" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="1120" y="882" width="310" height="34" fill="#f57c00" stroke="#333" stroke-width="2.5"/>
+  <text x="1275" y="905" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Multi-Agent AI System</text>
+
+  <rect x="1135" y="930" width="280" height="48" rx="6" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1275" y="950" text-anchor="middle" font-size="10" font-weight="700" fill="#111">Pricing Agent</text>
+  <text x="1275" y="968" text-anchor="middle" font-size="8" fill="#555">ML calculates optimal price → LLM explains</text>
+  <rect x="1145" y="940" width="20" height="11" rx="2" fill="#9c27b0"/><text x="1155" y="949" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">ML</text>
+  <rect x="1167" y="940" width="26" height="11" rx="2" fill="#e53935"/><text x="1180" y="949" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <!-- Arrow between agents -->
+  <line x1="1275" y1="978" x2="1275" y2="990" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ah-orange)"/>
+
+  <rect x="1135" y="992" width="280" height="48" rx="6" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1275" y="1012" text-anchor="middle" font-size="10" font-weight="700" fill="#111">Market Analyst Agent</text>
+  <text x="1275" y="1030" text-anchor="middle" font-size="8" fill="#555">Demand &amp; supply trend analysis</text>
+  <rect x="1145" y="1002" width="26" height="11" rx="2" fill="#e53935"/><text x="1158" y="1011" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <line x1="1275" y1="1040" x2="1275" y2="1052" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ah-orange)"/>
+
+  <rect x="1135" y="1054" width="280" height="48" rx="6" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1275" y="1074" text-anchor="middle" font-size="10" font-weight="700" fill="#111">Risk Detection Agent</text>
+  <text x="1275" y="1092" text-anchor="middle" font-size="8" fill="#555">Fake listings, anomaly detection</text>
+  <rect x="1145" y="1064" width="20" height="11" rx="2" fill="#9c27b0"/><text x="1155" y="1073" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">ML</text>
+  <rect x="1167" y="1064" width="26" height="11" rx="2" fill="#e53935"/><text x="1180" y="1073" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <line x1="1275" y1="1102" x2="1275" y2="1114" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ah-orange)"/>
+
+  <rect x="1135" y="1116" width="280" height="48" rx="6" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1275" y="1136" text-anchor="middle" font-size="10" font-weight="700" fill="#111">Explanation Agent</text>
+  <text x="1275" y="1154" text-anchor="middle" font-size="8" fill="#555">ML scores → human-readable language</text>
+  <rect x="1145" y="1126" width="26" height="11" rx="2" fill="#e53935"/><text x="1158" y="1135" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <line x1="1275" y1="1164" x2="1275" y2="1176" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ah-orange)"/>
+
+  <rect x="1135" y="1178" width="280" height="48" rx="6" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1275" y="1198" text-anchor="middle" font-size="10" font-weight="700" fill="#111">Negotiation Agent</text>
+  <text x="1275" y="1216" text-anchor="middle" font-size="8" fill="#555">Multi-step AI-powered price negotiation</text>
+  <rect x="1145" y="1188" width="26" height="11" rx="2" fill="#e53935"/><text x="1158" y="1197" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <rect x="1135" y="1240" width="280" height="48" rx="6" fill="#ffe0b2" stroke="#333" stroke-width="1.2"/>
+  <text x="1275" y="1260" text-anchor="middle" font-size="10" font-weight="700" fill="#111">Dispute Resolver Agent</text>
+  <text x="1275" y="1278" text-anchor="middle" font-size="8" fill="#555">Contract analysis &amp; fair resolution</text>
+  <rect x="1145" y="1250" width="26" height="11" rx="2" fill="#e53935"/><text x="1158" y="1259" text-anchor="middle" font-size="6" fill="#fff" font-weight="700">LLM</text>
+
+  <line x1="1275" y1="1226" x2="1275" y2="1240" stroke="#f57c00" stroke-width="1.5" marker-end="url(#ah-orange)"/>
+
+  <!-- Cross-link: Multi-Agent → LLM Use Cases -->
+  <line x1="1120" y1="1050" x2="1085" y2="1050" stroke="#e53935" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ah-red)"/>
+  <text x="1086" y="1042" font-size="8" fill="#e53935" text-anchor="end">LLM calls</text>
+
+  <!-- Cross-link: ML Engine → Multi-Agent -->
+  <line x1="410" y1="1050" x2="430" y2="1050" stroke="#9c27b0" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="415" y="1042" font-size="8" fill="#9c27b0">Scores</text>
+
+  <!-- ===================== ARROWS: Engine layer → Database ===================== -->
+  <line x1="400" y1="1302" x2="400" y2="1370" stroke="#00acc1" stroke-width="2.5" marker-end="url(#ah-cyan)"/>
+  <rect x="305" y="1326" width="190" height="16" rx="3" fill="#fff" stroke="#00acc1" stroke-width="0.5"/>
+  <text x="400" y="1338" text-anchor="middle" font-size="10" fill="#00acc1" font-weight="600">SQL Queries (Supabase-JS)</text>
+
+  <line x1="950" y1="1302" x2="950" y2="1370" stroke="#00acc1" stroke-width="2.5" marker-end="url(#ah-cyan)"/>
+  <rect x="855" y="1326" width="190" height="16" rx="3" fill="#fff" stroke="#00acc1" stroke-width="0.5"/>
+  <text x="950" y="1338" text-anchor="middle" font-size="10" fill="#00acc1" font-weight="600">Store conversations &amp; logs</text>
+
+  <!-- Response from DB -->
+  <line x1="420" y1="1370" x2="420" y2="1302" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah-gray)"/>
+  <text x="428" y="1340" font-size="8.5" fill="#888">Query results</text>
+
+  <!-- ===================== ROW 5: DATABASE ===================== -->
+  <rect x="100" y="1372" width="1260" height="180" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="100" y="1372" width="1260" height="34" fill="#00acc1" stroke="#333" stroke-width="2.5"/>
+  <text x="730" y="1395" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">Database — Supabase PostgreSQL 15+ (Row Level Security)</text>
+
+  <!-- DB Cylinders -->
+  <!-- warehouses -->
+  <ellipse cx="240" cy="1430" rx="80" ry="14" fill="#4caf50" stroke="#333" stroke-width="1.5"/>
+  <rect x="160" y="1430" width="160" height="50" fill="#4caf50" stroke="none"/>
+  <line x1="160" y1="1430" x2="160" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <line x1="320" y1="1430" x2="320" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <ellipse cx="240" cy="1480" rx="80" ry="14" fill="#388e3c" stroke="#333" stroke-width="1.5"/>
+  <text x="240" y="1460" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">warehouses</text>
+  <text x="240" y="1514" text-anchor="middle" font-size="9" fill="#555">10,002 records | 33 cols</text>
+
+  <!-- profiles -->
+  <ellipse cx="520" cy="1430" rx="80" ry="14" fill="#2196f3" stroke="#333" stroke-width="1.5"/>
+  <rect x="440" y="1430" width="160" height="50" fill="#2196f3" stroke="none"/>
+  <line x1="440" y1="1430" x2="440" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <line x1="600" y1="1430" x2="600" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <ellipse cx="520" cy="1480" rx="80" ry="14" fill="#1565c0" stroke="#333" stroke-width="1.5"/>
+  <text x="520" y="1460" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">profiles</text>
+  <text x="520" y="1514" text-anchor="middle" font-size="9" fill="#555">Users (auth.users FK)</text>
+
+  <!-- bookings -->
+  <ellipse cx="800" cy="1430" rx="80" ry="14" fill="#ff9800" stroke="#333" stroke-width="1.5"/>
+  <rect x="720" y="1430" width="160" height="50" fill="#ff9800" stroke="none"/>
+  <line x1="720" y1="1430" x2="720" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <line x1="880" y1="1430" x2="880" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <ellipse cx="800" cy="1480" rx="80" ry="14" fill="#e65100" stroke="#333" stroke-width="1.5"/>
+  <text x="800" y="1460" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">bookings</text>
+  <text x="800" y="1514" text-anchor="middle" font-size="9" fill="#555">Lease management</text>
+
+  <!-- inquiries -->
+  <ellipse cx="1080" cy="1430" rx="80" ry="14" fill="#9c27b0" stroke="#333" stroke-width="1.5"/>
+  <rect x="1000" y="1430" width="160" height="50" fill="#9c27b0" stroke="none"/>
+  <line x1="1000" y1="1430" x2="1000" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <line x1="1160" y1="1430" x2="1160" y2="1480" stroke="#333" stroke-width="1.5"/>
+  <ellipse cx="1080" cy="1480" rx="80" ry="14" fill="#6a1b9a" stroke="#333" stroke-width="1.5"/>
+  <text x="1080" y="1460" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">inquiries</text>
+  <text x="1080" y="1514" text-anchor="middle" font-size="9" fill="#555">Seeker-Owner messages</text>
+
+  <!-- ===================== ARROWS: DB → Data Sources ===================== -->
+  <line x1="730" y1="1552" x2="730" y2="1610" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+  <rect x="640" y="1570" width="180" height="16" rx="3" fill="#fff" stroke="#333" stroke-width="0.5"/>
+  <text x="730" y="1582" text-anchor="middle" font-size="10" fill="#333" font-weight="600">Preprocessed &amp; enriched data</text>
+
+  <!-- ===================== ROW 6: DATA SOURCES ===================== -->
+  <!-- WDRA Box -->
+  <rect x="30" y="1612" width="380" height="220" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="30" y="1612" width="380" height="34" fill="#4caf50" stroke="#333" stroke-width="2.5"/>
+  <text x="220" y="1635" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">WDRA Government Data (wdra.gov.in)</text>
+
+  <rect x="50" y="1656" width="340" height="30" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="220" y="1676" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">Source: Registered Warehouses — Maharashtra</text>
+
+  <rect x="50" y="1692" width="165" height="30" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1712" text-anchor="middle" font-size="9" font-weight="600" fill="#111">424 warehouses</text>
+
+  <rect x="225" y="1692" width="165" height="30" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="307" y="1712" text-anchor="middle" font-size="9" font-weight="600" fill="#111">12 cols, 33 districts</text>
+
+  <rect x="50" y="1728" width="165" height="30" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1748" text-anchor="middle" font-size="9" font-weight="600" fill="#111">Dec 2020 – Oct 2025</text>
+
+  <rect x="225" y="1728" width="165" height="30" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="307" y="1748" text-anchor="middle" font-size="9" font-weight="600" fill="#111">1 – 97,406 MT</text>
+
+  <rect x="50" y="1764" width="340" height="30" rx="5" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="220" y="1784" text-anchor="middle" font-size="9" font-weight="600" fill="#111">373 Active | 50 Inactive | 1 Cancelled</text>
+
+  <!-- Preprocessing Box -->
+  <rect x="430" y="1612" width="440" height="220" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="430" y="1612" width="440" height="34" fill="#795548" stroke="#333" stroke-width="2.5"/>
+  <text x="650" y="1635" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">Data Preprocessing Pipeline</text>
+
+  <rect x="450" y="1656" width="400" height="26" rx="5" fill="#fff9c4" stroke="#333" stroke-width="1"/>
+  <text x="650" y="1674" text-anchor="middle" font-size="9" font-weight="600" fill="#111">① CSV Parse &amp; Validate (csv-to-json.js)</text>
+  <text x="650" y="1688" text-anchor="middle" font-size="10" fill="#795548">↓</text>
+  <rect x="450" y="1692" width="400" height="26" rx="5" fill="#fff9c4" stroke="#333" stroke-width="1"/>
+  <text x="650" y="1710" text-anchor="middle" font-size="9" font-weight="600" fill="#111">② Pincode Extraction + City Imputation (30+ cities)</text>
+  <text x="650" y="1724" text-anchor="middle" font-size="10" fill="#795548">↓</text>
+  <rect x="450" y="1728" width="400" height="26" rx="5" fill="#fff9c4" stroke="#333" stroke-width="1"/>
+  <text x="650" y="1746" text-anchor="middle" font-size="9" font-weight="600" fill="#111">③ Lat/Lng Centroid + Gaussian Offset (±0.05°)</text>
+  <text x="650" y="1760" text-anchor="middle" font-size="10" fill="#795548">↓</text>
+  <rect x="450" y="1764" width="400" height="26" rx="5" fill="#fff9c4" stroke="#333" stroke-width="1"/>
+  <text x="650" y="1782" text-anchor="middle" font-size="9" font-weight="600" fill="#111">④ Feature Engineering: 12 → 33 attributes</text>
+  <text x="650" y="1796" text-anchor="middle" font-size="10" fill="#795548">↓</text>
+  <rect x="450" y="1800" width="400" height="26" rx="5" fill="#fff9c4" stroke="#795548" stroke-width="2"/>
+  <text x="650" y="1818" text-anchor="middle" font-size="9.5" font-weight="700" fill="#111">⑤ Synthetic Augmentation: 424 → 10,002 records</text>
+
+  <!-- External APIs Box  -->
+  <rect x="890" y="1612" width="540" height="220" rx="0" fill="#fff" stroke="#333" stroke-width="2.5"/>
+  <rect x="890" y="1612" width="540" height="34" fill="#0288d1" stroke="#333" stroke-width="2.5"/>
+  <text x="1160" y="1635" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">External APIs &amp; Cloud Services</text>
+
+  <rect x="910" y="1658" width="250" height="36" rx="5" fill="#e1f5fe" stroke="#0288d1" stroke-width="1.5"/>
+  <text x="1035" y="1676" text-anchor="middle" font-size="10" font-weight="700" fill="#01579b">Groq Cloud (LPU Hardware)</text>
+  <text x="1035" y="1690" text-anchor="middle" font-size="8" fill="#555">Llama 3.3 70B inference | 500 tok/s</text>
+
+  <rect x="1170" y="1658" width="250" height="36" rx="5" fill="#e1f5fe" stroke="#0288d1" stroke-width="1.5"/>
+  <text x="1295" y="1676" text-anchor="middle" font-size="10" font-weight="700" fill="#01579b">Supabase Auth</text>
+  <text x="1295" y="1690" text-anchor="middle" font-size="8" fill="#555">JWT tokens | RLS policies</text>
+
+  <rect x="910" y="1704" width="250" height="36" rx="5" fill="#e1f5fe" stroke="#0288d1" stroke-width="1.5"/>
+  <text x="1035" y="1722" text-anchor="middle" font-size="10" font-weight="700" fill="#01579b">Supabase Storage</text>
+  <text x="1035" y="1736" text-anchor="middle" font-size="8" fill="#555">Document &amp; image uploads</text>
+
+  <rect x="1170" y="1704" width="250" height="36" rx="5" fill="#e1f5fe" stroke="#0288d1" stroke-width="1.5"/>
+  <text x="1295" y="1722" text-anchor="middle" font-size="10" font-weight="700" fill="#01579b">Netlify CDN</text>
+  <text x="1295" y="1736" text-anchor="middle" font-size="8" fill="#555">Static hosting + serverless</text>
+
+  <rect x="910" y="1750" width="250" height="36" rx="5" fill="#e1f5fe" stroke="#0288d1" stroke-width="1.5"/>
+  <text x="1035" y="1768" text-anchor="middle" font-size="10" font-weight="700" fill="#01579b">TensorFlow.js CDN</text>
+  <text x="1035" y="1782" text-anchor="middle" font-size="8" fill="#555">MobileNet v2 model weights</text>
+
+  <rect x="1170" y="1750" width="250" height="36" rx="5" fill="#e1f5fe" stroke="#0288d1" stroke-width="1.5"/>
+  <text x="1295" y="1768" text-anchor="middle" font-size="10" font-weight="700" fill="#01579b">Tesseract.js WASM</text>
+  <text x="1295" y="1782" text-anchor="middle" font-size="8" fill="#555">OCR engine for doc verification</text>
+
+  <!-- WDRA → Preprocessing arrow -->
+  <line x1="410" y1="1730" x2="450" y2="1730" stroke="#4caf50" stroke-width="2" marker-end="url(#ah-green)"/>
+  <rect x="412" y="1714" width="36" height="14" rx="2" fill="#fff" stroke="#4caf50" stroke-width="0.5"/>
+  <text x="430" y="1724" text-anchor="middle" font-size="8" fill="#4caf50" font-weight="600">424</text>
+
+  <!-- Preprocessing → DB arrow -->
+  <line x1="650" y1="1612" x2="650" y2="1552" stroke="#795548" stroke-width="2" marker-end="url(#ah)"/>
+  <rect x="570" y="1572" width="160" height="16" rx="3" fill="#fff" stroke="#795548" stroke-width="0.5"/>
+  <text x="650" y="1584" text-anchor="middle" font-size="10" fill="#795548" font-weight="600">10,002 enriched records</text>
+
+  <!-- External APIs → LLM Gateway -->
+  <line x1="1035" y1="1658" x2="1035" y2="822" stroke="#0288d1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah-blue)"/>
+  <rect x="1040" y="1240" width="68" height="14" rx="2" fill="#fff" stroke="#0288d1" stroke-width="0.5"/>
+  <text x="1074" y="1250" text-anchor="middle" font-size="8" fill="#0288d1" font-weight="600">API calls</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <rect x="30" y="1860" width="1400" height="40" rx="0" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+  <text x="50" y="1885" font-size="10" font-weight="700" fill="#333">LEGEND:</text>
+  <!-- Seeker -->
+  <rect x="120" y="1872" width="14" height="14" rx="2" fill="#b2ebf2" stroke="#333" stroke-width="1"/>
+  <text x="140" y="1884" font-size="9" fill="#333">Seeker</text>
+  <!-- Owner -->
+  <rect x="190" y="1872" width="14" height="14" rx="2" fill="#c8e6c9" stroke="#333" stroke-width="1"/>
+  <text x="210" y="1884" font-size="9" fill="#333">Owner</text>
+  <!-- Admin -->
+  <rect x="260" y="1872" width="14" height="14" rx="2" fill="#ffe0b2" stroke="#333" stroke-width="1"/>
+  <text x="280" y="1884" font-size="9" fill="#333">Admin</text>
+  <!-- ML -->
+  <rect x="330" y="1872" width="14" height="14" rx="2" fill="#e1bee7" stroke="#9c27b0" stroke-width="1"/>
+  <text x="350" y="1884" font-size="9" fill="#333">ML Engine</text>
+  <!-- LLM -->
+  <rect x="415" y="1872" width="14" height="14" rx="2" fill="#ffcdd2" stroke="#e53935" stroke-width="1"/>
+  <text x="435" y="1884" font-size="9" fill="#333">LLM (Llama 3.3 70B)</text>
+  <!-- DocVer -->
+  <rect x="550" y="1872" width="14" height="14" rx="2" fill="#b2dfdb" stroke="#009688" stroke-width="1"/>
+  <text x="570" y="1884" font-size="9" fill="#333">Doc Verification</text>
+  <!-- DB -->
+  <rect x="670" y="1872" width="14" height="14" rx="2" fill="#b3e5fc" stroke="#00acc1" stroke-width="1"/>
+  <text x="690" y="1884" font-size="9" fill="#333">Database</text>
+  <!-- Multi-Agent -->
+  <rect x="755" y="1872" width="14" height="14" rx="2" fill="#ffe0b2" stroke="#f57c00" stroke-width="1"/>
+  <text x="775" y="1884" font-size="9" fill="#333">Multi-Agent</text>
+  <!-- Solid arrow -->
+  <line x1="860" y1="1879" x2="900" y2="1879" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="910" y="1884" font-size="9" fill="#333">Data flow</text>
+  <!-- Dashed arrow -->
+  <line x1="970" y1="1879" x2="1010" y2="1879" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah-gray)"/>
+  <text x="1020" y="1884" font-size="9" fill="#333">Response</text>
+  <!-- ML tag -->
+  <rect x="1090" y="1873" width="20" height="12" rx="2" fill="#9c27b0"/>
+  <text x="1100" y="1882" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">ML</text>
+  <text x="1116" y="1884" font-size="9" fill="#333">ML-powered</text>
+  <!-- LLM tag -->
+  <rect x="1190" y="1873" width="26" height="12" rx="2" fill="#e53935"/>
+  <text x="1203" y="1882" text-anchor="middle" font-size="6.5" fill="#fff" font-weight="700">LLM</text>
+  <text x="1222" y="1884" font-size="9" fill="#333">LLM-powered</text>
+
+</svg>
+
+<div class="footer" style="margin-top:10px;">
+  <strong>SmartSpace — Complete System Architecture &amp; AI Workflow Diagram</strong><br>
+  Primary LLM: Meta Llama 3.3 70B Versatile via Groq | ML: 12-Algorithm Ensemble | Data: WDRA Maharashtra (424 &rarr; 10,002 records)<br>
+  Tech Stack: React 18 + TypeScript + Express.js + Supabase PostgreSQL + TensorFlow.js + Tesseract.js<br>
+  &copy; 2025 SmartSpace Intelligent Warehouse Management Platform
+</div>
+
+</div>
+</body>
 </html>

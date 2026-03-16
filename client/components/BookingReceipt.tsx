@@ -1,22 +1,22 @@
-import React, { useRef } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import {
-  Receipt,
-  Building,
-  MapPin,
-  Calendar,
-  User,
-  Mail,
-  Phone,
-  Download,
+import React, { useRef } from 'react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { 
+  Receipt, 
+  Building, 
+  MapPin, 
+  Calendar, 
+  User, 
+  Mail, 
+  Phone, 
+  Download, 
   Printer,
   CheckCircle,
-  Hash,
-} from "lucide-react";
+  Hash
+} from 'lucide-react';
 
 interface BookingReceiptProps {
   isOpen: boolean;
@@ -40,32 +40,32 @@ interface BookingReceiptProps {
     created_at: string;
     approved_at?: string;
   };
-  type: "seeker" | "owner";
+  type: 'seeker' | 'owner';
 }
 
-export default function BookingReceipt({
-  isOpen,
-  onClose,
-  booking,
-  type,
+export default function BookingReceipt({ 
+  isOpen, 
+  onClose, 
+  booking, 
+  type 
 }: BookingReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
     });
   };
 
   const formatCurrency = (amount: number) => {
-    return `₹${amount.toLocaleString("en-IN")}`;
+    return `₹${amount.toLocaleString('en-IN')}`;
   };
 
   const generateReceiptNumber = () => {
-    const prefix = type === "seeker" ? "SR" : "OR";
+    const prefix = type === 'seeker' ? 'SR' : 'OR';
     return `${prefix}-${booking.id.substring(0, 8).toUpperCase()}`;
   };
 
@@ -73,22 +73,13 @@ export default function BookingReceipt({
     e.preventDefault();
     e.stopPropagation();
 
-    const printWindow = window.open(
-      "",
-      "_blank",
-      "width=720,height=960,scrollbars=yes",
-    );
-    if (!printWindow) {
-      window.print();
-      return;
-    }
+    const printWindow = window.open('', '_blank', 'width=720,height=960,scrollbars=yes');
+    if (!printWindow) { window.print(); return; }
 
     const receiptNum = generateReceiptNumber();
     const durationDays = getDurationDays();
     const blocks = booking.blocks_booked || [];
-    const blockBadges = blocks
-      .map((b) => `<span class="block-badge">#${b}</span>`)
-      .join("");
+    const blockBadges = blocks.map(b => `<span class="block-badge">#${b}</span>`).join('');
 
     printWindow.document.write(`<!DOCTYPE html>
 <html lang="en">
@@ -136,28 +127,28 @@ export default function BookingReceipt({
   <div class="section-title">Warehouse Details</div>
   <div class="card">
     <div style="font-size:14px;font-weight:700;margin-bottom:4px">${booking.warehouse_name}</div>
-    <div style="color:#6b7280;font-size:12px">${booking.warehouse_location}${booking.warehouse_address ? " &mdash; " + booking.warehouse_address : ""}</div>
+    <div style="color:#6b7280;font-size:12px">${booking.warehouse_location}${booking.warehouse_address ? ' &mdash; ' + booking.warehouse_address : ''}</div>
   </div>
   <div class="section-title">Booking Details</div>
   <div class="grid-2">
     <div class="card"><div class="field-label">Start Date</div><div class="field-value">${formatDate(booking.start_date)}</div></div>
     <div class="card"><div class="field-label">End Date</div><div class="field-value">${formatDate(booking.end_date)}</div></div>
     <div class="card"><div class="field-label">Duration</div><div class="field-value">${durationDays} days</div></div>
-    <div class="card"><div class="field-label">Area</div><div class="field-value">${booking.area_sqft.toLocaleString("en-IN")} sq ft</div></div>
+    <div class="card"><div class="field-label">Area</div><div class="field-value">${booking.area_sqft.toLocaleString('en-IN')} sq ft</div></div>
   </div>
-  ${blocks.length > 0 ? `<div class="card" style="margin-bottom:10px"><div class="field-label" style="margin-bottom:5px">Blocks Booked</div><div>${blockBadges}</div></div>` : ""}
-  <div class="section-title">${type === "owner" ? "Customer Details" : "Booked By"}</div>
+  ${blocks.length > 0 ? `<div class="card" style="margin-bottom:10px"><div class="field-label" style="margin-bottom:5px">Blocks Booked</div><div>${blockBadges}</div></div>` : ''}
+  <div class="section-title">${type === 'owner' ? 'Customer Details' : 'Booked By'}</div>
   <div class="card">
     <div class="info-row"><strong>${booking.seeker_name}</strong></div>
     <div class="info-row">${booking.seeker_email}</div>
-    ${booking.seeker_phone ? `<div class="info-row">${booking.seeker_phone}</div>` : ""}
-    ${booking.company_name ? `<div class="info-row">${booking.company_name}</div>` : ""}
+    ${booking.seeker_phone ? `<div class="info-row">${booking.seeker_phone}</div>` : ''}
+    ${booking.company_name ? `<div class="info-row">${booking.company_name}</div>` : ''}
   </div>
   <hr class="divider"/>
   <div class="section-title">Payment Summary</div>
   <div class="payment-box">
     <div class="payment-row"><span style="color:#374151">Payment Method</span><span style="font-weight:500;text-transform:capitalize">${booking.payment_method}</span></div>
-    <div class="total-line"><span style="font-size:14px;font-weight:700">Total Amount</span><span class="total-amount">&#8377;${booking.total_amount.toLocaleString("en-IN")}</span></div>
+    <div class="total-line"><span style="font-size:14px;font-weight:700">Total Amount</span><span class="total-amount">&#8377;${booking.total_amount.toLocaleString('en-IN')}</span></div>
   </div>
   <div class="footer">
     <p>Thank you for choosing SmartSpace!</p>
@@ -168,10 +159,7 @@ export default function BookingReceipt({
 </html>`);
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 600);
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 600);
   };
 
   const handleDownload = (e: React.MouseEvent) => {
@@ -190,21 +178,21 @@ WAREHOUSE DETAILS
 -----------------
 Name: ${booking.warehouse_name}
 Location: ${booking.warehouse_location}
-${booking.warehouse_address ? `Address: ${booking.warehouse_address}` : ""}
+${booking.warehouse_address ? `Address: ${booking.warehouse_address}` : ''}
 
 BOOKING DETAILS
 ---------------
 Start Date: ${formatDate(booking.start_date)}
 End Date: ${formatDate(booking.end_date)}
 Area: ${booking.area_sqft.toLocaleString()} sq ft
-${booking.blocks_booked ? `Blocks: ${booking.blocks_booked.join(", ")}` : ""}
+${booking.blocks_booked ? `Blocks: ${booking.blocks_booked.join(', ')}` : ''}
 
-${type === "owner" ? "CUSTOMER" : "BOOKED BY"}
+${type === 'owner' ? 'CUSTOMER' : 'BOOKED BY'}
 ---------
 Name: ${booking.seeker_name}
 Email: ${booking.seeker_email}
-${booking.seeker_phone ? `Phone: ${booking.seeker_phone}` : ""}
-${booking.company_name ? `Company: ${booking.company_name}` : ""}
+${booking.seeker_phone ? `Phone: ${booking.seeker_phone}` : ''}
+${booking.company_name ? `Company: ${booking.company_name}` : ''}
 
 PAYMENT DETAILS
 ---------------
@@ -216,9 +204,9 @@ Thank you for using SmartSpace!
 For support: support@smartspace.com
     `.trim();
 
-    const blob = new Blob([receiptText], { type: "text/plain" });
+    const blob = new Blob([receiptText], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `receipt-${generateReceiptNumber()}.txt`;
     document.body.appendChild(a);
@@ -267,9 +255,7 @@ For support: support@smartspace.com
             </div>
             <div className="text-right">
               <p className="text-slate-400">Date</p>
-              <p className="font-medium">
-                {formatDate(new Date().toISOString())}
-              </p>
+              <p className="font-medium">{formatDate(new Date().toISOString())}</p>
             </div>
           </div>
 
@@ -277,16 +263,12 @@ For support: support@smartspace.com
 
           {/* Warehouse Details */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
-              Warehouse Details
-            </h3>
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">Warehouse Details</h3>
             <Card className="bg-slate-800/70 border-slate-700">
               <CardContent className="p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <Building className="w-4 h-4 text-blue-400" />
-                  <span className="font-semibold">
-                    {booking.warehouse_name}
-                  </span>
+                  <span className="font-semibold">{booking.warehouse_name}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-300">
                   <MapPin className="w-4 h-4" />
@@ -298,9 +280,7 @@ For support: support@smartspace.com
 
           {/* Booking Details */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
-              Booking Details
-            </h3>
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">Booking Details</h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-slate-800/70 p-3 rounded-lg border border-slate-700">
                 <p className="text-slate-400 text-xs">Start Date</p>
@@ -316,21 +296,15 @@ For support: support@smartspace.com
               </div>
               <div className="bg-slate-800/70 p-3 rounded-lg border border-slate-700">
                 <p className="text-slate-400 text-xs">Area</p>
-                <p className="font-medium">
-                  {booking.area_sqft.toLocaleString()} sq ft
-                </p>
+                <p className="font-medium">{booking.area_sqft.toLocaleString()} sq ft</p>
               </div>
             </div>
             {booking.blocks_booked && booking.blocks_booked.length > 0 && (
               <div className="bg-slate-800/70 p-3 rounded-lg border border-slate-700">
                 <p className="text-slate-400 text-xs mb-1">Blocks Booked</p>
                 <div className="flex flex-wrap gap-1">
-                  {booking.blocks_booked.map((block) => (
-                    <Badge
-                      key={block}
-                      variant="outline"
-                      className="text-xs border-slate-600 text-slate-200"
-                    >
+                  {booking.blocks_booked.map(block => (
+                    <Badge key={block} variant="outline" className="text-xs border-slate-600 text-slate-200">
                       #{block}
                     </Badge>
                   ))}
@@ -342,7 +316,7 @@ For support: support@smartspace.com
           {/* Customer Details */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
-              {type === "owner" ? "Customer Details" : "Booked By"}
+              {type === 'owner' ? 'Customer Details' : 'Booked By'}
             </h3>
             <Card className="bg-slate-800/70 border-slate-700">
               <CardContent className="p-3 space-y-2">
@@ -374,24 +348,16 @@ For support: support@smartspace.com
 
           {/* Payment Summary */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">
-              Payment Summary
-            </h3>
+            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">Payment Summary</h3>
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
               <div className="flex justify-between items-center mb-2 text-sm">
                 <span className="text-slate-300">Payment Method</span>
-                <span className="font-medium capitalize">
-                  {booking.payment_method}
-                </span>
+                <span className="font-medium capitalize">{booking.payment_method}</span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between items-center">
-                <span className="font-semibold text-slate-100">
-                  Total Amount
-                </span>
-                <span className="text-2xl font-bold text-blue-400">
-                  {formatCurrency(booking.total_amount)}
-                </span>
+                <span className="font-semibold text-slate-100">Total Amount</span>
+                <span className="text-2xl font-bold text-blue-400">{formatCurrency(booking.total_amount)}</span>
               </div>
             </div>
           </div>

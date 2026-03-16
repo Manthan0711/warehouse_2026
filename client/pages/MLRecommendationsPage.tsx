@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -14,32 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Bot,
-  Star,
-  MapPin,
-  Building2,
-  Users,
-  ArrowRight,
-  RefreshCw,
-  Settings,
-  Brain,
-  Zap,
-  Target,
-  ChartBar as BarChart3,
-  TrendingUp,
-  Filter,
-  Info,
-  ChevronRight,
-  Clock,
-  Save,
-  Share,
-  CircleHelp as HelpCircle,
-  Sparkles,
-  Download,
-  TriangleAlert as AlertTriangle,
-  Activity,
-} from "lucide-react";
+import { Bot, Star, MapPin, Building2, Users, ArrowRight, RefreshCw, Settings, Brain, Zap, Target, ChartBar as BarChart3, TrendingUp, Filter, Info, ChevronRight, Clock, Save, Share, CircleHelp as HelpCircle, Sparkles, Download, TriangleAlert as AlertTriangle, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSmartRecommendations } from "@/hooks/use-recommendations";
 import RecommendationCustomizer from "@/components/RecommendationCustomizer";
@@ -62,7 +31,7 @@ export default function MLRecommendationsPage() {
     setCustomizeMode,
     clearPreferences,
     limit,
-    setLimit,
+    setLimit
   } = useSmartRecommendations();
 
   const recommendations = data?.items || [];
@@ -73,7 +42,7 @@ export default function MLRecommendationsPage() {
   // Toggle warehouse selection for comparison
   const toggleWarehouseComparison = (whId: string) => {
     if (compareWarehouseIds.includes(whId)) {
-      setCompareWarehouseIds(compareWarehouseIds.filter((id) => id !== whId));
+      setCompareWarehouseIds(compareWarehouseIds.filter(id => id !== whId));
     } else {
       if (compareWarehouseIds.length < 3) {
         setCompareWarehouseIds([...compareWarehouseIds, whId]);
@@ -93,19 +62,11 @@ export default function MLRecommendationsPage() {
   const getRecommendationStats = () => {
     if (!recommendations || recommendations.length === 0) return null;
 
-    const avgPrice =
-      recommendations.reduce((sum, w) => sum + w.pricePerSqFt, 0) /
-      recommendations.length;
-    const avgSpace =
-      recommendations.reduce((sum, w) => sum + w.totalAreaSqft, 0) /
-      recommendations.length;
-    const avgRating =
-      recommendations.reduce((sum, w) => sum + w.rating, 0) /
-      recommendations.length;
-    const avgScore =
-      recommendations.reduce((sum, w) => sum + w.matchScore, 0) /
-      recommendations.length;
-    const districtCount = new Set(recommendations.map((w) => w.district)).size;
+    const avgPrice = recommendations.reduce((sum, w) => sum + w.pricePerSqFt, 0) / recommendations.length;
+    const avgSpace = recommendations.reduce((sum, w) => sum + w.totalAreaSqft, 0) / recommendations.length;
+    const avgRating = recommendations.reduce((sum, w) => sum + w.rating, 0) / recommendations.length;
+    const avgScore = recommendations.reduce((sum, w) => sum + w.matchScore, 0) / recommendations.length;
+    const districtCount = new Set(recommendations.map(w => w.district)).size;
 
     return {
       avgPrice,
@@ -113,7 +74,7 @@ export default function MLRecommendationsPage() {
       avgRating,
       avgScore,
       districtCount,
-      topScore: recommendations.length > 0 ? recommendations[0].matchScore : 0,
+      topScore: recommendations.length > 0 ? recommendations[0].matchScore : 0
     };
   };
 
@@ -135,40 +96,23 @@ export default function MLRecommendationsPage() {
             LLM Warehouse Recommendations
           </h1>
           <p className="text-lg text-slate-300 mt-3">
-            Personalized warehouse suggestions powered by an{" "}
-            <span className="text-neon-blue font-medium">
-              LLM-first ranking engine
-            </span>
+            Personalized warehouse suggestions powered by an <span className="text-neon-blue font-medium">LLM-first ranking engine</span>
           </p>
         </div>
 
         {/* Main Tabs */}
-        <Tabs
-          defaultValue="recommendations"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
+        <Tabs defaultValue="recommendations" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex justify-between items-center glass-dark p-3 rounded-xl fade-in">
             <TabsList className="tabs-glass">
-              <TabsTrigger
-                value="recommendations"
-                className="tab-item-glass flex items-center gap-2"
-              >
+              <TabsTrigger value="recommendations" className="tab-item-glass flex items-center gap-2">
                 <Zap className="h-4 w-4" />
                 Recommendations
               </TabsTrigger>
-              <TabsTrigger
-                value="insights"
-                className="tab-item-glass flex items-center gap-2"
-              >
+              <TabsTrigger value="insights" className="tab-item-glass flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 AI Insights
               </TabsTrigger>
-              <TabsTrigger
-                value="how-it-works"
-                className="tab-item-glass flex items-center gap-2"
-              >
+              <TabsTrigger value="how-it-works" className="tab-item-glass flex items-center gap-2">
                 <Brain className="h-4 w-4" />
                 How It Works
               </TabsTrigger>
@@ -189,9 +133,7 @@ export default function MLRecommendationsPage() {
                 disabled={isLoading}
                 className="btn-glass"
               >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
               <Button size="sm" asChild className="btn-glass-primary">
@@ -208,17 +150,12 @@ export default function MLRecommendationsPage() {
             <GeminiApiKeySetup />
 
             {/* Active Filters Summary */}
-            {(preferences.district ||
-              preferences.targetPrice ||
-              preferences.minAreaSqft ||
-              preferences.preferredType) && (
+            {(preferences.district || preferences.targetPrice || preferences.minAreaSqft || preferences.preferredType) && (
               <div className="preferences-card-dark p-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <Filter className="h-5 w-5 text-blue-400" />
-                    <span className="text-sm font-medium text-slate-200">
-                      Active Preferences:
-                    </span>
+                    <span className="text-sm font-medium text-slate-200">Active Preferences:</span>
                     <div className="flex flex-wrap gap-2">
                       {preferences.district && (
                         <span className="badge-premium badge-location inline-flex items-center">
@@ -228,8 +165,8 @@ export default function MLRecommendationsPage() {
                       )}
                       {preferences.targetPrice && (
                         <span className="badge-premium badge-price inline-flex items-center">
-                          <Zap className="h-3 w-3 mr-1" />₹
-                          {preferences.targetPrice}/sqft
+                          <Zap className="h-3 w-3 mr-1" />
+                          ₹{preferences.targetPrice}/sqft
                         </span>
                       )}
                       {preferences.minAreaSqft && (
@@ -247,12 +184,7 @@ export default function MLRecommendationsPage() {
                     </div>
                   </div>
                   <div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearPreferences}
-                      className="text-slate-300 hover:text-white hover:bg-slate-700/50"
-                    >
+                    <Button variant="ghost" size="sm" onClick={clearPreferences} className="text-slate-300 hover:text-white hover:bg-slate-700/50">
                       <RefreshCw className="h-3 w-3 mr-1" />
                       Clear All
                     </Button>
@@ -267,12 +199,8 @@ export default function MLRecommendationsPage() {
                 <div className="ml-stats-card p-5">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-slate-400">
-                        Best Match
-                      </p>
-                      <p className="text-3xl font-bold ml-score-display">
-                        {stats.topScore}%
-                      </p>
+                      <p className="text-sm font-medium text-slate-400">Best Match</p>
+                      <p className="text-3xl font-bold ml-score-display">{stats.topScore}%</p>
                     </div>
                     <Target className="h-10 w-10 text-green-500/30" />
                   </div>
@@ -280,12 +208,8 @@ export default function MLRecommendationsPage() {
                 <div className="ml-stats-card p-5">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-slate-400">
-                        Avg. Price
-                      </p>
-                      <p className="text-3xl font-bold text-neon-blue">
-                        ₹{Math.round(stats.avgPrice)}
-                      </p>
+                      <p className="text-sm font-medium text-slate-400">Avg. Price</p>
+                      <p className="text-3xl font-bold text-neon-blue">₹{Math.round(stats.avgPrice)}</p>
                     </div>
                     <TrendingUp className="h-10 w-10 text-blue-500/30" />
                   </div>
@@ -293,12 +217,8 @@ export default function MLRecommendationsPage() {
                 <div className="ml-stats-card p-5">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-slate-400">
-                        Avg. Rating
-                      </p>
-                      <p className="text-3xl font-bold text-neon-amber">
-                        {stats.avgRating.toFixed(1)}
-                      </p>
+                      <p className="text-sm font-medium text-slate-400">Avg. Rating</p>
+                      <p className="text-3xl font-bold text-neon-amber">{stats.avgRating.toFixed(1)}</p>
                     </div>
                     <Star className="h-10 w-10 text-amber-500/30" />
                   </div>
@@ -306,12 +226,8 @@ export default function MLRecommendationsPage() {
                 <div className="ml-stats-card p-5">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-slate-400">
-                        Found In
-                      </p>
-                      <p className="text-3xl font-bold text-neon-purple">
-                        {stats.districtCount} districts
-                      </p>
+                      <p className="text-sm font-medium text-slate-400">Found In</p>
+                      <p className="text-3xl font-bold text-neon-purple">{stats.districtCount} districts</p>
                     </div>
                     <MapPin className="h-10 w-10 text-purple-500/30" />
                   </div>
@@ -342,9 +258,7 @@ export default function MLRecommendationsPage() {
                       <Badge variant="outline" className="bg-blue-100">
                         {compareWarehouseIds.length} selected
                       </Badge>
-                      <span className="text-sm font-medium">
-                        Compare warehouses
-                      </span>
+                      <span className="text-sm font-medium">Compare warehouses</span>
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -360,9 +274,7 @@ export default function MLRecommendationsPage() {
                         asChild
                         disabled={compareWarehouseIds.length < 2}
                       >
-                        <Link
-                          to={`/compare?ids=${compareWarehouseIds.join(",")}`}
-                        >
+                        <Link to={`/compare?ids=${compareWarehouseIds.join(',')}`}>
                           Compare
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
@@ -382,18 +294,16 @@ export default function MLRecommendationsPage() {
             />
           </TabsContent>
 
+
           <TabsContent value="how-it-works" className="space-y-6">
             {/* System Status Card */}
             <div className="glass-dark rounded-xl p-5 border border-amber-500/30">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-5 w-5 text-amber-400" />
-                <span className="font-semibold text-slate-200">
-                  System Status
-                </span>
+                <span className="font-semibold text-slate-200">System Status</span>
               </div>
               <p className="text-sm text-slate-400 mb-4">
-                If you're experiencing issues with recommendations or seeing
-                empty results, use the diagnostic tool below.
+                If you're experiencing issues with recommendations or seeing empty results, use the diagnostic tool below.
               </p>
               <EnvChecker />
             </div>
@@ -405,12 +315,8 @@ export default function MLRecommendationsPage() {
                   <Brain className="h-6 w-6 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-100">
-                    How Our LLM Ranking Works
-                  </h3>
-                  <p className="text-sm text-slate-400">
-                    LLM-first ranking with heuristic guardrails
-                  </p>
+                  <h3 className="text-xl font-bold text-slate-100">How Our LLM Ranking Works</h3>
+                  <p className="text-sm text-slate-400">LLM-first ranking with heuristic guardrails</p>
                 </div>
               </div>
 
@@ -423,52 +329,19 @@ export default function MLRecommendationsPage() {
                   </h4>
                   <div className="space-y-3">
                     {[
-                      {
-                        name: "Location Match",
-                        weight: "25%",
-                        color: "bg-blue-500",
-                      },
-                      {
-                        name: "Price Optimization",
-                        weight: "20%",
-                        color: "bg-green-500",
-                      },
-                      {
-                        name: "Area Requirements",
-                        weight: "20%",
-                        color: "bg-amber-500",
-                      },
-                      {
-                        name: "Type Preference",
-                        weight: "15%",
-                        color: "bg-purple-500",
-                      },
-                      {
-                        name: "Availability",
-                        weight: "15%",
-                        color: "bg-pink-500",
-                      },
-                      {
-                        name: "Quality Rating",
-                        weight: "5%",
-                        color: "bg-cyan-500",
-                      },
+                      { name: "Location Match", weight: "25%", color: "bg-blue-500" },
+                      { name: "Price Optimization", weight: "20%", color: "bg-green-500" },
+                      { name: "Area Requirements", weight: "20%", color: "bg-amber-500" },
+                      { name: "Type Preference", weight: "15%", color: "bg-purple-500" },
+                      { name: "Availability", weight: "15%", color: "bg-pink-500" },
+                      { name: "Quality Rating", weight: "5%", color: "bg-cyan-500" }
                     ].map((factor, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between"
-                      >
+                      <div key={i} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div
-                            className={`w-2 h-2 rounded-full ${factor.color}`}
-                          />
-                          <span className="text-sm text-slate-300">
-                            {factor.name}
-                          </span>
+                          <div className={`w-2 h-2 rounded-full ${factor.color}`} />
+                          <span className="text-sm text-slate-300">{factor.name}</span>
                         </div>
-                        <span className="badge-premium text-xs">
-                          {factor.weight}
-                        </span>
+                        <span className="badge-premium text-xs">{factor.weight}</span>
                       </div>
                     ))}
                   </div>
@@ -482,39 +355,15 @@ export default function MLRecommendationsPage() {
                   </h4>
                   <div className="space-y-3">
                     {[
-                      {
-                        range: "90-100%",
-                        label: "Perfect Match",
-                        color: "text-green-400",
-                        dot: "bg-green-400",
-                      },
-                      {
-                        range: "80-89%",
-                        label: "Excellent Match",
-                        color: "text-blue-400",
-                        dot: "bg-blue-400",
-                      },
-                      {
-                        range: "70-79%",
-                        label: "Good Match",
-                        color: "text-amber-400",
-                        dot: "bg-amber-400",
-                      },
-                      {
-                        range: "<70%",
-                        label: "Fair Match",
-                        color: "text-slate-400",
-                        dot: "bg-slate-400",
-                      },
+                      { range: "90-100%", label: "Perfect Match", color: "text-green-400", dot: "bg-green-400" },
+                      { range: "80-89%", label: "Excellent Match", color: "text-blue-400", dot: "bg-blue-400" },
+                      { range: "70-79%", label: "Good Match", color: "text-amber-400", dot: "bg-amber-400" },
+                      { range: "<70%", label: "Fair Match", color: "text-slate-400", dot: "bg-slate-400" }
                     ].map((score, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full ${score.dot}`} />
-                        <span className={`text-sm font-medium ${score.color}`}>
-                          {score.range}
-                        </span>
-                        <span className="text-sm text-slate-400">
-                          {score.label}
-                        </span>
+                        <span className={`text-sm font-medium ${score.color}`}>{score.range}</span>
+                        <span className="text-sm text-slate-400">{score.label}</span>
                       </div>
                     ))}
                   </div>
@@ -530,29 +379,15 @@ export default function MLRecommendationsPage() {
                   5-Algorithm Ensemble Pipeline
                 </h4>
                 <div className="grid grid-cols-5 gap-2">
-                  {[
-                    "KNN",
-                    "Random Forest",
-                    "XGBoost",
-                    "Neural Net",
-                    "TF-IDF",
-                  ].map((algo, i) => (
-                    <div
-                      key={i}
-                      className="text-center p-3 rounded-lg bg-slate-800/50 border border-slate-700/30"
-                    >
-                      <div className="text-xs text-indigo-400 font-medium">
-                        {algo}
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-1">
-                        Step {i + 1}
-                      </div>
+                  {["KNN", "Random Forest", "XGBoost", "Neural Net", "TF-IDF"].map((algo, i) => (
+                    <div key={i} className="text-center p-3 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                      <div className="text-xs text-indigo-400 font-medium">{algo}</div>
+                      <div className="text-[10px] text-slate-500 mt-1">Step {i + 1}</div>
                     </div>
                   ))}
                 </div>
                 <p className="text-xs text-slate-400 mt-3 text-center">
-                  All algorithms run in parallel with dynamic weight adjustment
-                  for optimal accuracy
+                  All algorithms run in parallel with dynamic weight adjustment for optimal accuracy
                 </p>
               </div>
             </div>
@@ -565,50 +400,19 @@ export default function MLRecommendationsPage() {
               </h3>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
-                  {
-                    step: "1",
-                    title: "Be Specific",
-                    desc: "Choose a specific district for focused results",
-                  },
-                  {
-                    step: "2",
-                    title: "Set Budget",
-                    desc: "Include target price for value optimization",
-                  },
-                  {
-                    step: "3",
-                    title: "Specify Area",
-                    desc: "Set minimum sqft for accurate matches",
-                  },
-                  {
-                    step: "4",
-                    title: "Choose Type",
-                    desc: "Select warehouse type for specialized needs",
-                  },
-                  {
-                    step: "5",
-                    title: "Quality Filters",
-                    desc: "Enable verified & availability filters",
-                  },
-                  {
-                    step: "6",
-                    title: "Iterate",
-                    desc: "Refine preferences based on results",
-                  },
+                  { step: "1", title: "Be Specific", desc: "Choose a specific district for focused results" },
+                  { step: "2", title: "Set Budget", desc: "Include target price for value optimization" },
+                  { step: "3", title: "Specify Area", desc: "Set minimum sqft for accurate matches" },
+                  { step: "4", title: "Choose Type", desc: "Select warehouse type for specialized needs" },
+                  { step: "5", title: "Quality Filters", desc: "Enable verified & availability filters" },
+                  { step: "6", title: "Iterate", desc: "Refine preferences based on results" }
                 ].map((tip, i) => (
-                  <div
-                    key={i}
-                    className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/30"
-                  >
+                  <div key={i} className="p-4 rounded-lg bg-slate-800/50 border border-slate-700/30">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                        <span className="text-xs font-bold text-indigo-400">
-                          {tip.step}
-                        </span>
+                        <span className="text-xs font-bold text-indigo-400">{tip.step}</span>
                       </div>
-                      <span className="font-medium text-slate-200">
-                        {tip.title}
-                      </span>
+                      <span className="font-medium text-slate-200">{tip.title}</span>
                     </div>
                     <p className="text-xs text-slate-400">{tip.desc}</p>
                   </div>

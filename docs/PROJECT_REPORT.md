@@ -40,11 +40,11 @@ This report documents architecture, data model, ML, APIs, setup, and operational
 
 ### Data flow (high‑level)
 
-1. Owner submits a property → row inserted into `warehouse_submissions` with status `pending`.
-2. Admin reviews in UI → calls `/api/approve-submission` → server updates status to `approved`.
-3. A DB trigger (planned) or service flow creates a row in `warehouses` referencing the submission.
-4. Seekers query `/api/recommend` with preferences → server fetches candidate rows from `warehouses`, ranks via Hybrid ML, returns top‑N with explanations.
-5. File uploads use presigned URLs; client uploads directly to MinIO/S3; resulting public URL is saved in the submission/warehouse record.
+1) Owner submits a property → row inserted into `warehouse_submissions` with status `pending`.  
+2) Admin reviews in UI → calls `/api/approve-submission` → server updates status to `approved`.  
+3) A DB trigger (planned) or service flow creates a row in `warehouses` referencing the submission.  
+4) Seekers query `/api/recommend` with preferences → server fetches candidate rows from `warehouses`, ranks via Hybrid ML, returns top‑N with explanations.  
+5) File uploads use presigned URLs; client uploads directly to MinIO/S3; resulting public URL is saved in the submission/warehouse record.
 
 ---
 
@@ -72,13 +72,11 @@ This report documents architecture, data model, ML, APIs, setup, and operational
 ## Database Model & Migrations
 
 Key files:
-
 - `supabase/migrations/20251002100000_create_warehouses_full.sql` – Full `warehouses` schema + RLS + indexes (idempotent)
 - `database/warehouse_submissions.sql` – Pending submissions table + notifications + RLS + indexes (idempotent)
 - `supabase/migrations/20251003000000_create_seeker_tables.sql` – Seeker profiles, bookings, reviews, etc. (idempotent)
 
 Highlights:
-
 - Idempotency: Uses `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`; safe to re‑run
 - RLS: Enabled on `warehouses`, `warehouse_submissions`, and related tables with focused policies
 - Performance: Indexes on city, district, status, price, rating; owner/status on submissions
@@ -141,7 +139,7 @@ Create a `.env` at project root with at least:
 
 - Supabase
   - `SUPABASE_URL=...`
-  - `SUPABASE_ANON_KEY=...` (client)
+  - `SUPABASE_ANON_KEY=...` (client)  
   - `SUPABASE_SERVICE_ROLE=...` (server; required for approval/policies)
 - Presign server (dev)
   - `PRESIGN_SERVER_URL=http://localhost:4001` (example)
