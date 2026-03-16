@@ -94,6 +94,11 @@ export default function OwnerAnalyticsPage() {
     setError("");
     try {
       const res = await fetch(`/api/analytics/owner/${user.id}`);
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("Analytics API returned an invalid response");
+      }
+
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
       setData(json.analytics);

@@ -10,6 +10,13 @@ import recommendPriceRouter from "./routes/recommend-price";
 import productPricingRouter from "./routes/product-pricing";
 import citiesRouter from "./routes/cities";
 import { getAdminWarehouses, getAdminUsers } from "./routes/admin-warehouses";
+import { getOwnerBookings, respondToBooking } from "./routes/owner-bookings";
+import {
+  createWarehouseSubmission,
+  getOwnerSubmissions,
+  uploadFile as uploadWarehouseSubmissionFile,
+} from "./routes/warehouse-submissions";
+import { getOwnerAnalytics } from "./routes/analytics";
 
 // Create Supabase client directly to avoid module resolution issues
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
@@ -332,6 +339,18 @@ export function createServer() {
   app.get("/api/admin/bookings", getAdminBookings);
   app.post("/api/admin/bookings/status", updateBookingStatus);
   app.get("/api/admin/bookings/stats", getBookingStats);
+
+  // Owner booking routes
+  app.get("/api/owner/bookings", getOwnerBookings);
+  app.post("/api/owner/bookings/respond", respondToBooking);
+
+  // Owner analytics route
+  app.get("/api/analytics/owner/:ownerId", getOwnerAnalytics);
+
+  // Owner warehouse submission routes
+  app.post("/api/warehouse-submissions", createWarehouseSubmission);
+  app.get("/api/warehouse-submissions/owner/:ownerId", getOwnerSubmissions);
+  app.post("/api/warehouse-submissions/upload", uploadWarehouseSubmissionFile);
 
   // Admin warehouse routes
   app.get("/api/admin/warehouses", getAdminWarehouses);
