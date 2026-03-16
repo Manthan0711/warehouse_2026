@@ -114,45 +114,78 @@ export default function AdminWarehousesPage() {
   const [warehouses, setWarehouses] = useState<WarehouseData[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => { fetchWarehouses(); }, []);
 
+  const fetchAdminWarehouses = async () => {
+    const urls = [
+      '/api/admin/warehouses',
+      'http://localhost:8080/api/admin/warehouses',
+      'http://localhost:8081/api/admin/warehouses',
+      'http://localhost:3000/api/admin/warehouses',
+    ];
+
+    let lastError = 'Unable to fetch warehouse analytics';
+
+    for (const url of urls) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          lastError = `Server error (${response.status})`;
+          continue;
+        }
+
+        const data = await response.json();
+        if (data?.success) return data;
+
+        lastError = data?.error || lastError;
+      } catch (err: any) {
+        lastError = err?.message || lastError;
+      }
+    }
+
+    throw new Error(lastError);
+  };
+
   const fetchWarehouses = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/warehouses');
-      const data = await response.json();
-      if (data.success) {
-        const normalizedWarehouses = (data.warehouses || []).map((wh: any) => ({
-          ...wh,
-          total_area: safeNumber(wh.total_area),
-          occupied_area: safeNumber(wh.occupied_area),
-          available_area: safeNumber(wh.available_area),
-          occupancy_pct: safeNumber(wh.occupancy_pct),
-          price_per_sqft: safeNumber(wh.price_per_sqft),
-          total_bookings: safeNumber(wh.total_bookings),
-          approved_bookings: safeNumber(wh.approved_bookings),
-          pending_bookings: safeNumber(wh.pending_bookings),
-          rejected_bookings: safeNumber(wh.rejected_bookings),
-          total_revenue: safeNumber(wh.total_revenue),
-          bookings: Array.isArray(wh.bookings)
-            ? wh.bookings.map((booking: any) => ({
-                ...booking,
-                area_sqft: safeNumber(booking?.area_sqft),
-                total_amount: safeNumber(booking?.total_amount),
-                blocks_booked: safeBlocks(booking?.blocks_booked),
-              }))
-            : [],
-        }));
+      setLoadError('');
 
-        setWarehouses(normalizedWarehouses);
-        setSummary(data.summary || null);
-      }
+      const data = await fetchAdminWarehouses();
+      const normalizedWarehouses = (data.warehouses || []).map((wh: any) => ({
+        ...wh,
+        total_area: safeNumber(wh.total_area),
+        occupied_area: safeNumber(wh.occupied_area),
+        available_area: safeNumber(wh.available_area),
+        occupancy_pct: safeNumber(wh.occupancy_pct),
+        price_per_sqft: safeNumber(wh.price_per_sqft),
+        total_bookings: safeNumber(wh.total_bookings),
+        approved_bookings: safeNumber(wh.approved_bookings),
+        pending_bookings: safeNumber(wh.pending_bookings),
+        rejected_bookings: safeNumber(wh.rejected_bookings),
+        total_revenue: safeNumber(wh.total_revenue),
+        bookings: Array.isArray(wh.bookings)
+          ? wh.bookings.map((booking: any) => ({
+              ...booking,
+              area_sqft: safeNumber(booking?.area_sqft),
+              total_amount: safeNumber(booking?.total_amount),
+              blocks_booked: safeBlocks(booking?.blocks_booked),
+            }))
+          : [],
+      }));
+
+      setWarehouses(normalizedWarehouses);
+      setSummary(data.summary || null);
     } catch (error) {
       console.error('Error fetching warehouses:', error);
+      setLoadError(error instanceof Error ? error.message : 'Failed to load warehouse analytics');
+      setWarehouses([]);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
@@ -325,6 +358,12 @@ export default function AdminWarehousesPage() {
         )}
 
         {/* Filters */}
+        {loadError && (
+          <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            Failed to load admin warehouse data: {loadError}
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-4 mb-4">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

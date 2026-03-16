@@ -9,6 +9,7 @@ import debugRouter from "./routes/debug";
 import recommendPriceRouter from "./routes/recommend-price";
 import productPricingRouter from "./routes/product-pricing";
 import citiesRouter from "./routes/cities";
+import smartBookingRouter from "./routes/smartBooking";
 import { getAdminWarehouses, getAdminUsers } from "./routes/admin-warehouses";
 
 // Create Supabase client directly to avoid module resolution issues
@@ -322,6 +323,7 @@ export function createServer() {
   app.post("/api/recommend", handleRecommend);
   app.post('/api/approve-submission', approveSubmissionRouter);
   app.use('/api/debug', debugRouter);
+  app.use(smartBookingRouter);
 
   // New AI-powered features
   app.use('/api/recommend-price', recommendPriceRouter);

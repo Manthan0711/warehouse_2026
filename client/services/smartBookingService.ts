@@ -771,12 +771,20 @@ export async function processNaturalLanguageBooking(
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error('❌ Server API error:', error);
+      let errorMessage = `Server error (${response.status})`;
+      try {
+        const error = await response.json();
+        errorMessage = error?.error || errorMessage;
+        console.error('❌ Server API error:', error);
+      } catch {
+        const text = await response.text().catch(() => '');
+        if (text) errorMessage = text;
+        console.error('❌ Server API error:', errorMessage);
+      }
       return {
         requirement: null,
         analysis: null,
-        response: `Search failed: ${error.error}. Please try with a clearer query like "I need 400 sq ft in Thane" or "cold storage in Mumbai".`
+        response: `Search failed: ${errorMessage}. Please try with a clearer query like "I need 400 sq ft in Thane" or "cold storage in Mumbai".`
       };
     }
 
