@@ -1,12 +1,14 @@
 /**
- * Unified AI Service - Groq & OpenRouter as primary LLM providers
- * Priority: Groq (fastest, free) → OpenRouter (free models) → Local Fallback
- * Gemini & Cloudflare removed (broken/unreliable)
+ * Unified AI Service - Supports multiple LLM providers
+ * Prioritizes: OpenRouter > Groq > Gemini > Cloudflare Workers AI
  */
 
 // API Keys from environment
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const CLOUDFLARE_ACCOUNT_ID = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+const CLOUDFLARE_AI_TOKEN = import.meta.env.VITE_CLOUDFLARE_AI_TOKEN;
 
 export interface AIRequest {
   prompt: string;
@@ -17,177 +19,212 @@ export interface AIRequest {
 
 export interface AIResponse {
   text: string;
-  provider: 'openrouter' | 'groq' | 'fallback';
+  provider: 'openrouter' | 'groq' | 'gemini' | 'cloudflare' | 'fallback';
   model: string;
   error?: string;
 }
 
-/** Helper: fetch with timeout (default 15s) */
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 15000): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    return res;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /**
- * Call Groq API — fastest free LLM provider
- * Models tried in order: llama-3.3-70b-versatile → llama-3.1-8b-instant → mixtral-8x7b-32768
- */
-async function callGroq(request: AIRequest): Promise<AIResponse> {
-  if (!GROQ_API_KEY) {
-    throw new Error('Groq API key not configured');
-  }
-
-  // Try multiple models in case one is unavailable/deprecated
-  const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
-
-  for (const model of models) {
-    try {
-      console.log(`  🔸 Groq: trying model ${model}...`);
-      const response = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
-            { role: 'user', content: request.prompt }
-          ],
-          max_tokens: request.maxTokens || 2000,
-          temperature: request.temperature || 0.7
-        })
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => '');
-        console.warn(`  ❌ Groq ${model}: ${response.status} ${response.statusText} — ${errorBody.substring(0, 200)}`);
-        continue; // try next model
-      }
-
-      const data = await response.json();
-      if (!data.choices?.[0]?.message?.content) {
-        console.warn(`  ❌ Groq ${model}: empty response`);
-        continue;
-      }
-
-      return {
-        text: data.choices[0].message.content,
-        provider: 'groq',
-        model
-      };
-    } catch (err: any) {
-      console.warn(`  ❌ Groq ${model}: ${err.name === 'AbortError' ? 'timeout' : err.message}`);
-      continue;
-    }
-  }
-
-  throw new Error('All Groq models failed');
-}
-
-/**
- * Call OpenRouter API — access to many free LLM models
- * Uses free models: qwen-2.5-72b → llama-3.1-8b → gemma-2-9b
+ * Call OpenRouter API (Best option - access to Claude, GPT-4, etc.)
  */
 async function callOpenRouter(request: AIRequest): Promise<AIResponse> {
   if (!OPENROUTER_API_KEY) {
     throw new Error('OpenRouter API key not configured');
   }
 
-  // Free models on OpenRouter (no credits needed)
-  const models = [
-    'qwen/qwen-2.5-72b-instruct:free',
-    'meta-llama/llama-3.1-8b-instruct:free',
-    'google/gemma-2-9b-it:free'
-  ];
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': window.location.origin,
+      'X-Title': 'SmartSpace Warehouse'
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3.5-sonnet', // Best model available
+      messages: [
+        ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
+        { role: 'user', content: request.prompt }
+      ],
+      max_tokens: request.maxTokens || 2000,
+      temperature: request.temperature || 0.7
+    })
+  });
 
-  for (const model of models) {
-    try {
-      console.log(`  🔸 OpenRouter: trying model ${model}...`);
-      const response = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'SmartSpace Warehouse'
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
-            { role: 'user', content: request.prompt }
-          ],
-          max_tokens: request.maxTokens || 2000,
-          temperature: request.temperature || 0.7
-        })
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => '');
-        console.warn(`  ❌ OpenRouter ${model}: ${response.status} ${response.statusText} — ${errorBody.substring(0, 200)}`);
-        continue;
-      }
-
-      const data = await response.json();
-      if (!data.choices?.[0]?.message?.content) {
-        console.warn(`  ❌ OpenRouter ${model}: empty response`);
-        continue;
-      }
-
-      return {
-        text: data.choices[0].message.content,
-        provider: 'openrouter',
-        model
-      };
-    } catch (err: any) {
-      console.warn(`  ❌ OpenRouter ${model}: ${err.name === 'AbortError' ? 'timeout' : err.message}`);
-      continue;
-    }
+  if (!response.ok) {
+    throw new Error(`OpenRouter API error: ${response.statusText}`);
   }
 
-  throw new Error('All OpenRouter models failed');
+  const data = await response.json();
+  return {
+    text: data.choices[0].message.content,
+    provider: 'openrouter',
+    model: 'claude-3.5-sonnet'
+  };
 }
 
 /**
- * Main AI service — tries Groq first (fastest), then OpenRouter (free models)
- * Falls back to local template if both providers fail
+ * Call Groq API (Fastest option - Llama 3.3, Mixtral, etc.)
+ */
+async function callGroq(request: AIRequest): Promise<AIResponse> {
+  if (!GROQ_API_KEY) {
+    throw new Error('Groq API key not configured');
+  }
+
+  console.log('🔐 Groq API Key Status:', GROQ_API_KEY ? `✅ Configured (${GROQ_API_KEY.substring(0, 10)}...)` : '❌ Missing');
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile', // Latest Llama model
+      messages: [
+        ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
+        { role: 'user', content: request.prompt }
+      ],
+      max_tokens: request.maxTokens || 2000,
+      temperature: request.temperature || 0.7
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error('❌ Groq API Error Response:', errorData);
+    throw new Error(`Groq API error: ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`);
+  }
+
+  const data = await response.json();
+  console.log('✅ Groq API Success - Response received');
+  return {
+    text: data.choices[0].message.content,
+    provider: 'groq',
+    model: 'llama-3.3-70b'
+  };
+}
+
+/**
+ * Call Google Gemini API (Fallback option)
+ */
+async function callGemini(request: AIRequest): Promise<AIResponse> {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API key not configured');
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: request.systemPrompt 
+              ? `${request.systemPrompt}\n\n${request.prompt}` 
+              : request.prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: request.temperature || 0.7,
+          maxOutputTokens: request.maxTokens || 2000
+        }
+      })
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return {
+    text: data.candidates[0].content.parts[0].text,
+    provider: 'gemini',
+    model: 'gemini-pro'
+  };
+}
+
+/**
+ * Call Cloudflare Workers AI (Free tier option)
+ */
+async function callCloudflare(request: AIRequest): Promise<AIResponse> {
+  if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_AI_TOKEN) {
+    throw new Error('Cloudflare AI not configured');
+  }
+
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CLOUDFLARE_AI_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: [
+          ...(request.systemPrompt ? [{ role: 'system', content: request.systemPrompt }] : []),
+          { role: 'user', content: request.prompt }
+        ],
+        max_tokens: request.maxTokens || 2000,
+        temperature: request.temperature || 0.7
+      })
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Cloudflare AI error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return {
+    text: data.result.response,
+    provider: 'cloudflare',
+    model: 'llama-3.1-8b'
+  };
+}
+
+/**
+ * Main AI service - tries providers in order of preference
+ * Priority: Groq (free & fast) → OpenRouter (best quality) → Cloudflare → Gemini (last resort)
  */
 export async function getAIResponse(request: AIRequest): Promise<AIResponse> {
   console.log('🤖 AI Request:', request.prompt.substring(0, 100) + '...');
 
+  // Try providers in order: Groq first (free), then OpenRouter (quality), then others
   const providers = [
-    { name: 'Groq', fn: callGroq, enabled: !!GROQ_API_KEY },
-    { name: 'OpenRouter', fn: callOpenRouter, enabled: !!OPENROUTER_API_KEY }
+    { name: 'Groq (Llama 3.3)', fn: callGroq, enabled: !!GROQ_API_KEY },
+    { name: 'OpenRouter (Claude 3.5)', fn: callOpenRouter, enabled: !!OPENROUTER_API_KEY },
+    { name: 'Cloudflare AI', fn: callCloudflare, enabled: !!(CLOUDFLARE_ACCOUNT_ID && CLOUDFLARE_AI_TOKEN) },
+    { name: 'Gemini Pro', fn: callGemini, enabled: !!GEMINI_API_KEY }
   ];
 
   for (const provider of providers) {
     if (!provider.enabled) {
-      console.log(`⏭️ Skipping ${provider.name} — API key not set`);
+      console.log(`⏭️ Skipping ${provider.name} - not configured`);
       continue;
     }
 
     try {
       console.log(`🔄 Trying ${provider.name}...`);
       const response = await provider.fn(request);
-      console.log(`✅ Success with ${provider.name} (${response.model})`);
+      console.log(`✅ Success with ${provider.name}`);
       return response;
-    } catch (error: any) {
-      console.warn(`⚠️ ${provider.name} failed:`, error.message || error);
+    } catch (error) {
+      console.warn(`⚠️ ${provider.name} failed:`, error);
       continue;
     }
   }
 
-  // All providers failed — return a useful local fallback
-  console.error('❌ All AI providers failed, using local fallback response');
-  return generateLocalFallback(request);
+  // All providers failed - return fallback
+  console.error('❌ All AI providers failed, using fallback response');
+  return {
+    text: 'AI service is currently unavailable. Please configure at least one API key in your .env file.',
+    provider: 'fallback',
+    model: 'none',
+    error: 'No working AI provider configured'
+  };
 }
 
 /**
@@ -306,46 +343,3 @@ export default {
   getAIWarehouseRecommendations,
   getChatbotResponse
 };
-
-/**
- * Local fallback when all AI providers are unavailable
- * Generates contextually relevant text without any API
- */
-function generateLocalFallback(request: AIRequest): AIResponse {
-  const prompt = request.prompt.toLowerCase();
-
-  let text = '';
-
-  // Warehouse description generation
-  if (prompt.includes('listing description') || prompt.includes('warehouse listing')) {
-    const nameMatch = request.prompt.match(/Name:\s*(.+)/i);
-    const cityMatch = request.prompt.match(/City:\s*(.+)/i);
-    const typeMatch = request.prompt.match(/Warehouse Type:\s*(.+)/i);
-    const areaMatch = request.prompt.match(/Total Area:\s*(.+?)(?:\s*sq|$)/im);
-    const name = nameMatch?.[1]?.trim() || 'this warehouse';
-    const city = cityMatch?.[1]?.trim() || 'a prime location';
-    const type = typeMatch?.[1]?.trim() || 'General Storage';
-    const area = areaMatch?.[1]?.trim() || '';
-
-    text = `${name} is a premium ${type.toLowerCase()} facility located in ${city}. ${area ? `Spanning ${area} sq ft of well-maintained space, this` : 'This'} warehouse offers excellent connectivity to major transport routes and industrial areas. The facility is equipped with modern amenities including 24/7 security, CCTV surveillance, and dedicated loading/unloading docks. With robust infrastructure and competitive pricing, it is an ideal choice for businesses looking for reliable storage and logistics solutions in ${city}.`;
-  }
-  // Owner insights
-  else if (prompt.includes('owner insight') || prompt.includes('owner dashboard')) {
-    text = 'Your warehouse portfolio is performing well in the current market. Consider optimizing pricing for peak season demand in Maharashtra. Tip 1: List detailed amenities and high-quality images to improve inquiry rates by up to 40%. Tip 2: Offer flexible rental terms (monthly/quarterly) to attract a wider range of tenants.';
-  }
-  // Chatbot / general
-  else if (prompt.includes('warehouse') || prompt.includes('storage')) {
-    text = 'I can help you find the right warehouse. Our platform lists over 10,000 warehouses across Maharashtra with prices ranging from ₹25-150 per sq ft. Tell me your preferred city, required area, and storage type, and I\'ll suggest the best options for you.';
-  }
-  // Generic fallback
-  else {
-    text = 'I\'m SmartSpace AI Assistant. I can help with warehouse recommendations, pricing insights, and platform guidance. Please ask me about available warehouses, pricing, or how to list your property.';
-  }
-
-  return {
-    text,
-    provider: 'fallback',
-    model: 'local-template',
-    error: 'All AI providers unavailable, using local fallback'
-  };
-}
