@@ -9,6 +9,7 @@ import debugRouter from "./routes/debug";
 import recommendPriceRouter from "./routes/recommend-price";
 import productPricingRouter from "./routes/product-pricing";
 import citiesRouter from "./routes/cities";
+import { getAdminWarehouses, getAdminUsers } from "./routes/admin-warehouses";
 
 // Create Supabase client directly to avoid module resolution issues
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://bsrzqffxgvdebyofmhzg.supabase.co';
@@ -400,6 +401,10 @@ export function createServer() {
       return res.status(500).json({ success: false, error: 'Route loading error' });
     }
   });
+
+  // Admin warehouse routes
+  app.get("/api/admin/warehouses", getAdminWarehouses);
+  app.get("/api/admin/users", getAdminUsers);
 
   // Admin warehouse submission routes
   app.get("/api/admin/warehouse-submissions", async (req, res) => {

@@ -42,6 +42,7 @@ import MLRecommendationsPage from "./pages/MLRecommendationsPage";
 import ListProperty from "./pages/ListProperty";
 import SubmissionView from "./pages/SubmissionView";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminWarehousesPage from "./pages/AdminWarehousesPage";
 import InvoicePage from "./pages/InvoicePage";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -54,13 +55,13 @@ import OwnerAnalyticsPage from "./pages/OwnerAnalyticsPage";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    {/* TEMPORARY FIX: ThemeProvider disabled due to React bundling conflict - UI styles maintained manually */}
-    {/* <ThemeProvider> */}
-    {/* <ProfessionalTheme /> */}
-    <AuthProvider>
-      <WarehouseProvider>
-        <Router>
+  <Router>
+    <QueryClientProvider client={queryClient}>
+      {/* TEMPORARY FIX: ThemeProvider disabled due to React bundling conflict - UI styles maintained manually */}
+      {/* <ThemeProvider> */}
+      {/* <ProfessionalTheme /> */}
+      <AuthProvider>
+        <WarehouseProvider>
           {/* Manually applying professional theme classes - EXACT MATCH to enhanced-ui.css */}
           {/* Using inline styles to guarantee precedence over Tailwind defaults */}
           <div className="min-h-screen dark relative selection:bg-blue-500/30 font-sans antialiased text-slate-50"
@@ -126,9 +127,14 @@ const App = () => (
                     <AdminWarehouseSubmissionsPage />
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/warehouses" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminWarehousesPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="/admin-dashboard" element={
                   <ProtectedRoute allowedRoles={['admin']}>
-                    <Dashboard />
+                    <AdminDashboard />
                   </ProtectedRoute>
                 } />
                 <Route path="/admin-verification" element={
@@ -236,11 +242,10 @@ const App = () => (
               <GeminiChatbot />
             </div>
           </div>
-        </Router>
-      </WarehouseProvider>
-    </AuthProvider>
-    {/* </ThemeProvider> */}
-  </QueryClientProvider>
+        </WarehouseProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </Router>
 );
 
 export default App;
